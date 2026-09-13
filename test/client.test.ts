@@ -1465,6 +1465,25 @@ class CopyingBackend implements OpenCvBackend {
     return new CopyingMatVectorHandle();
   }
 
+  approximationCalls: { epsilon: number; closed: boolean }[] = [];
+
+  matApproxPolyDPInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    epsilon: number,
+    closed: boolean,
+  ): void {
+    this.approximationCalls.push({ epsilon, closed });
+    replaceMockDestination(
+      destination,
+      source.rows,
+      source.columns,
+      source.channels,
+      source.toUint8Array(),
+      source.depth,
+    );
+  }
+
   matFindContoursInto(
     _source: WasmMatHandle,
     contours: WasmMatVectorHandle,
@@ -3431,6 +3450,7 @@ describe("OpenCv client", () => {
 
     client.findContours(source, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
+    expect(client.findContours.length).toBe(0);
     expect(contours.size()).toBe(1);
     const contour = contours.get(0);
     expect(contour.toInt32Array()).toEqual(new Int32Array([1, 1, 1, 3, 3, 3, 3, 1]));
@@ -5464,5 +5484,23 @@ describe("OpenCv client", () => {
     expect(kaze.getNOctaves()).toBe(1);
     expect(kaze.getThreshold()).toBe(Number.POSITIVE_INFINITY);
     kaze.dispose();
+  });
+});
+
+describe("approxPolyDP binding", () => {
+  test("forwards finite numeric epsilon, boolean closure and matrix destinations", () => {
+    const backend = new CopyingBackend();
+    const cv = createOpenCv(backend);
+    const source = cv.matFromI32(3, 1, 2, new Int32Array([0, 0, 1, 2, 4, 0]));
+    const destination = cv.emptyMat();
+    cv.approxPolyDP(source, destination, 0.5, true);
+    expect(backend.approximationCalls).toEqual([{ epsilon: 0.5, closed: true }]);
+    expect(destination.toInt32Array()).toEqual(source.toInt32Array());
+    expect(cv.approxPolyDP.length).toBe(4);
+    // @ts-expect-error exercise pinned binding arity rejection
+    expect(() => cv.approxPolyDP(source, destination, 1)).toThrow(BindingError);
+    source.dispose();
+    expect(() => cv.approxPolyDP(source, destination, 1, false)).toThrow();
+    destination.dispose();
   });
 });

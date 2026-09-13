@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WASMosaic shape analysis differential test</title>
+    <script type="importmap">
+      { "imports": { "#wasm": "/wasm/wasmosaic_wasm.js" } }
+    </script>
+  </head>
+  <body>
+    <h1>Shape analysis differential test</h1>
+    <output id="result">Running...</output>
+    <script type="module">
+      import { initOpenCv } from "/dist/index.js";
+      import { contourApi } from "./shape-analysis-adapters.js";
+      import { runContourCases } from "./shape-analysis-cases.js";
+      import { compareContourAnalysis } from "./shape-analysis-compare.js";
+      const output = document.querySelector("#result");
+      const worker = new Worker("./shape-analysis-worker.js");
+      const timer = setTimeout(() => {
+        worker.terminate();
+        output.textContent = "FAIL reference timed out";
+      }, 180000);
+      worker.addEventListener("message", async ({ data }) => {
+        clearTimeout(timer);
+        try {
+          if (data.error) throw new Error(data.error);
+          const cv = await initOpenCv();
+          const actual = runContourCases(contourApi(cv, false));
+          const known = await (await fetch("./shape-analysis-known-differences.json")).json();
+          const report = compareContourAnalysis(actual, data.result, known);
+          globalThis.shapeAnalysisReport = { ...report, userAgent: navigator.userAgent };
+          output.textContent = `PASS OpenCV.js 4.13.0: ${report.numericCases} exact shape cases, ${report.errorCases} rejection cases; ${report.knownDifferences.length} recorded differences`;
+        } catch (error) {
+          output.textContent = `FAIL ${error.stack ?? error}`;
+        } finally {
+          worker.terminate();
+        }
+      });
+      worker.addEventListener("error", (event) => {
+        clearTimeout(timer);
+        worker.terminate();
+        output.textContent = `FAIL ${event.message}`;
+      });
+      worker.postMessage({});
+    </script>
+  </body>
+</html>

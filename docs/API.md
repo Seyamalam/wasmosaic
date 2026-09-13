@@ -111,7 +111,33 @@ Produces a single-channel U8 edge map from a single-channel U8 source. The curre
 
 `createMatVector()` allocates a Rust-owned collection with `size()`, `get(index)`, `push_back(mat)`, `clear()`, and explicit `dispose()`/`delete()` lifetime methods. Retrieved matrices retain shared Rust storage independently of the vector wrapper.
 
-`findContours` currently extracts external connected-component boundaries from single-channel U8 masks. It supports `RETR_EXTERNAL` and `RETR_LIST`, `CHAIN_APPROX_NONE` and `CHAIN_APPROX_SIMPLE`, integer offsets, mutable vector replacement, and an I32 four-channel sibling hierarchy. Hole relationships, tree retrieval, flood-fill input, and Teh-Chin approximation remain reserved.
+`findContours` extracts boundaries from single-channel U8 masks, including holes and nested islands. `RETR_EXTERNAL` keeps only outermost boundaries; `RETR_LIST` flattens all boundaries; `RETR_CCOMP` makes a two-level component/hole hierarchy; `RETR_TREE` preserves every nesting level. `CHAIN_APPROX_NONE` keeps the traced pixel chain and `CHAIN_APPROX_SIMPLE` removes intermediate points on straight runs.
+
+Contour matrices are `Nx1C2` I32. The hierarchy is `1xNC4` I32, with `[next sibling, previous sibling, first child, parent]` per contour and `-1` for absent links. Empty results clear both outputs. Offsets use signed I32 conversion and wrapping addition. Strided source regions are supported and ordinary source matrices are preserved.
+
+The implementation snapshots the source before output writes. Passing the same matrix as source and hierarchy therefore differs from the pinned OpenCV.js build, which clears the input before extraction. I32 label input, `RETR_FLOODFILL` and Teh–Chin chain encodings remain unsupported. This family retains partial status.
+
+### `approxPolyDP(curve, approximation, epsilon, closed)`
+
+Simplifies an open or closed I32/F32 curve with iterative Ramer–Douglas–Peucker subdivision. `epsilon` must be finite and nonnegative; `closed` uses JavaScript truthiness. Input matrices must be nonempty and continuous in `Nx1C2`, `1xNC2` or `Nx2C1` form. Coordinates must be finite. The result is `Nx1C2` with the input depth and exact selected input coordinates.
+
+The destination may be empty, a compatible ROI or the input itself. Compatible ROI outputs write through to their parent; other shapes replace the destination header. Source data is copied before output writes. Closed curves can start at a different vertex or retain a different singleton at large epsilon than OpenCV.js. Non-finite input is rejected even where the pinned build returns a result. These differences keep this family partial.
+
+```ts
+const contours = cv.createMatVector();
+const hierarchy = cv.emptyMat();
+cv.findContours(mask, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+for (let index = 0; index < contours.size(); index++) {
+  const contour = contours.get(index);
+  const polygon = cv.emptyMat();
+  cv.approxPolyDP(contour, polygon, 0.01 * cv.arcLength(contour, true), true);
+  console.log(cv.boundingRect(polygon), cv.contourArea(polygon, false));
+  polygon.dispose();
+  contour.dispose();
+}
+hierarchy.dispose();
+contours.dispose();
+```
 
 ### `warpAffine(source, destination, transform, size, flags?, borderType?, borderValue?)`
 

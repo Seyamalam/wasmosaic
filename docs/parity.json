@@ -1918,9 +1918,23 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "approxPolyDP",
+      "module": "imgproc",
+      "notes": "Iterative Ramer–Douglas–Peucker simplification of finite I32/F32 open or closed curves in Nx1C2, 1xNC2 and Nx2C1 continuous matrices; mutable destinations, ROI output and aliases. Closed-curve start/retained vertex choices and non-finite input behavior differ from the pinned browser; wider numerical and error contracts remain unverified.",
+      "sources": [
+        "https://docs.opencv.org/4.13.0/d3/dc0/group__imgproc__shape.html",
+        "https://doi.org/10.3138/FM57-6770-U75U-7727"
+      ],
+      "status": "partial",
+      "upstream": "cv.approxPolyDP",
+      "upstreamId": "imgproc.function.approx-poly-dp",
+      "wasmExport": "matApproxPolyDPInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "findContours",
       "module": "imgproc",
-      "notes": "Rust-owned MatVector output, mutable I32 hierarchy, RETR_EXTERNAL/RETR_LIST connected-component boundaries, CHAIN_APPROX_NONE/SIMPLE, and offsets for single-channel U8 masks; hole hierarchy, CCOMP/TREE/FLOODFILL, and Teh-Chin approximation remain.",
+      "notes": "Single-channel U8 masks, holes and nested islands, RETR_EXTERNAL/LIST/CCOMP/TREE, CHAIN_APPROX_NONE/SIMPLE, exact sibling/point order, offsets, strided sources and empty-output clearing. Source/hierarchy aliasing uses a snapshot and differs from the pinned browser; I32 label input, FLOODFILL and Teh-Chin approximation remain.",
       "sources": ["https://docs.opencv.org/4.13.0/d3/dc0/group__imgproc__shape.html"],
       "status": "partial",
       "upstream": "cv.findContours",

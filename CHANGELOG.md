@@ -6,10 +6,16 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Original Rust `approxPolyDP` for finite I32/F32 open and closed curves, with strict TypeScript binding, mutable destinations and source/destination alias support.
+- Contour hole tracing and nested island hierarchy for `RETR_EXTERNAL`, `RETR_LIST`, `RETR_CCOMP` and `RETR_TREE`, with exact sibling ordering, SIMPLE/NONE chains, offsets and empty-output clearing.
+- A dedicated shape-analysis browser fixture covering exhaustive 3×3 masks, larger nested/generated masks, polygon workflows and approximation contracts.
+
 - Original Rust `matchTemplate` for U8/F32 images with one through four channels, all six matching methods, optional binary U8 and weighted F32 masks, and mutable F32 score maps. Strict TypeScript constants and overloads support matching followed by `minMaxLoc`.
 - Dedicated pinned-browser template-matching fixtures and a reproducible scalar benchmark covering 256×256, 1080p, and 4K images with one/four channels and both input depths.
 
 ### Compatibility
+
+- Shape families remain partial: polygon start/singleton choices and non-finite input behavior differ from OpenCV.js; contour source/hierarchy aliasing uses a source snapshot. Label input, flood-fill retrieval and Teh–Chin chains remain unsupported. Current totals are 124 implemented and 55 partial families, or 179 supported of 488.
 
 - Template matching remains partial. Inputs are snapshotted before destination writes, which differs from one pinned OpenCV.js template/result overlap case. Extreme floating-point behavior and complete error details remain unverified.
 

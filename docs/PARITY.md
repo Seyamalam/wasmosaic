@@ -119,7 +119,8 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `cvtColor`, `resize`, `threshold`                                     | `cv.cvtColor`, `cv.resize`, `cv.threshold`                | U8 color codes 0-11, nearest/linear/area, five modes/Otsu |
 | `GaussianBlur`, `morphologyEx`, `Sobel`                               | Matching `cv` neighborhood-filter families                | U8 separable blur, morphology, and 3x3 signed gradients   |
 | `Canny`                                                               | `cv.Canny`                                                | U8 3x3 gradients, suppression, and hysteresis             |
-| `findContours`                                                        | `cv.findContours`                                         | External/list U8 contours, simple/none chains, MatVector  |
+| `approxPolyDP`                                                        | `cv.approxPolyDP`                                         | I32/F32 open/closed curves and mutable destinations       |
+| `findContours`                                                        | `cv.findContours`                                         | U8 holes, nested hierarchy, SIMPLE/NONE chains            |
 | `warpAffine`                                                          | `cv.warpAffine`                                           | U8 nearest/linear warps and constant/replicate borders    |
 | `equalizeHist`                                                        | `cv.equalizeHist`                                         | Exact single-channel U8 histogram equalization            |
 | `matchTemplate`                                                       | `cv.matchTemplate`                                        | Six U8/F32 methods, binary/weighted masks, F32 score maps |
@@ -192,3 +193,15 @@ Performance does not decide parity. A slower correct implementation may count as
 8. Run `bun run parity:check`.
 
 CI rejects stale [generated parity JSON](parity.json). Status values are `implemented`, `partial`, and `planned`. Only `implemented` increments the 488-family parity numerator.
+
+## Shape analysis differential coverage
+
+Run `bun run test:browser:prepare`, `bun run build`, then `bun run test:browser:serve` and open `http://127.0.0.1:8766/test/browser/shape-analysis.html`. The comparator runs in a separate worker. The fixture compares complete contour point arrays, matrix headers, hierarchy indices, source preservation, and approximation outputs without sorting contours or rotating polygon vertices.
+
+The September 13, 2026 Chromium run contains 4,637 cases: 4,587 exact result/contract comparisons, 13 matching rejection checks, and 37 explicitly recorded differences. It covers every binary 3×3 mask with all four supported retrieval modes and both chain encodings; nested holes/islands; 32 deterministic larger masks; single-row and empty inputs; strided sources; signed/fractional/wrapping offsets; and contour → perimeter → polygon → bounds/area workflows. Approximation cases cover both depths, all three input layouts, open/closed curves, repeated endpoints, collinear backtracking, compatible destination ROIs, in-place and overlapping output, epsilon validation and binding arity/coercion.
+
+The [recorded differences](../test/browser/shape-analysis-known-differences.json) contain complete actual and reference results. Eight cases exercise source/hierarchy aliasing: WASMosaic snapshots the source, while the pinned comparator clears it before tracing. Twenty-eight approximation cases differ in closed-curve start or singleton vertex choice. One non-finite contour is rejected locally while OpenCV.js returns finite endpoints. The fixture requires those exact outcomes; it fails on new, changed, missing or resolved differences so the ledger must be deliberately updated.
+
+`findContours` remains partial because I32 label input, `RETR_FLOODFILL`, Teh–Chin chains and the alias contract are incomplete. `approxPolyDP` remains partial because of the recorded vertex/non-finite differences and unverified wider numerical/error behavior. Full parity stays at 124/488; support increases to 179 families, including 55 partial families. This checkpoint makes no speed claim.
+
+The implementations follow the public [shape API contract](https://docs.opencv.org/4.13.0/d3/dc0/group__imgproc__shape.html) and the [Douglas–Peucker paper](https://doi.org/10.3138/FM57-6770-U75U-7727). Region labeling, boundary tracing, hierarchy construction and iterative simplification are original Rust code; the comparator is test-only. The [saved browser report](../test/browser/reports/shape-analysis-2026-09-13.json) records the fixture result and build hashes.

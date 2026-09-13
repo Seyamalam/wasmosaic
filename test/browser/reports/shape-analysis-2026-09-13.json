@@ -1,0 +1,165 @@
+{
+  "cases": 4637,
+  "numericCases": 4587,
+  "errorCases": 13,
+  "knownDifferences": [
+    {
+      "name": "source-hierarchy-alias/0/1",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "source-hierarchy-alias/0/2",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "source-hierarchy-alias/1/1",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "source-hierarchy-alias/1/2",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "source-hierarchy-alias/2/1",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "source-hierarchy-alias/2/2",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "source-hierarchy-alias/3/1",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "source-hierarchy-alias/3/2",
+      "reason": "Source/hierarchy alias uses an input snapshot."
+    },
+    {
+      "name": "approx/rectangle/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/rectangle/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/wave/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/wave/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/4/true/0",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/4/true/0.2",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/4/true/1",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/5/true/0",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/5/true/0.2",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/5/true/1",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/triangle/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/line/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/line/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/pair/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/pair/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/repeatedEnd/4/false/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/repeatedEnd/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/repeatedEnd/5/false/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/repeatedEnd/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/nearLine/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/nearLine/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/slopingLine/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/slopingLine/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/reversal/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/reversal/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/concave/4/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/concave/5/true/10",
+      "reason": "Closed-curve starting or singleton vertex choice."
+    },
+    {
+      "name": "approx/nonfinite",
+      "reason": "Non-finite coordinates are rejected."
+    }
+  ],
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+  "recordedAt": "2026-09-13",
+  "baseline": "OpenCV.js 4.13.0",
+  "baseRevision": "e0725eacc1c5152a093bf12db949ac3db410d09e",
+  "packageVersion": "0.2.0",
+  "unreleasedChanges": true,
+  "wasmSha256": "ea0cf5e3f38a0205648335a9c0ad5ac85b39d61876c971ea8b69ab8ff8a9b341",
+  "referenceSha256": "63366510248adf3a7eddf3e793dd825404efb7df3749f4d6f8557c7fa4ca8aa0",
+  "caseSourceSha256": "ee54d6007a73833fd4bce29137512432aac6388a31d0ddfff192dfc1411f8aab",
+  "knownDifferencesSha256": "a11d390bd6ed8aa413aeb3f950fb2abd7121b8c09eeb189ac35705efbc401158"
+}

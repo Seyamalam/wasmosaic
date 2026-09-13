@@ -16,7 +16,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum GeometryWasmError {
+pub(crate) enum GeometryWasmError {
     Kernel(GeometryError),
     UnsupportedDepth(MatDepth),
     NonContinuousContour,
@@ -182,7 +182,7 @@ fn point_polygon_test_adapter(
     point_polygon_test(&points, query, measure_distance).map_err(GeometryWasmError::from)
 }
 
-fn decode_browser_contour_query(contour: &Mat) -> Result<Vec<Point>, GeometryWasmError> {
+pub(crate) fn decode_browser_contour_query(contour: &Mat) -> Result<Vec<Point>, GeometryWasmError> {
     if !contour.is_continuous() {
         return Err(GeometryWasmError::NonContinuousContour);
     }

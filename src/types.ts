@@ -120,6 +120,12 @@ export interface OpenCvBackend {
     borderValue: Float64Array,
   ): void;
   matVectorNew(): WasmMatVectorHandle;
+  matApproxPolyDPInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    epsilon: number,
+    closed: boolean,
+  ): void;
   matFindContoursInto(
     source: WasmMatHandle,
     contours: WasmMatVectorHandle,
@@ -608,6 +614,7 @@ export interface OpenCv {
   bitwiseNotAlloc(source: Mat): Mat;
   bitwiseOr(left: Mat, right: Mat): Mat;
   bitwiseXor(left: Mat, right: Mat): Mat;
+  approxPolyDP(curve: Mat, approximation: Mat, epsilon: number, closed: boolean): void;
   arcLength(contour: Mat, closed: boolean): number;
   boundingRect(contour: Mat): Rect;
   clipLine(rectangle: Rect, start: Point, end: Point): readonly [Point, Point] | undefined;

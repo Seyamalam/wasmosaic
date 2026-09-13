@@ -267,6 +267,12 @@ declare module "#wasm" {
     borderValue: Float64Array,
   ): void;
   export function matVectorNew(): WasmMatVectorHandle;
+  export function matApproxPolyDPInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    epsilon: number,
+    closed: boolean,
+  ): void;
   export function matFindContoursInto(
     source: WasmMatHandle,
     contours: WasmMatVectorHandle,

@@ -7,12 +7,13 @@ use crate::{
 
 pub(crate) const RETR_EXTERNAL: i32 = 0;
 pub(crate) const RETR_LIST: i32 = 1;
+pub(crate) const RETR_CCOMP: i32 = 2;
+pub(crate) const RETR_TREE: i32 = 3;
 pub(crate) const CHAIN_APPROX_NONE: i32 = 1;
 pub(crate) const CHAIN_APPROX_SIMPLE: i32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum FindContoursError {
-    EmptySource,
     InvalidMethod(i32),
     InvalidMode(i32),
     Matrix(MatError),
@@ -23,7 +24,6 @@ pub(crate) enum FindContoursError {
 impl fmt::Display for FindContoursError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptySource => formatter.write_str("findContours source must not be empty"),
             Self::InvalidMethod(value) => write!(formatter, "unsupported contour method {value}"),
             Self::InvalidMode(value) => write!(formatter, "unsupported contour mode {value}"),
             Self::Matrix(error) => error.fmt(formatter),
@@ -65,68 +65,67 @@ pub(crate) fn find_contours_into(
     offset_x: i32,
     offset_y: i32,
 ) -> Result<(), FindContoursError> {
-    if source.rows() == 0 || source.columns() == 0 {
-        return Err(FindContoursError::EmptySource);
-    }
     if source.depth() != MatDepth::U8 {
         return Err(FindContoursError::UnsupportedDepth(source.depth()));
     }
     if source.channels() != 1 {
         return Err(FindContoursError::RequiresSingleChannel);
     }
-    if !matches!(mode, RETR_EXTERNAL | RETR_LIST) {
+    if !matches!(mode, RETR_EXTERNAL | RETR_LIST | RETR_CCOMP | RETR_TREE) {
         return Err(FindContoursError::InvalidMode(mode));
     }
     if !matches!(method, CHAIN_APPROX_NONE | CHAIN_APPROX_SIMPLE) {
         return Err(FindContoursError::InvalidMethod(method));
     }
 
-    let input = source.compact_bytes();
-    let rows = usize::try_from(source.rows()).expect("WASM rows fit usize");
-    let columns = usize::try_from(source.columns()).expect("WASM columns fit usize");
-    let mut visited = vec![false; input.len()];
-    let mut found = Vec::new();
-    for row in 0..rows {
-        for column in 0..columns {
-            let index = row * columns + column;
-            if input[index] == 0 || visited[index] {
-                continue;
-            }
-            mark_component(&input, &mut visited, rows, columns, row, column);
-            let mut points = trace_boundary(&input, rows, columns, row, column);
-            if method == CHAIN_APPROX_SIMPLE {
-                points = simplify_chain(&points);
-            }
-            let mut bytes = Vec::with_capacity(points.len() * 2 * i32::BITS as usize / 8);
-            for (x, y) in points {
-                bytes.extend_from_slice(&(x.saturating_add(offset_x)).to_ne_bytes());
-                bytes.extend_from_slice(&(y.saturating_add(offset_y)).to_ne_bytes());
-            }
-            let point_count =
-                u32::try_from(bytes.len() / 8).map_err(|_| MatError::BufferSizeOverflow)?;
-            found.push(Mat::from_owned_bytes(
-                bytes,
-                point_count,
-                1,
-                2,
-                MatDepth::I32,
-            )?);
-        }
+    if source.rows() == 0 || source.columns() == 0 {
+        hierarchy.write_output(Vec::new(), 0, 0, 1, MatDepth::U8)?;
+        contours.replace(Vec::new());
+        return Ok(());
     }
 
-    let mut hierarchy_values = Vec::with_capacity(found.len() * 4);
-    for index in 0..found.len() {
-        let next = if index + 1 < found.len() {
-            i32::try_from(index + 1).unwrap_or(-1)
+    // A zero border joins every exterior background pixel into region zero.
+    // Foreground uses eight-connectivity; background uses four-connectivity,
+    // so diagonal contacts do not incorrectly join an enclosed hole to outside.
+    let compact = source.compact_bytes();
+    let rows = (source.rows() as usize)
+        .checked_add(2)
+        .ok_or(MatError::BufferSizeOverflow)?;
+    let columns = (source.columns() as usize)
+        .checked_add(2)
+        .ok_or(MatError::BufferSizeOverflow)?;
+    let length = rows
+        .checked_mul(columns)
+        .ok_or(MatError::BufferSizeOverflow)?;
+    let mut input = vec![0; length];
+    for row in 0..source.rows() as usize {
+        let width = source.columns() as usize;
+        input[(row + 1) * columns + 1..(row + 1) * columns + 1 + width]
+            .copy_from_slice(&compact[row * width..(row + 1) * width]);
+    }
+    let (labels, regions) = label_regions(&input, rows, columns);
+    let (order, hierarchy_values) = retrieval_layout(&labels, &regions, mode)?;
+    let mut found = Vec::with_capacity(order.len());
+    for id in order {
+        let region = &regions[id];
+        let x = i32::try_from(region.seed % columns).map_err(|_| MatError::BufferSizeOverflow)?;
+        let y = i32::try_from(region.seed / columns).map_err(|_| MatError::BufferSizeOverflow)?;
+        let (start, backtrack) = if region.filled {
+            ((x, y), (x - 1, y))
         } else {
-            -1
+            ((x - 1, y), (x, y))
         };
-        let previous = if index == 0 {
-            -1
-        } else {
-            i32::try_from(index - 1).unwrap_or(-1)
-        };
-        hierarchy_values.extend_from_slice(&[next, previous, -1, -1]);
+        let mut points = trace_boundary(&input, rows, columns, start, backtrack);
+        if method == CHAIN_APPROX_SIMPLE {
+            points = simplify_chain(&points);
+        }
+        let mut bytes = Vec::with_capacity(points.len() * 8);
+        for (x, y) in points {
+            bytes.extend_from_slice(&((x - 1).wrapping_add(offset_x)).to_ne_bytes());
+            bytes.extend_from_slice(&((y - 1).wrapping_add(offset_y)).to_ne_bytes());
+        }
+        let count = u32::try_from(bytes.len() / 8).map_err(|_| MatError::BufferSizeOverflow)?;
+        found.push(Mat::from_owned_bytes(bytes, count, 1, 2, MatDepth::I32)?);
     }
     if hierarchy_values.is_empty() {
         hierarchy.write_output(Vec::new(), 0, 0, 1, MatDepth::U8)?;
@@ -147,43 +146,109 @@ pub(crate) fn find_contours_into(
     Ok(())
 }
 
-fn mark_component(
-    input: &[u8],
-    visited: &mut [bool],
-    rows: usize,
-    columns: usize,
-    start_y: usize,
-    start_x: usize,
-) {
-    let mut queue = VecDeque::from([(start_y, start_x)]);
-    visited[start_y * columns + start_x] = true;
-    while let Some((row, column)) = queue.pop_front() {
-        for y in row.saturating_sub(1)..=(row + 1).min(rows - 1) {
-            for x in column.saturating_sub(1)..=(column + 1).min(columns - 1) {
-                let index = y * columns + x;
-                if input[index] != 0 && !visited[index] {
-                    visited[index] = true;
-                    queue.push_back((y, x));
+struct Region {
+    seed: usize,
+    filled: bool,
+}
+
+fn retrieval_layout(
+    labels: &[usize],
+    regions: &[Region],
+    mode: i32,
+) -> Result<(Vec<usize>, Vec<i32>), MatError> {
+    let mut children = vec![Vec::new(); regions.len()];
+    let mut parents = vec![0; regions.len()];
+    for id in 1..regions.len() {
+        let region = &regions[id];
+        let enclosing = labels[region.seed - 1];
+        if mode == RETR_EXTERNAL && enclosing != 0 {
+            continue;
+        }
+        let parent = if mode == RETR_LIST || (mode == RETR_CCOMP && region.filled) {
+            0
+        } else {
+            enclosing
+        };
+        parents[id] = parent;
+        children[parent].push(id);
+    }
+    // Reverse discovery order among siblings, then visit parents before children.
+    let mut pending = children[0].clone();
+    let mut order = Vec::new();
+    while let Some(id) = pending.pop() {
+        order.push(id);
+        pending.extend_from_slice(&children[id]);
+    }
+    let mut positions = vec![-1; regions.len()];
+    for (position, &id) in order.iter().enumerate() {
+        positions[id] = i32::try_from(position).map_err(|_| MatError::BufferSizeOverflow)?;
+    }
+    let mut hierarchy_rows = vec![[-1; 4]; order.len()];
+    for siblings in &children {
+        for (index, &id) in siblings.iter().rev().enumerate() {
+            let position =
+                usize::try_from(positions[id]).expect("retrieved region has an output position");
+            hierarchy_rows[position] = [
+                if index + 1 < siblings.len() {
+                    positions[siblings[siblings.len() - index - 2]]
+                } else {
+                    -1
+                },
+                if index == 0 {
+                    -1
+                } else {
+                    positions[siblings[siblings.len() - index]]
+                },
+                children[id].last().map_or(-1, |&child| positions[child]),
+                positions[parents[id]],
+            ];
+        }
+    }
+    let hierarchy_values = hierarchy_rows.into_iter().flatten().collect::<Vec<_>>();
+    Ok((order, hierarchy_values))
+}
+
+fn label_regions(input: &[u8], rows: usize, columns: usize) -> (Vec<usize>, Vec<Region>) {
+    let mut labels = vec![usize::MAX; input.len()];
+    let mut regions = Vec::new();
+    let mut queue = VecDeque::new();
+    for seed in 0..input.len() {
+        if labels[seed] != usize::MAX {
+            continue;
+        }
+        let filled = input[seed] != 0;
+        let id = regions.len();
+        regions.push(Region { seed, filled });
+        labels[seed] = id;
+        queue.push_back(seed);
+        while let Some(index) = queue.pop_front() {
+            let (row, column) = (index / columns, index % columns);
+            for y in row.saturating_sub(1)..=(row + 1).min(rows - 1) {
+                for x in column.saturating_sub(1)..=(column + 1).min(columns - 1) {
+                    if !filled && y != row && x != column {
+                        continue;
+                    }
+                    let neighbor = y * columns + x;
+                    if labels[neighbor] == usize::MAX && (input[neighbor] != 0) == filled {
+                        labels[neighbor] = id;
+                        queue.push_back(neighbor);
+                    }
                 }
             }
         }
     }
+    (labels, regions)
 }
 
 fn trace_boundary(
     input: &[u8],
     rows: usize,
     columns: usize,
-    start_y: usize,
-    start_x: usize,
+    start: (i32, i32),
+    mut backtrack: (i32, i32),
 ) -> Vec<(i32, i32)> {
-    let start = (
-        i32::try_from(start_x).expect("column fits i32"),
-        i32::try_from(start_y).expect("row fits i32"),
-    );
     let mut points = vec![start];
     let mut current = start;
-    let mut backtrack = (start.0 - 1, start.1);
     let Some((first, first_backtrack)) = next_boundary(input, rows, columns, current, backtrack)
     else {
         return points;
@@ -192,9 +257,6 @@ fn trace_boundary(
     backtrack = first_backtrack;
     let maximum_steps = input.len().saturating_mul(8).max(8);
     for _ in 0..maximum_steps {
-        if current != start {
-            points.push(current);
-        }
         let Some((next, next_backtrack)) = next_boundary(input, rows, columns, current, backtrack)
         else {
             break;
@@ -202,6 +264,7 @@ fn trace_boundary(
         if current == start && next == first {
             break;
         }
+        points.push(current);
         current = next;
         backtrack = next_backtrack;
     }
@@ -275,6 +338,113 @@ mod tests {
     use super::*;
     use crate::{mat::mat_from_u8, mat_vector::mat_vector_new};
 
+    fn values(matrix: &Mat) -> Vec<i32> {
+        matrix
+            .compact_bytes()
+            .chunks_exact(4)
+            .map(|b| i32::from_ne_bytes(b.try_into().unwrap()))
+            .collect()
+    }
+    fn nested() -> Mat {
+        let pixels = (0..121)
+            .map(|i| {
+                let (x, y) = (i % 11, i / 11);
+                u8::from(
+                    (1..=9).contains(&x)
+                        && (1..=9).contains(&y)
+                        && (!(3..=7).contains(&x) || !(3..=7).contains(&y) || (x == 5 && y == 5)),
+                )
+            })
+            .collect::<Vec<_>>();
+        mat_from_u8(&pixels, 11, 11, 1).unwrap()
+    }
+    #[test]
+    fn retrieval_modes_preserve_nested_holes_and_islands() {
+        let source = nested();
+        for (mode, expected) in [
+            (RETR_EXTERNAL, vec![-1, -1, -1, -1]),
+            (RETR_TREE, vec![-1, -1, 1, -1, -1, -1, 2, 0, -1, -1, -1, 1]),
+            (RETR_CCOMP, vec![1, -1, -1, -1, -1, 0, 2, -1, -1, -1, -1, 1]),
+            (RETR_LIST, vec![1, -1, -1, -1, 2, 0, -1, -1, -1, 1, -1, -1]),
+        ] {
+            let contours = mat_vector_new();
+            let hierarchy = crate::mat::mat_empty();
+            find_contours_into(
+                &source,
+                &contours,
+                &hierarchy,
+                mode,
+                CHAIN_APPROX_SIMPLE,
+                0,
+                0,
+            )
+            .unwrap();
+            assert_eq!(values(&hierarchy), expected);
+            if mode == RETR_TREE {
+                assert_eq!(
+                    values(&contours.get(1).unwrap()),
+                    [2, 3, 3, 2, 7, 2, 8, 3, 8, 7, 7, 8, 3, 8, 2, 7]
+                );
+                assert_eq!(values(&contours.get(2).unwrap()), [5, 5]);
+            }
+        }
+    }
+    #[test]
+    fn source_hierarchy_alias_uses_input_snapshot() {
+        let source = nested();
+        let contours = mat_vector_new();
+        find_contours_into(
+            &source,
+            &contours,
+            &source,
+            RETR_TREE,
+            CHAIN_APPROX_SIMPLE,
+            -2,
+            7,
+        )
+        .unwrap();
+        assert_eq!(contours.size(), 3);
+        assert_eq!(values(&contours.get(2).unwrap()), [3, 12]);
+        assert_eq!(
+            values(&source),
+            [-1, -1, 1, -1, -1, -1, 2, 0, -1, -1, -1, 1]
+        );
+    }
+    #[test]
+    fn empty_input_clears_previous_outputs_and_invalid_mode_preserves_them() {
+        let source = nested();
+        let contours = mat_vector_new();
+        let hierarchy = crate::mat::mat_empty();
+        find_contours_into(
+            &source,
+            &contours,
+            &hierarchy,
+            RETR_TREE,
+            CHAIN_APPROX_SIMPLE,
+            0,
+            0,
+        )
+        .unwrap();
+        let saved = hierarchy.compact_bytes();
+        assert!(
+            find_contours_into(&source, &contours, &hierarchy, 4, CHAIN_APPROX_SIMPLE, 0, 0)
+                .is_err()
+        );
+        assert_eq!(hierarchy.compact_bytes(), saved);
+        assert_eq!(contours.size(), 3);
+        find_contours_into(
+            &crate::mat::mat_empty(),
+            &contours,
+            &hierarchy,
+            RETR_TREE,
+            CHAIN_APPROX_SIMPLE,
+            0,
+            0,
+        )
+        .unwrap();
+        assert_eq!(contours.size(), 0);
+        assert_eq!(hierarchy.rows(), 0);
+    }
     #[test]
     fn simple_external_rectangle_matches_browser_point_order() {
         let source = mat_from_u8(

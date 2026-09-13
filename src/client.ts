@@ -235,6 +235,16 @@ class WasmOpenCv implements OpenCv {
     return new Mat(this.#backend.matAddU8(left.handleForBackend(), right.handleForBackend()));
   }
 
+  approxPolyDP(curve: Mat, approximation: Mat, epsilon: number, closed: boolean): void {
+    requireExactArity(arguments.length, 4, "approxPolyDP");
+    this.#backend.matApproxPolyDPInto(
+      matHandleForBinding(curve),
+      matHandleForBinding(approximation),
+      toWasmF64(epsilon),
+      coerceBoolean(closed),
+    );
+  }
+
   arcLength(contour: Mat, closed: boolean): number {
     requireExactArity(arguments.length, 2, "arcLength");
     return this.#backend.matArcLength(matHandleForBinding(contour), coerceBoolean(closed));
@@ -739,15 +749,21 @@ class WasmOpenCv implements OpenCv {
   }
 
   findContours(
-    source: Mat,
-    contours: MatVector,
-    hierarchy: Mat,
-    mode: number,
-    method: number,
-    offset: Point = { x: 0, y: 0 },
+    ...arguments_:
+      | [source: Mat, contours: MatVector, hierarchy: Mat, mode: number, method: number]
+      | [
+          source: Mat,
+          contours: MatVector,
+          hierarchy: Mat,
+          mode: number,
+          method: number,
+          offset: Point,
+        ]
   ): void {
-    requireArityRange(arguments.length, 5, 6, "findContours");
-    const convertedOffset = point2iForBinding(offset);
+    requireArityRange(arguments_.length, 5, 6, "findContours");
+    const [source, contours, hierarchy, mode, method] = arguments_;
+    const convertedOffset =
+      arguments_.length === 6 ? point2iForBinding(arguments_[5]) : { x: 0, y: 0 };
     this.#backend.matFindContoursInto(
       matHandleForBinding(source),
       contours.handleForBackend(),

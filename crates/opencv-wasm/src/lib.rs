@@ -40,6 +40,7 @@ mod features2d_orb;
 mod features2d_orb_wasm;
 mod features2d_threshold_detectors;
 mod features2d_threshold_detectors_wasm;
+mod imgproc_approx;
 mod imgproc_border;
 mod imgproc_border_wasm;
 mod imgproc_canny;
