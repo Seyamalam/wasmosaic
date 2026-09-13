@@ -60,6 +60,7 @@ mod imgproc_histogram_wasm;
 mod imgproc_perspective;
 mod imgproc_resize;
 mod imgproc_resize_wasm;
+mod imgproc_sample;
 mod imgproc_template;
 mod imgproc_template_wasm;
 mod imgproc_threshold;

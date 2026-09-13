@@ -1,0 +1,31 @@
+{
+  "cases": 3880,
+  "numericCases": 3202,
+  "errorCases": 678,
+  "maximumError": 9.5367431640625e-7,
+  "maximumRelativeError": 1.6900559138098525e-7,
+  "differences": [],
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+  "recordedAt": "2026-09-13",
+  "baseline": "OpenCV.js 4.13.0",
+  "baseRevision": "cd6a9253331df565bbc8e597166b8a017d515ece",
+  "packageVersion": "0.2.0",
+  "unreleasedChanges": true,
+  "wasmSha256": "d60ec5449bf7e5824e578eaa7bfd68a969a3c1c7c3e23c346d38ce2de7e618ca",
+  "referenceSha256": "63366510248adf3a7eddf3e793dd825404efb7df3749f4d6f8557c7fa4ca8aa0",
+  "caseSourceSha256": "3eccd9bb4cfd7af2de4dc812c69eba9bf2861eaf275c815cf814cdfeac22e616",
+  "contractSourceSha256": "e97c8530aed6d1350b1787dd2c07523117f95b98b0b6992bb172054591911d7d",
+  "tolerances": {
+    "integer": "exact",
+    "F32": "2e-5 * max(1, abs(reference))",
+    "F64": "2e-9 * max(1, abs(reference))",
+    "nonfinite": "exact category",
+    "postErrorBytes": "unspecified reference bytes excluded; headers compared"
+  },
+  "regressionFixtures": {
+    "differential.html": "PASS",
+    "perspective.html": "PASS: 2186 cases, 6 recorded differences",
+    "shape-analysis.html": "PASS: 4587 exact, 13 rejection, 37 recorded differences",
+    "template-matching.html": "PASS: 259 numeric, 16 rejection, 1 recorded difference"
+  }
+}

@@ -5551,3 +5551,54 @@ describe("perspective bindings", () => {
     transform.dispose();
   });
 });
+
+describe("resize binding", () => {
+  test("converts dimensions, distinguishes omitted arguments, and forwards every mode", () => {
+    const backend = new CopyingBackend();
+    const calls: number[][] = [];
+    backend.matResizeInto = (_source, _destination, width, height, fx, fy, mode) => {
+      calls.push([width, height, fx, fy, mode]);
+    };
+    const cv = createOpenCv(backend);
+    const source = cv.matFromU8(1, 1, 1, new Uint8Array([7]));
+    const destination = cv.emptyMat();
+    cv.resize(source, destination, { width: 3.9, height: 2.1 });
+    expect(calls[0]).toEqual([3, 2, 0, 0, 1]);
+    for (const mode of [0, 1, 2, 3, 4, 5, 6] as const)
+      cv.resize(source, destination, { width: 2, height: 3 }, 0.7, 1.3, mode);
+    expect(calls.slice(1).map((call) => call[4])).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect(() => cv.resize(source, destination, { width: 2, height: 3 }, 0, 0, undefined)).toThrow(
+      TypeError,
+    );
+    expect(() => cv.resize(source, destination, { width: 2, height: 3 }, undefined)).toThrow();
+    expect(cv.resize.length).toBe(0);
+    // @ts-expect-error audit runtime binding arity
+    expect(() => cv.resize(source, destination)).toThrow(BindingError);
+    // @ts-expect-error audit runtime binding arity
+    expect(() => cv.resize(source, destination, { width: 1, height: 1 }, 0, 0, 0, 0)).toThrow(
+      BindingError,
+    );
+    source.dispose();
+    destination.dispose();
+  });
+  test("validates matrix lifetime before reading structural size fields", () => {
+    const cv = createOpenCv(new CopyingBackend());
+    const source = cv.emptyMat(),
+      destination = cv.emptyMat();
+    const reads: string[] = [];
+    const size = {
+      get width() {
+        reads.push("width");
+        return 2;
+      },
+      get height() {
+        reads.push("height");
+        return 2;
+      },
+    };
+    source.dispose();
+    expect(() => cv.resize(source, destination, size)).toThrow(BindingError);
+    expect(reads).toEqual([]);
+    destination.dispose();
+  });
+});

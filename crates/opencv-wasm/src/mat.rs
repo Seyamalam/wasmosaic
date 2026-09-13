@@ -408,6 +408,36 @@ impl Mat {
         Ok(())
     }
 
+    pub(crate) fn try_write_shared_nearest(
+        &self,
+        source: &Self,
+        columns: &[u32],
+        rows: &[u32],
+    ) -> Result<bool, MatError> {
+        let from = source.header.borrow();
+        let to = self.header.borrow();
+        if to.rows as usize != rows.len()
+            || to.columns as usize != columns.len()
+            || to.depth != from.depth
+            || to.channels != from.channels
+        {
+            return Ok(false);
+        }
+        let (Some(input), Some(output)) = (from.storage.as_ref(), to.storage.as_ref()) else {
+            return Ok(false);
+        };
+        if !input.shares_allocation_with(output) {
+            return Ok(false);
+        }
+        output.write_nearest_from_shared(
+            input,
+            usize::from(from.channels) * from.depth.byte_width(),
+            columns,
+            rows,
+        )?;
+        Ok(true)
+    }
+
     pub(crate) fn try_write_shared_transpose(&self, source: &Self) -> Result<bool, MatError> {
         let source_header = source.header.borrow();
         let destination_header = self.header.borrow();

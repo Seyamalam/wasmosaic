@@ -44,6 +44,40 @@ pub(crate) struct MutableStorage {
 }
 
 impl MutableStorage {
+    pub(crate) fn write_nearest_from_shared(
+        &self,
+        source: &Self,
+        pixel_bytes: usize,
+        columns: &[u32],
+        rows: &[u32],
+    ) -> Result<(), MutableStorageError> {
+        if !self.shares_allocation_with(source)
+            || self.rows != rows.len()
+            || self.row_bytes
+                != columns
+                    .len()
+                    .checked_mul(pixel_bytes)
+                    .ok_or(MutableStorageError::SizeOverflow)?
+            || rows.iter().any(|&row| row as usize >= source.rows)
+            || columns
+                .iter()
+                .any(|&column| (column as usize + 1) * pixel_bytes > source.row_bytes)
+        {
+            return Err(MutableStorageError::RegionOutOfBounds);
+        }
+        let mut data = self.data.borrow_mut();
+        for (y, &source_y) in rows.iter().enumerate() {
+            for (x, &source_x) in columns.iter().enumerate() {
+                let from = source.offset
+                    + source_y as usize * source.row_stride
+                    + source_x as usize * pixel_bytes;
+                let to = self.offset + y * self.row_stride + x * pixel_bytes;
+                data.copy_within(from..from + pixel_bytes, to);
+            }
+        }
+        Ok(())
+    }
+
     pub(crate) fn shares_allocation_with(&self, other: &Self) -> bool {
         Rc::ptr_eq(&self.data, &other.data)
     }

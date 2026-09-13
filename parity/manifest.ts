@@ -1709,9 +1709,9 @@ export const PARITY_MANIFEST = {
       method: "resize",
       module: "imgproc",
       notes:
-        "Mutable Mat resizing with all-depth nearest-neighbor sampling, half-pixel U8 linear interpolation, U8 area shrinking, explicit dimensions or scale-derived dimensions, compact strided sources, destination replacement, and pinned-browser fixtures; all-depth linear/area plus cubic, Lanczos, and exact modes remain.",
+        "All seven pinned interpolation modes with depth/channel-specific acceptance, explicit or scale-derived dimensions, fixed and floating arithmetic, strided sources/destinations, in-place and nearest overlap behavior, structural binding conversion, non-finite inputs and late-error output allocation. The dedicated 3,880-case browser fixture passes; integer values are exact, with declared F32/F64 numerical tolerances and unspecified post-error bytes excluded.",
       sources: [IMGPROC_TRANSFORM_SOURCE],
-      status: "partial",
+      status: "implemented",
       upstream: "cv.resize",
       upstreamId: "imgproc.function.resize",
       wasmExport: "matResizeInto",

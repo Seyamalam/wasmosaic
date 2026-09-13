@@ -1316,13 +1316,15 @@ class WasmOpenCv implements OpenCv {
   ): void {
     requireArityRange(arguments_.length, 3, 6, "resize");
     const [source, destination, size] = arguments_;
+    const sourceHandle = matHandleForBinding(source);
+    const destinationHandle = matHandleForBinding(destination);
     const convertedSize = size2iForBinding(size);
     const scaleX = arguments_.length >= 4 ? toWasmF64(arguments_[3]) : 0;
     const scaleY = arguments_.length >= 5 ? toWasmF64(arguments_[4]) : 0;
     const interpolation = arguments_.length === 6 ? toWasmI32(arguments_[5]) : INTER_LINEAR;
     this.#backend.matResizeInto(
-      matHandleForBinding(source),
-      matHandleForBinding(destination),
+      sourceHandle,
+      destinationHandle,
       convertedSize.width,
       convertedSize.height,
       scaleX,

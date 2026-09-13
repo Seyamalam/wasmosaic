@@ -4,13 +4,12 @@ use crate::{imgproc_resize, mat::Mat};
 
 /// Resizes a matrix into a mutable destination.
 ///
-/// The first compatibility slice supports nearest-neighbor interpolation for every scalar depth
-/// and interleaved channel count represented by `Mat`.
+/// Implements the seven pinned interpolation modes with their depth and channel contracts.
 ///
 /// # Errors
 ///
 /// Returns an error for empty sources, invalid output geometry, invalid scales, size overflow, or
-/// an interpolation mode outside the current slice.
+/// an unsupported depth/channel and interpolation combination.
 #[allow(clippy::too_many_arguments)]
 #[wasm_bindgen(js_name = matResizeInto)]
 pub fn mat_resize_into(

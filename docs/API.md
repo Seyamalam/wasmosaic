@@ -174,17 +174,17 @@ Resizes an RGBA image with nearest-neighbor sampling. Both target dimensions mus
 
 ### `resize(source, destination, size, fx?, fy?, interpolation?)`
 
-Resizes a Rust-owned `Mat` into a mutable destination. A positive `size.width` and `size.height` set the output dimensions. Passing `{ width: 0, height: 0 }` derives them from positive finite `fx` and `fy` values.
+Accepts three through six arguments. Positive `size.width` and `size.height` determine the output dimensions. If either dimension is nonpositive after signed i32 conversion, positive finite `fx` and `fy` determine both dimensions using nearest-even rounding. Sampling retains those scale factors even when the output dimensions round. Mat lifetimes are checked before structural size fields are read.
 
-The current slice implements:
+All seven interpolation modes are supported:
 
-- `INTER_NEAREST` across every matrix depth and channel count
-- `INTER_LINEAR` for U8 matrices using OpenCV half-pixel coordinates and nearest-even output rounding
-- `INTER_AREA` for shrinking U8 matrices using source-pixel coverage weights
+- `INTER_NEAREST` and `INTER_NEAREST_EXACT` copy complete scalar bytes for every depth. The exact mode quantizes the source/destination step to 16 fractional bits before choosing pixel centres.
+- `INTER_LINEAR`, `INTER_CUBIC`, `INTER_LANCZOS4` and `INTER_AREA` support U8, U16, I16, F32 and F64. Linear uses half-pixel coordinates; cubic and Lanczos use four and eight taps per axis. Area uses source-pixel overlap when shrinking both axes and the pinned two-tap mapping otherwise. Fractional area shrinking requires at most four channels; integer area decimation accepts wider channel counts.
+- `INTER_LINEAR_EXACT` uses fixed-point coefficients for integer depths, including I8 and I32, and selects regular linear for floating depths. Exact twofold decimation uses area rounding except for two-channel input; this also determines the I8/I32 rejection cases.
 
-Nearest-neighbor mode copies complete scalar bytes without numeric conversion, so signed and floating-point matrices preserve their stored bit patterns. The operation compacts strided sources, replaces incompatible destinations, and snapshots the source before an exact in-place resize.
+Compatible destination regions are written through; other outputs are rebound. Exact in-place resizing is supported. Nearest-neighbor overlaps read prior destination writes in row/pixel order, matching the pinned build. Other audited interpolation overlaps pass the browser fixture. Same-size calls copy before interpolation validation. Certain later rejections allocate the output header before throwing; newly allocated error output is zero-filled here, while the pinned build leaves its bytes unspecified.
 
-The package exports all pinned interpolation constants now so TypeScript code can use one stable namespace. Cubic, Lanczos, exact modes, linear interpolation for wider depths, and area enlargement remain unimplemented and reject instead of silently selecting another algorithm.
+Integer browser outputs compare exactly. F32 and F64 outputs use the declared [resize tolerances](PARITY.md#resize-differential-coverage); non-finite categories are compared exactly.
 
 ### `cvtColor(source, destination, code, dstCn?)`
 

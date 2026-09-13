@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Resize differential</title>
+    <script type="importmap">
+      { "imports": { "#wasm": "/wasm/wasmosaic_wasm.js" } }
+    </script>
+  </head>
+  <body>
+    <h1>Resize differential</h1>
+    <output id="result">Running...</output>
+    <script type="module">
+      import { initOpenCv } from "/dist/index.js";
+      import { runResizeCases, compareResize } from "./resize-cases.js";
+      import { runResizeContracts } from "./resize-contract-cases.js";
+      const worker = new Worker("./resize-worker.js");
+      const timer = setTimeout(() => {
+        worker.terminate();
+        document.getElementById("result").textContent = "FAIL reference timed out";
+      }, 180000);
+      worker.addEventListener("error", (event) => {
+        clearTimeout(timer);
+        worker.terminate();
+        document.getElementById("result").textContent = `FAIL ${event.message}`;
+      });
+      worker.addEventListener("message", async ({ data }) => {
+        clearTimeout(timer);
+        try {
+          if (data.error) throw new Error(data.error);
+          const cv = await initOpenCv();
+          globalThis.resizeActual = [
+            ...runResizeCases(cv, false),
+            ...runResizeContracts(cv, false),
+          ];
+          globalThis.resizeReference = data.result;
+          globalThis.resizeReport = compareResize(globalThis.resizeActual, data.result);
+          document.getElementById("result").textContent =
+            `${resizeReport.differences.length ? "FAIL" : "PASS"} ${resizeReport.cases} cases; ${resizeReport.differences.length} differences`;
+        } catch (error) {
+          document.getElementById("result").textContent = `FAIL ${error.stack ?? error}`;
+        } finally {
+          worker.terminate();
+        }
+      });
+      worker.postMessage({});
+    </script>
+  </body>
+</html>

@@ -22,7 +22,7 @@ The roadmap gives release order. This file lists concrete work that can be picke
 - [x] Add deterministic TypeScript disposal for WASM matrix handles.
 - [x] Add signed integer and floating-point matrix depths.
 - [ ] Add reusable output buffers and in-WASM operation pipelines.
-- [ ] Expand differential fixtures to cover all 46 partial operation families.
+- [ ] Expand differential fixtures to cover all 55 partial operation families.
 - [x] Verify and promote all 13 GFTT detector instance methods against the pinned browser call-contract matrix.
 - [x] Verify and promote the five primitive AGAST and five primitive FAST instance methods against the pinned browser call-contract matrix.
 - [x] Verify and promote the 11 non-enum KAZE instance methods against the pinned browser call-contract matrix.
@@ -63,4 +63,4 @@ The roadmap gives release order. This file lists concrete work that can be picke
 - [ ] Specify border modes before adding convolution.
 - [ ] Specify channel order and output format for general color conversion.
 - [x] Add operation-specific parity fixtures before marking the first entries implemented.
-- [ ] Add operation-specific parity fixtures before marking another entry implemented. Current checkpoint: 124 of 488 families, or 25.41%.
+- [ ] Add operation-specific parity fixtures before marking another entry implemented. Current checkpoint: 125 of 488 families, or 25.61%.
