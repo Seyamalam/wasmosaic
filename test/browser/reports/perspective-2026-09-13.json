@@ -1,0 +1,47 @@
+{
+  "cases": 2186,
+  "numericCases": 1731,
+  "errorCases": 449,
+  "maximumError": 1.52587890625e-5,
+  "knownDifferences": [
+    {
+      "name": "get/zero",
+      "reason": "Degenerate inputs require an unimplemented homogeneous SVD fallback."
+    },
+    {
+      "name": "get/collinear",
+      "reason": "Degenerate inputs require an unimplemented homogeneous SVD fallback."
+    },
+    {
+      "name": "get/boolean",
+      "reason": "This decomposition method is not implemented for perspective construction."
+    },
+    {
+      "name": "get/svd",
+      "reason": "This decomposition method is not implemented for perspective construction."
+    },
+    {
+      "name": "get/eigen",
+      "reason": "This decomposition method is not implemented for perspective construction."
+    },
+    {
+      "name": "get/cholesky",
+      "reason": "This decomposition method is not implemented for perspective construction."
+    }
+  ],
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+  "recordedAt": "2026-09-13",
+  "baseline": "OpenCV.js 4.13.0",
+  "baseRevision": "19024e3e51c05cc1d6a905b86a4ef9888684b4b1",
+  "packageVersion": "0.2.0",
+  "unreleasedChanges": true,
+  "wasmSha256": "5b5a7a9d04cad0cfc3a03c660bc2c113cac255b8c7125663c69c519253902e95",
+  "referenceSha256": "63366510248adf3a7eddf3e793dd825404efb7df3749f4d6f8557c7fa4ca8aa0",
+  "caseSourceSha256": "922dc54f1e2134998f73dd68e094d313cfd2b47e90744e0898e660c5d611fba4",
+  "knownDifferencesSha256": "811c7732acf394a5c1bdc3601738a2f5334aa16451f50ff198332b1b1c9f02e2",
+  "regressionFixtures": {
+    "differential.html": "PASS",
+    "template-matching.html": "PASS: 259 numeric, 16 rejection, 1 recorded difference",
+    "shape-analysis.html": "PASS: 4587 exact, 13 rejection, 37 recorded differences"
+  }
+}

@@ -1587,6 +1587,19 @@ class CopyingBackend implements OpenCvBackend {
     );
   }
 
+  perspectiveCalls: { flags: number; borderType: number; width: number; height: number }[] = [];
+  matWarpPerspectiveInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _transform: WasmMatHandle,
+    width: number,
+    height: number,
+    flags: number,
+    borderType: number,
+    _borderValue: Float64Array,
+  ): void {
+    this.perspectiveCalls.push({ flags, borderType, width, height });
+  }
   matWarpAffineInto(
     source: WasmMatHandle,
     destination: WasmMatHandle,
@@ -2534,7 +2547,11 @@ class CopyingBackend implements OpenCvBackend {
     return f64Handle(2, 3, [scaleX, 0, origin.x, 0, scaleY, origin.y]);
   }
 
-  matGetPerspectiveTransform(source: WasmMatHandle, destination: WasmMatHandle): WasmMatHandle {
+  matGetPerspectiveTransform(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    _method: number,
+  ): WasmMatHandle {
     const affine = this.matGetAffineTransform(source, destination).toFloat64Array();
     return f64Handle(3, 3, [
       affine[0] ?? 0,
@@ -3099,7 +3116,12 @@ function f64Handle(rows: number, columns: number, values: readonly number[]): Wa
 }
 
 function contourPoints(source: WasmMatHandle): Array<{ readonly x: number; readonly y: number }> {
-  const values = source.depth === 4 ? source.toInt32Array() : source.toFloat64Array();
+  const values =
+    source.depth === 4
+      ? source.toInt32Array()
+      : source.depth === 5
+        ? source.toFloat32Array()
+        : source.toFloat64Array();
   const points: Array<{ readonly x: number; readonly y: number }> = [];
   for (let index = 0; index < values.length; index += 2) {
     points.push({ x: requiredNumber(values, index), y: requiredNumber(values, index + 1) });
@@ -3994,17 +4016,17 @@ describe("OpenCv client", () => {
     const inverseAlloc = client.invertAffineTransformAlloc(affine);
     expect(Array.from(inverseAlloc.toFloat64Array())).toEqual([0.5, 0, -1, 0, 1 / 3, -1]);
 
-    const perspectiveSource = client.matFromF64(
+    const perspectiveSource = client.matFromF32(
       4,
       2,
       1,
-      new Float64Array([0, 0, 1, 0, 1, 1, 0, 1]),
+      new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
     );
-    const perspectiveDestination = client.matFromF64(
+    const perspectiveDestination = client.matFromF32(
       4,
       2,
       1,
-      new Float64Array([2, 3, 4, 3, 4, 6, 2, 6]),
+      new Float32Array([2, 3, 4, 3, 4, 6, 2, 6]),
     );
     const perspective = client.getPerspectiveTransform(perspectiveSource, perspectiveDestination);
     expect(Array.from(perspective.toFloat64Array())).toEqual([2, 0, 2, 0, 3, 3, 0, 0, 1]);
@@ -5502,5 +5524,30 @@ describe("approxPolyDP binding", () => {
     source.dispose();
     expect(() => cv.approxPolyDP(source, destination, 1, false)).toThrow();
     destination.dispose();
+  });
+});
+
+describe("perspective bindings", () => {
+  test("forwards warp defaults, converts integer fields, and checks arity and lifetimes", () => {
+    const backend = new CopyingBackend();
+    const cv = createOpenCv(backend);
+    const source = cv.matFromU8(1, 1, 1, new Uint8Array([5]));
+    const destination = cv.emptyMat();
+    const transform = cv.matFromF64(3, 3, 1, new Float64Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+    cv.warpPerspective(source, destination, transform, { width: 3.9, height: 2.1 });
+    expect(backend.perspectiveCalls).toEqual([{ flags: 1, borderType: 0, width: 3, height: 2 }]);
+    expect(cv.warpPerspective.length).toBe(0);
+    expect(cv.getPerspectiveTransform.length).toBe(0);
+    expect([cv.DECOMP_LU, cv.DECOMP_QR, cv.DECOMP_NORMAL]).toEqual([0, 4, 16]);
+    // @ts-expect-error test binding arity rejection
+    expect(() => cv.warpPerspective(source, destination, transform)).toThrow(BindingError);
+    // @ts-expect-error test binding arity rejection
+    expect(() => cv.getPerspectiveTransform(source)).toThrow(BindingError);
+    source.dispose();
+    expect(() =>
+      cv.warpPerspective(source, destination, transform, { width: 1, height: 1 }),
+    ).toThrow(BindingError);
+    destination.dispose();
+    transform.dispose();
   });
 });

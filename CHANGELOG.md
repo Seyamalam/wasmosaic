@@ -6,6 +6,9 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Original Rust `warpPerspective` with all-depth nearest sampling, five-depth linear/area sampling, five border modes, inverse maps, ROI destinations and alias-safe input snapshots.
+- LU/QR perspective constructors and decomposition constants, plus a pinned-browser fixture covering 2,186 cases and two document-rectification workflows.
+
 - Original Rust `approxPolyDP` for finite I32/F32 open and closed curves, with strict TypeScript binding, mutable destinations and source/destination alias support.
 - Contour hole tracing and nested island hierarchy for `RETR_EXTERNAL`, `RETR_LIST`, `RETR_CCOMP` and `RETR_TREE`, with exact sibling ordering, SIMPLE/NONE chains, offsets and empty-output clearing.
 - A dedicated shape-analysis browser fixture covering exhaustive 3×3 masks, larger nested/generated masks, polygon workflows and approximation contracts.
@@ -15,7 +18,9 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Compatibility
 
-- Shape families remain partial: polygon start/singleton choices and non-finite input behavior differ from OpenCV.js; contour source/hierarchy aliasing uses a source snapshot. Label input, flood-fill retrieval and Teh–Chin chains remain unsupported. Current totals are 124 implemented and 55 partial families, or 179 supported of 488.
+- `getPerspectiveTransform` now requires continuous F32 points, matching the pinned browser; earlier F64 and strided point extensions are rejected. SVD/EIG/Cholesky and degenerate homogeneous fallback remain unsupported, with six frozen differential cases. Perspective warping remains partial. Current totals are 124 implemented, 56 partial and 180 supported of 488.
+
+- Shape families remain partial: polygon start/singleton choices and non-finite input behavior differ from OpenCV.js; contour source/hierarchy aliasing uses a source snapshot. Label input, flood-fill retrieval and Teh–Chin chains remain unsupported.
 
 - Template matching remains partial. Inputs are snapshotted before destination writes, which differs from one pinned OpenCV.js template/result overlap case. Extreme floating-point behavior and complete error details remain unverified.
 

@@ -1,4 +1,12 @@
 import {
+  DECOMP_LU,
+  DECOMP_SVD,
+  DECOMP_EIG,
+  DECOMP_CHOLESKY,
+  DECOMP_QR,
+  DECOMP_NORMAL,
+} from "./decomposition.js";
+import {
   AKAZE,
   AKAZE_DescriptorType,
   KAZE_DiffusivityType,
@@ -147,6 +155,12 @@ class WasmOpenCv implements OpenCv {
   readonly TM_CCORR_NORMED = TM_CCORR_NORMED;
   readonly TM_CCOEFF = TM_CCOEFF;
   readonly TM_CCOEFF_NORMED = TM_CCOEFF_NORMED;
+  readonly DECOMP_LU = DECOMP_LU;
+  readonly DECOMP_SVD = DECOMP_SVD;
+  readonly DECOMP_EIG = DECOMP_EIG;
+  readonly DECOMP_CHOLESKY = DECOMP_CHOLESKY;
+  readonly DECOMP_QR = DECOMP_QR;
+  readonly DECOMP_NORMAL = DECOMP_NORMAL;
   readonly RETR_EXTERNAL = RETR_EXTERNAL;
   readonly RETR_LIST = RETR_LIST;
   readonly RETR_CCOMP = RETR_CCOMP;
@@ -837,11 +851,16 @@ class WasmOpenCv implements OpenCv {
     return this.#backend.getOptimalDFTSize(toWasmI32(size));
   }
 
-  getPerspectiveTransform(source: Mat, destination: Mat): Mat {
+  getPerspectiveTransform(
+    ...arguments_:
+      [source: Mat, destination: Mat] | [source: Mat, destination: Mat, solveMethod: number]
+  ): Mat {
+    requireArityRange(arguments_.length, 2, 3, "getPerspectiveTransform");
     return new Mat(
       this.#backend.matGetPerspectiveTransform(
-        source.handleForBackend(),
-        destination.handleForBackend(),
+        matHandleForBinding(arguments_[0]),
+        matHandleForBinding(arguments_[1]),
+        arguments_.length === 3 ? toWasmI32(arguments_[2]) : 0,
       ),
     );
   }
@@ -1483,6 +1502,35 @@ class WasmOpenCv implements OpenCv {
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat {
     return this.#concat(sources, "vertical");
+  }
+
+  warpPerspective(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      transform: Mat,
+      size: Size,
+      flags?: number,
+      borderType?: BorderType,
+      borderValue?: Scalar,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "warpPerspective");
+    const [source, destination, transform, size] = arguments_;
+    const sourceHandle = matHandleForBinding(source);
+    const destinationHandle = matHandleForBinding(destination);
+    const transformHandle = matHandleForBinding(transform);
+    const convertedSize = size2iForBinding(size);
+    this.#backend.matWarpPerspectiveInto(
+      sourceHandle,
+      destinationHandle,
+      transformHandle,
+      convertedSize.width,
+      convertedSize.height,
+      arguments_.length >= 5 ? toWasmI32(arguments_[4]) : INTER_LINEAR,
+      arguments_.length >= 6 ? toWasmI32(arguments_[5]) : BORDER_CONSTANT,
+      arguments_.length >= 7 ? scalarForBinding(arguments_[6]) : new Float64Array(4),
+    );
   }
 
   warpAffine(

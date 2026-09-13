@@ -108,7 +108,7 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `transform`, `perspectiveTransform`                                   | `cv.transform`, `cv.perspectiveTransform`                 | Selected channel and coefficient forms                    |
 | `invert`, `solve`                                                     | `cv.invert`, `cv.solve`                                   | Selected dense single-channel methods                     |
 | `ellipse2Poly`, `clipLine`                                            | Matching `cv` integer geometry helpers                    | Selected integer argument and return forms                |
-| `getPerspectiveTransform`                                             | `cv.getPerspectiveTransform`                              | Selected F32/F64 inputs with F64 output                   |
+| `getPerspectiveTransform`                                             | `cv.getPerspectiveTransform`                              | Continuous F32 points; LU/QR with F64 output              |
 | `createAKAZE`                                                         | `cv.AKAZE.create`                                         | Static factory is absent from the pinned artifact         |
 | `createKAZE`                                                          | `cv.KAZE.create`                                          | Static factory is absent from the pinned artifact         |
 | `createAgastFeatureDetector`                                          | `cv.AgastFeatureDetector.create`                          | Static factory is absent from the pinned artifact         |
@@ -164,7 +164,7 @@ One template/result overlap case is recorded separately as a known difference. W
 
 ## Tracked planned sample
 
-The machine-readable implementation ledger tracks `warpPerspective` as a planned example. The upstream inventory already lists all 488 families. An inventory entry is missing until work starts; it does not need a duplicate planned implementation record.
+The machine-readable implementation ledger tracks `warpPerspective` as an original partial implementation. The upstream inventory already lists all 488 families. An inventory entry is missing until work starts; it does not need a duplicate planned implementation record.
 
 ## Definition of done
 
@@ -205,3 +205,11 @@ The [recorded differences](../test/browser/shape-analysis-known-differences.json
 `findContours` remains partial because I32 label input, `RETR_FLOODFILL`, Teh–Chin chains and the alias contract are incomplete. `approxPolyDP` remains partial because of the recorded vertex/non-finite differences and unverified wider numerical/error behavior. Full parity stays at 124/488; support increases to 179 families, including 55 partial families. This checkpoint makes no speed claim.
 
 The implementations follow the public [shape API contract](https://docs.opencv.org/4.13.0/d3/dc0/group__imgproc__shape.html) and the [Douglas–Peucker paper](https://doi.org/10.3138/FM57-6770-U75U-7727). Region labeling, boundary tracing, hierarchy construction and iterative simplification are original Rust code; the comparator is test-only. The [saved browser report](../test/browser/reports/shape-analysis-2026-09-13.json) records the fixture result and build hashes.
+
+### Perspective rectification differential coverage
+
+`test/browser/perspective.html` compares 2,186 cases against pinned OpenCV.js 4.13.0: 1,731 matching output cases and 449 matching rejection cases, plus six frozen solver differences. The fixture covers seven depths, one/four channels, nearest/linear/area interpolation, five borders, forward/inverse maps, singular and zero-denominator maps, regions, destination replacement, in-place and overlapping outputs, binding defaults and errors, transform constructors, and two corner-to-rectangle workflows.
+
+Integer outputs compare exactly; F32 values use `2e-5 * max(1, abs(reference))` tolerance, and F64 values use `2e-9 * max(1, abs(reference))`. The observed maximum absolute difference is `1.52587890625e-5`. Serialized NaN/infinity categories are compared exactly; signed-zero equality is not audited here. The recorded report is [perspective-2026-09-13.json](../test/browser/reports/perspective-2026-09-13.json). The known-difference ledger freezes both actual and reference results, so new or changed differences fail the fixture.
+
+`getPerspectiveTransform` still rejects two degenerate cases and four cases selecting unsupported SVD/EIG/Cholesky methods (including boolean-to-SVD coercion). `warpPerspective` remains partial: cubic/Lanczos interpolation, transparent borders, non-finite matrices and exhaustive numeric/error behavior remain. No family is promoted to full parity. Current totals are **124 implemented, 56 partial and 180 supported of 488**. This checkpoint makes no speed claim.

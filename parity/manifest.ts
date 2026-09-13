@@ -1628,7 +1628,7 @@ export const PARITY_MANIFEST = {
       method: "getPerspectiveTransform",
       module: "imgproc",
       notes:
-        "Four F32 or F64 point pairs in 4x2C1, 4x1C2, or 1x4C2 matrices, including strided regions, allocate a normalized 3x3 F64 map; only one scaled partial-pivoting solve method is present, and differential fixtures remain.",
+        "Four continuous F32 point pairs allocate a normalized 3x3 F64 map with LU or QR (including NORMAL flags), strict two/three-argument binding and non-finite NaN output. Pinned-browser document workflows pass; SVD, EIG, Cholesky and degenerate homogeneous fallback remain unsupported with six frozen browser differences.",
       sources: [IMGPROC_SOURCE],
       status: "partial",
       upstream: "cv.getPerspectiveTransform",
@@ -2136,14 +2136,16 @@ export const PARITY_MANIFEST = {
       wasmExport: "matEqualizeHistInto",
     },
     {
-      implementationOrigin: "not-started",
+      implementationOrigin: "original",
       method: "warpPerspective",
       module: "imgproc",
-      notes: "Perspective transforms are not implemented.",
+      notes:
+        "Original inverse projective sampling: nearest for all seven depths; linear/area for U8, U16, I16, F32 and F64; five border modes, inverse flag, source/destination ROIs and aliases. Pinned-browser rectification workflows pass. Cubic, Lanczos, transparent borders, non-finite transform matrices and exhaustive numeric/error contracts remain unsupported or unaudited.",
       sources: [IMGPROC_TRANSFORM_SOURCE],
-      status: "planned",
+      status: "partial",
       upstream: "cv.warpPerspective",
       upstreamId: "imgproc.function.warp-perspective",
+      wasmExport: "matWarpPerspectiveInto",
     },
     {
       implementationOrigin: "original",

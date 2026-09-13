@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WASMosaic perspective rectification differential test</title>
+    <script type="importmap">
+      { "imports": { "#wasm": "/wasm/wasmosaic_wasm.js" } }
+    </script>
+  </head>
+  <body>
+    <h1>Perspective rectification differential test</h1>
+    <output id="result">Running...</output>
+    <script type="module">
+      import { initOpenCv } from "/dist/index.js";
+      import { perspectiveApi } from "./perspective-adapters.js";
+      import { runPerspectiveCases } from "./perspective-cases.js";
+      import { comparePerspective } from "./perspective-cases.js";
+      const output = document.querySelector("#result");
+      const worker = new Worker("./perspective-worker.js");
+      const timer = setTimeout(() => {
+        worker.terminate();
+        output.textContent = "FAIL reference timed out";
+      }, 180000);
+      worker.addEventListener("message", async ({ data }) => {
+        clearTimeout(timer);
+        try {
+          if (data.error) throw new Error(data.error);
+          const cv = await initOpenCv();
+          const actual = runPerspectiveCases(perspectiveApi(cv, false));
+          const known = await fetch("./perspective-known-differences.json").then((response) =>
+            response.json(),
+          );
+          const report = comparePerspective(actual, data.result, known);
+          globalThis.perspectiveReport = { ...report, userAgent: navigator.userAgent };
+          output.textContent = `PASS ${report.cases} perspective cases; ${report.knownDifferences.length} recorded differences`;
+        } catch (error) {
+          output.textContent = `FAIL ${error.stack ?? error}`;
+        } finally {
+          worker.terminate();
+        }
+      });
+      worker.addEventListener("error", (event) => {
+        clearTimeout(timer);
+        worker.terminate();
+        output.textContent = `FAIL ${event.message}`;
+      });
+      worker.postMessage({});
+    </script>
+  </body>
+</html>

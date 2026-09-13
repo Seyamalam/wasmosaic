@@ -11,45 +11,50 @@ const INTER_MASK: i32 = 7;
 const WARP_INVERSE_MAP: i32 = 16;
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) enum WarpAffineError {
+pub(crate) enum WarpError {
     EmptySource,
     InvalidBorderType(i32),
     InvalidInterpolation(i32),
     InvalidTarget { width: i32, height: i32 },
-    InvalidTransform,
+    InvalidTransform { rows: u32 },
+    NonFiniteTransform,
     Matrix(MatError),
     SingularTransform,
     UnsupportedDepth(MatDepth),
 }
 
-impl fmt::Display for WarpAffineError {
+impl fmt::Display for WarpError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::EmptySource => formatter.write_str("warpAffine source must not be empty"),
+            Self::EmptySource => formatter.write_str("image warp source must not be empty"),
             Self::InvalidBorderType(value) => write!(formatter, "unsupported border type {value}"),
             Self::InvalidInterpolation(value) => {
-                write!(formatter, "unsupported warpAffine interpolation {value}")
+                write!(formatter, "unsupported image warp interpolation {value}")
             }
             Self::InvalidTarget { width, height } => write!(
                 formatter,
                 "warpAffine target dimensions must be positive; received {width} by {height}"
             ),
-            Self::InvalidTransform => {
-                formatter.write_str("warpAffine transform must be a 2x3 single-channel F32/F64 Mat")
+            Self::InvalidTransform { rows } => write!(
+                formatter,
+                "transform must be a {rows}x3 single-channel F32/F64 Mat"
+            ),
+            Self::NonFiniteTransform => {
+                formatter.write_str("transform coefficients must be finite")
             }
             Self::Matrix(error) => error.fmt(formatter),
             Self::SingularTransform => formatter.write_str("warpAffine transform is singular"),
             Self::UnsupportedDepth(depth) => {
                 write!(
                     formatter,
-                    "warpAffine source depth {depth:?} is not implemented"
+                    "image warp source depth {depth:?} is not implemented"
                 )
             }
         }
     }
 }
 
-impl Error for WarpAffineError {
+impl Error for WarpError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Matrix(error) => Some(error),
@@ -58,7 +63,7 @@ impl Error for WarpAffineError {
     }
 }
 
-impl From<MatError> for WarpAffineError {
+impl From<MatError> for WarpError {
     fn from(error: MatError) -> Self {
         Self::Matrix(error)
     }
@@ -74,27 +79,27 @@ pub(crate) fn warp_affine_into(
     flags: i32,
     border_type: i32,
     border_value: &[f64],
-) -> Result<(), WarpAffineError> {
+) -> Result<(), WarpError> {
     if source.rows() == 0 || source.columns() == 0 {
-        return Err(WarpAffineError::EmptySource);
+        return Err(WarpError::EmptySource);
     }
     if source.depth() != MatDepth::U8 {
-        return Err(WarpAffineError::UnsupportedDepth(source.depth()));
+        return Err(WarpError::UnsupportedDepth(source.depth()));
     }
     if width <= 0 || height <= 0 {
-        return Err(WarpAffineError::InvalidTarget { width, height });
+        return Err(WarpError::InvalidTarget { width, height });
     }
     let interpolation = flags & INTER_MASK;
     if !matches!(interpolation, INTER_NEAREST | INTER_LINEAR) {
-        return Err(WarpAffineError::InvalidInterpolation(interpolation));
+        return Err(WarpError::InvalidInterpolation(interpolation));
     }
     if !matches!(
         border_type & !BORDER_ISOLATED,
         BORDER_CONSTANT | BORDER_REPLICATE
     ) {
-        return Err(WarpAffineError::InvalidBorderType(border_type));
+        return Err(WarpError::InvalidBorderType(border_type));
     }
-    let coefficients = read_transform(transform)?;
+    let coefficients = read_transform::<6>(transform, 2)?;
     let inverse = if flags & WARP_INVERSE_MAP != 0 {
         coefficients
     } else {
@@ -160,9 +165,12 @@ pub(crate) fn warp_affine_into(
     Ok(())
 }
 
-fn read_transform(transform: &Mat) -> Result<[f64; 6], WarpAffineError> {
-    if transform.rows() != 2 || transform.columns() != 3 || transform.channels() != 1 {
-        return Err(WarpAffineError::InvalidTransform);
+pub(crate) fn read_transform<const N: usize>(
+    transform: &Mat,
+    rows: u32,
+) -> Result<[f64; N], WarpError> {
+    if transform.rows() != rows || transform.columns() != 3 || transform.channels() != 1 {
+        return Err(WarpError::InvalidTransform { rows });
     }
     let bytes = transform.compact_bytes();
     let values = match transform.depth() {
@@ -174,17 +182,17 @@ fn read_transform(transform: &Mat) -> Result<[f64; 6], WarpAffineError> {
             .chunks_exact(8)
             .map(|bytes| f64::from_ne_bytes(bytes.try_into().expect("f64 bytes")))
             .collect::<Vec<_>>(),
-        _ => return Err(WarpAffineError::InvalidTransform),
+        _ => return Err(WarpError::InvalidTransform { rows }),
     };
     values
         .try_into()
-        .map_err(|_| WarpAffineError::InvalidTransform)
+        .map_err(|_| WarpError::InvalidTransform { rows })
 }
 
-fn invert_transform(transform: [f64; 6]) -> Result<[f64; 6], WarpAffineError> {
+fn invert_transform(transform: [f64; 6]) -> Result<[f64; 6], WarpError> {
     let determinant = transform[0] * transform[4] - transform[1] * transform[3];
     if determinant == 0.0 || !determinant.is_finite() {
-        return Err(WarpAffineError::SingularTransform);
+        return Err(WarpError::SingularTransform);
     }
     let inverse = 1.0 / determinant;
     Ok([

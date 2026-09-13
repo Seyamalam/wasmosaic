@@ -256,6 +256,16 @@ declare module "#wasm" {
     method: number,
     mask: WasmMatHandle,
   ): void;
+  export function matWarpPerspectiveInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    transform: WasmMatHandle,
+    width: number,
+    height: number,
+    flags: number,
+    borderType: number,
+    borderValue: Float64Array,
+  ): void;
   export function matWarpAffineInto(
     source: WasmMatHandle,
     destination: WasmMatHandle,

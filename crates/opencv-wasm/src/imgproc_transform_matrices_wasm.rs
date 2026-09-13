@@ -133,16 +133,20 @@ pub fn mat_invert_affine_transform_into(transform: &Mat, destination: &Mat) -> R
 
 /// Allocates the 3x3 F64 projective map between four source and destination points.
 ///
-/// Point inputs may be 4x2 single-channel matrices or 4x1 and 1x4 two-channel vectors. F32 and
-/// F64 inputs and strided regions are supported. This partial implementation uses one scaled
-/// partial-pivoting solver and normalizes the lower-right output coefficient to one.
+/// Point inputs may be 4x2 single-channel matrices or 4x1 and 1x4 two-channel vectors. F32
+/// inputs must be continuous. LU (0) and QR (4), optionally combined with NORMAL (16),
+/// normalize the lower-right output coefficient to one.
 ///
 /// # Errors
-/// Returns an error for unsupported depth or shape, non-finite coordinates, degenerate point
+/// Returns an error for unsupported depth, shape or solve method, degenerate point
 /// configurations, or a transform that cannot use the selected normalization.
 #[wasm_bindgen(js_name = matGetPerspectiveTransform)]
-pub fn mat_get_perspective_transform(source: &Mat, destination: &Mat) -> Result<Mat, JsError> {
-    perspective_adapter(source, destination).map_err(JsError::from)
+pub fn mat_get_perspective_transform(
+    source: &Mat,
+    destination: &Mat,
+    method: i32,
+) -> Result<Mat, JsError> {
+    perspective_adapter(source, destination, method).map_err(JsError::from)
 }
 
 fn rotation_adapter(
@@ -236,10 +240,24 @@ fn invert_affine_bytes(transform: &Mat) -> Result<(Vec<u8>, MatDepth), Transform
     }
 }
 
-fn perspective_adapter(source: &Mat, destination: &Mat) -> Result<Mat, TransformMatrixWasmError> {
+fn perspective_adapter(
+    source: &Mat,
+    destination: &Mat,
+    method: i32,
+) -> Result<Mat, TransformMatrixWasmError> {
+    for matrix in [source, destination] {
+        if matrix.depth() != MatDepth::F32 {
+            return Err(TransformMatrixWasmError::F32PointInputRequired(
+                matrix.depth(),
+            ));
+        }
+        if !matrix.is_continuous() {
+            return Err(TransformMatrixWasmError::NonContinuousPointInput);
+        }
+    }
     let source = decode_points::<4>(source)?;
     let destination = decode_points::<4>(destination)?;
-    let result = imgproc_transform_matrices::perspective_transform(&source, &destination)?;
+    let result = imgproc_transform_matrices::perspective_transform(&source, &destination, method)?;
     f64_matrix(&result, 3, 3)
 }
 
@@ -476,20 +494,20 @@ mod tests {
     #[test]
     fn perspective_adapter_builds_a_non_affine_projective_map() {
         let source = f32_mat(&[0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0], 1, 4, 2);
-        let destination = f64_mat(
+        let destination = f32_mat(
             &[1.0, 2.0, 2.0, 7.0 / 6.0, 2.0, 19.0 / 7.0, 1.2, 4.0],
             4,
             2,
             1,
         );
 
-        let result = perspective_adapter(&source, &destination).expect("valid correspondences");
+        let result = perspective_adapter(&source, &destination, 0).expect("valid correspondences");
 
         assert_eq!((result.rows(), result.columns()), (3, 3));
         assert_close(
             &result,
             &[2.0, 0.5, 1.0, -0.25, 3.0, 2.0, 0.5, 0.25, 1.0],
-            1.0e-12,
+            1.0e-6,
         );
     }
 

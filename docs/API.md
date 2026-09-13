@@ -143,6 +143,27 @@ contours.dispose();
 
 Warps an interleaved U8 matrix through a 2×3 F32 or F64 affine transform into a mutable destination. The current Rust sampler supports `INTER_NEAREST` and `INTER_LINEAR`, `BORDER_CONSTANT` and `BORDER_REPLICATE`, per-channel scalar border values, and `WARP_INVERSE_MAP`. Without the inverse flag, the forward transform is inverted before sampling. Wider source depths, additional border modes, and exact interpolation variants remain reserved.
 
+### `warpPerspective(source, destination, transform, size, flags?, borderType?, borderValue?)`
+
+Inverse-maps a finite `3x3C1` F32/F64 projective transform into a mutable destination. `INTER_NEAREST` supports all seven matrix depths. `INTER_LINEAR` (the default) and `INTER_AREA` use bilinear sampling on a 1/32-pixel grid for U8, U16, I16, F32 and F64. Supported borders are constant (default), replicate, reflect, wrap and reflect-101, with four-lane scalar border values. `WARP_INVERSE_MAP` treats the supplied matrix as the destination-to-source map.
+
+Source and transform regions are accepted; compatible destination regions are written through. Inputs are snapshotted for in-place or overlapping output. If either output dimension is nonpositive after integer conversion, both dimensions use the source size. Singular forward transforms and zero projective denominators sample the origin. Cubic/Lanczos interpolation, transparent borders and non-finite transform matrices remain unsupported. This family is partial.
+
+For document rectification, order four detected corners consistently around the document, pair them with the output rectangle, then construct and apply the map:
+
+```ts
+const corners = cv.matFromF32(4, 1, 2, new Float32Array([30, 20, 610, 45, 590, 450, 50, 430]));
+const rectangle = cv.matFromF32(4, 1, 2, new Float32Array([0, 0, 599, 0, 599, 399, 0, 399]));
+const map = cv.getPerspectiveTransform(corners, rectangle);
+const rectified = cv.emptyMat();
+cv.warpPerspective(source, rectified, map, { width: 600, height: 400 });
+// Consume rectified before releasing these handles.
+rectified.dispose();
+map.dispose();
+rectangle.dispose();
+corners.dispose();
+```
+
 ### `equalizeHist(source, destination)`
 
 Equalizes a single-channel U8 matrix with a Rust-owned 256-bin histogram, cumulative distribution, and lookup table. Constant images are preserved and the mutable destination is replaced when its layout is incompatible. CLAHE remains a separate, unimplemented family.
@@ -352,7 +373,7 @@ getRotationMatrix2D(center: Point, angleDegrees: number, scale: number): Mat;
 getAffineTransform(source: Mat, destination: Mat): Mat;
 invertAffineTransform(transform: Mat, destination: Mat): void;
 invertAffineTransformAlloc(transform: Mat): Mat;
-getPerspectiveTransform(source: Mat, destination: Mat): Mat;
+getPerspectiveTransform(source: Mat, destination: Mat, solveMethod?: number): Mat;
 ```
 
 `getRotationMatrix2D` accepts exactly three arguments. The center may be any structural Point2f object with `x` and `y` fields. The binding checks those fields in order and narrows them to float32. Angle and scale use strict Embind double conversion; numbers and booleans are accepted, while strings, boxed numbers, and generic coercion objects are rejected. Signed zero, `NaN`, and infinities propagate to a bit-exact `2x3C1` F64 result. Every call allocates an independent matrix.
@@ -361,9 +382,9 @@ getPerspectiveTransform(source: Mat, destination: Mat): Mat;
 
 `invertAffineTransform` accepts exactly two Mat arguments. The source must be `2x3C1` at F32 or F64 depth and may be a strided region. The destination is replaced when its layout differs and written through when it is a compatible region. Exact in-place operation is supported. Output depth and arithmetic match the source. Singular matrices produce the pinned signed-zero coefficients, while NaN and infinity propagate through the observed arithmetic. `invertAffineTransformAlloc` is the package-specific allocating convenience.
 
-`getPerspectiveTransform` reads four source and destination points. Each point set may be `4x2C1`, `4x1C2`, or `1x4C2` at F32 or F64 depth. Strided regions are supported. It uses one scaled partial-pivoting solver, fixes the lower-right output coefficient to one, and returns a `3x3C1` F64 matrix. It rejects non-finite values, degenerate point configurations, and transforms that cannot use that normalization.
+`getPerspectiveTransform` accepts two or three arguments and reads four source and destination points from continuous F32 matrices shaped `4x2C1`, `4x1C2`, or `1x4C2`. It returns a fresh `3x3C1` F64 matrix normalized with the last coefficient equal to one. The default `DECOMP_LU` and optional `DECOMP_QR` are supported, including either combined with `DECOMP_NORMAL`. Non-finite coordinates produce nine NaNs. Degenerate configurations and SVD/EIG/Cholesky methods remain unsupported; the pinned browser's homogeneous fallback is not implemented. Earlier F64 and strided point extensions are now rejected to match the pinned input contract.
 
-The three `get*Transform` constructors allocate their results. `invertAffineTransform` uses the upstream mutable destination contract, with an allocating package convenience. `getRotationMatrix2D`, `getAffineTransform`, and `invertAffineTransform` pass their complete pinned browser contracts. Complete differential fixtures remain for `getPerspectiveTransform`.
+The three `get*Transform` constructors allocate their results. `invertAffineTransform` uses the upstream mutable destination contract, with an allocating package convenience. `getRotationMatrix2D`, `getAffineTransform`, and `invertAffineTransform` pass their complete pinned browser contracts. The perspective differential fixture records six remaining solver/fallback differences.
 
 The pinned OpenCV.js 4.13.0 browser fixture passes the complete audited contracts for all five contour methods, `getRotationMatrix2D`, `getAffineTransform`, `invertAffineTransform`, and `getStructuringElement`. The audits cover exact overloads, structural value-object conversion, numeric edge behavior, mutable outputs, aliasing, source preservation, and result metadata.
 

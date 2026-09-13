@@ -211,7 +211,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `createHanningWindow`                       | `cv.createHanningWindow`                       | Full    | Exact F32/F64 mutable window contract      |
 | imgproc    | `ellipse2Poly`                              | `cv.ellipse2Poly`                              | Partial | Ordered integer ellipse arcs               |
 | imgproc    | `getAffineTransform`                        | `cv.getAffineTransform`                        | Full    | Exact continuous F32 points and F64 map    |
-| imgproc    | `getPerspectiveTransform`                   | `cv.getPerspectiveTransform`                   | Partial | Four F32/F64 point pairs to F64            |
+| imgproc    | `getPerspectiveTransform`                   | `cv.getPerspectiveTransform`                   | Partial | Continuous F32 points; LU/QR to F64        |
 | imgproc    | `getRotationMatrix2D`                       | `cv.getRotationMatrix2D`                       | Full    | Exact Point2f and F64 matrix contract      |
 | imgproc    | `getStructuringElement`                     | `cv.getStructuringElement`                     | Full    | Exact rectangle, cross, ellipse, diamond   |
 | imgproc    | `cvtColor`                                  | `cv.cvtColor`                                  | Partial | U8 RGB/BGR/alpha/gray codes 0 through 11   |
@@ -229,7 +229,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `warpAffine`                                | `cv.warpAffine`                                | Partial | U8 nearest/linear affine image warps       |
 | imgproc    | `equalizeHist`                              | `cv.equalizeHist`                              | Partial | Exact single-channel U8 equalization       |
 | imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks |
-| imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Planned | Not started                                |
+| imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Partial | Nearest/linear projective sampling         |
 | photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process    |
 | photo      | `createTonemapMantiuk`                      | `cv.createTonemapMantiuk`                      | Partial | Global factory absent; no pixel process    |
 | photo      | `createTonemapReinhard`                     | `cv.createTonemapReinhard`                     | Partial | Global factory absent; no pixel process    |
@@ -250,7 +250,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | photo      | `TonemapReinhard.setIntensity`              | `cv.TonemapReinhard.setIntensity`              | Full    | Exact float coercion and call contract     |
 | photo      | `TonemapReinhard.setLightAdaptation`        | `cv.TonemapReinhard.setLightAdaptation`        | Full    | Exact float coercion and call contract     |
 
-Current full parity is **124 of 488 (25.41%)**. There are **55 partial families**, for **179 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
+Current full parity is **124 of 488 (25.41%)**. There are **56 partial families**, for **180 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
 
 The fixture passes the complete pinned browser contract for `determinant`. The function requires exactly one live `Mat` and accepts only nonempty square single-channel F32 or F64 matrices, including non-contiguous regions. It preserves the input, matches the direct 1x1, 2x2, and 3x3 paths with signed-zero and non-finite propagation, and keeps F32 and F64 arithmetic distinct during elimination for larger matrices. The audit locks the absolute pivot cutoffs, exact cutoff acceptance, row-swap signs, singular positive zero, stored-F32 widening in the small formulas, and Hilbert precision. Integer, multichannel, nonsquare, empty, deleted, and non-Mat inputs reject before computation.
 

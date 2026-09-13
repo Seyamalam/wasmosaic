@@ -198,3 +198,12 @@ export async function initOpenCv(): Promise<ReturnType<typeof createOpenCv>> {
   await backend.default();
   return createOpenCv(backend);
 }
+
+export {
+  DECOMP_LU,
+  DECOMP_SVD,
+  DECOMP_EIG,
+  DECOMP_CHOLESKY,
+  DECOMP_QR,
+  DECOMP_NORMAL,
+} from "./decomposition.js";

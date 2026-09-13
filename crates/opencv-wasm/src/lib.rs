@@ -57,6 +57,7 @@ mod imgproc_helpers;
 mod imgproc_helpers_wasm;
 mod imgproc_histogram;
 mod imgproc_histogram_wasm;
+mod imgproc_perspective;
 mod imgproc_resize;
 mod imgproc_resize_wasm;
 mod imgproc_template;

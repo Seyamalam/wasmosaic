@@ -109,6 +109,16 @@ export interface OpenCvBackend {
     mask: WasmMatHandle,
   ): void;
   matEqualizeHistInto(source: WasmMatHandle, destination: WasmMatHandle): void;
+  matWarpPerspectiveInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    transform: WasmMatHandle,
+    width: number,
+    height: number,
+    flags: number,
+    borderType: number,
+    borderValue: Float64Array,
+  ): void;
   matWarpAffineInto(
     source: WasmMatHandle,
     destination: WasmMatHandle,
@@ -289,7 +299,11 @@ export interface OpenCvBackend {
     upperBound: WasmMatHandle,
   ): WasmMatHandle;
   matGetAffineTransform(source: WasmMatHandle, destination: WasmMatHandle): WasmMatHandle;
-  matGetPerspectiveTransform(source: WasmMatHandle, destination: WasmMatHandle): WasmMatHandle;
+  matGetPerspectiveTransform(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    method: number,
+  ): WasmMatHandle;
   matGetRotationMatrix2D(
     centerX: number,
     centerY: number,
@@ -522,6 +536,12 @@ export interface OpenCv {
   matchTemplate(image: Mat, template: Mat, result: Mat, method: TemplateMatchMode): void;
   /** U8 masks select nonzero pixels; F32 masks supply weights, shared or per channel. */
   matchTemplate(image: Mat, template: Mat, result: Mat, method: TemplateMatchMode, mask: Mat): void;
+  readonly DECOMP_LU: 0;
+  readonly DECOMP_SVD: 1;
+  readonly DECOMP_EIG: 2;
+  readonly DECOMP_CHOLESKY: 3;
+  readonly DECOMP_QR: 4;
+  readonly DECOMP_NORMAL: 16;
   readonly RETR_EXTERNAL: 0;
   readonly RETR_LIST: 1;
   readonly RETR_CCOMP: 2;
@@ -706,7 +726,7 @@ export interface OpenCv {
     sigmaY?: number,
     borderType?: BorderType,
   ): void;
-  getPerspectiveTransform(source: Mat, destination: Mat): Mat;
+  getPerspectiveTransform(source: Mat, destination: Mat, solveMethod?: number): Mat;
   getRotationMatrix2D(center: Point, angleDegrees: number, scale: number): Mat;
   getStructuringElement(kind: StructuringElementKind, size: Size, anchor?: Point): Mat;
   invert(image: RgbaImage): RgbaImage;
@@ -825,6 +845,15 @@ export interface OpenCv {
   vconcat(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat;
+  warpPerspective(
+    source: Mat,
+    destination: Mat,
+    transform: Mat,
+    size: Size,
+    flags?: number,
+    borderType?: BorderType,
+    borderValue?: Scalar,
+  ): void;
   warpAffine(
     source: Mat,
     destination: Mat,

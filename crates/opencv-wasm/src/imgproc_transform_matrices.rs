@@ -5,7 +5,7 @@ use std::{error::Error, fmt};
 /// Failures reported while constructing an image-transform matrix.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum TransformMatrixError {
-    NonFiniteInput,
+    UnsupportedSolveMethod(i32),
     DegenerateGeometry,
     NumericalFailure,
 }
@@ -13,9 +13,10 @@ pub(crate) enum TransformMatrixError {
 impl fmt::Display for TransformMatrixError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::NonFiniteInput => {
-                formatter.write_str("transform matrix inputs must contain only finite values")
-            }
+            Self::UnsupportedSolveMethod(method) => write!(
+                formatter,
+                "perspective solve method {method} is not implemented; use LU (0) or QR (4)"
+            ),
             Self::DegenerateGeometry => formatter
                 .write_str("transform matrix cannot be determined from degenerate input geometry"),
             Self::NumericalFailure => formatter
@@ -155,15 +156,24 @@ pub(crate) fn invert_affine_transform_f32(transform: &[f32; 6]) -> [f32; 6] {
 
 /// Finds a 3-by-3 projective map between four point correspondences.
 ///
-/// This partial implementation fixes the lower-right coefficient to one and uses scaled partial
-/// pivoting. It rejects correspondences that need a projective matrix with a zero lower-right
+/// This partial implementation fixes the lower-right coefficient to one and uses LU or QR. It rejects correspondences that need a projective matrix with a zero lower-right
 /// coefficient.
 pub(crate) fn perspective_transform(
     source: &[[f64; 2]; 4],
     destination: &[[f64; 2]; 4],
+    method: i32,
 ) -> Result<[f64; 9], TransformMatrixError> {
-    validate_points(source)?;
-    validate_points(destination)?;
+    if !matches!(method, 0 | 4 | 16 | 20) {
+        return Err(TransformMatrixError::UnsupportedSolveMethod(method));
+    }
+    if source
+        .iter()
+        .chain(destination)
+        .flatten()
+        .any(|value| !value.is_finite())
+    {
+        return Ok([f64::NAN; 9]);
+    }
     let mut coefficients = [[0.0; 8]; 8];
     let mut right_hand_side = [0.0; 8];
     for (index, (&[source_x, source_y], &[destination_x, destination_y])) in
@@ -195,7 +205,14 @@ pub(crate) fn perspective_transform(
         ];
         right_hand_side[y_row] = destination_y;
     }
-    let solution = solve_linear(coefficients, right_hand_side)?;
+    let coefficients = coefficients.into_iter().flatten().collect::<Vec<_>>();
+    let solution = if method & 15 == 4 {
+        crate::core_algebra::solve_qr(&coefficients, 8, 8, &right_hand_side, 1)
+    } else {
+        crate::core_algebra::solve_lu(&coefficients, 8, &right_hand_side, 1)
+    }
+    .map_err(|_| TransformMatrixError::NumericalFailure)?
+    .ok_or(TransformMatrixError::DegenerateGeometry)?;
     let result = [
         solution[0],
         solution[1],
@@ -209,76 +226,6 @@ pub(crate) fn perspective_transform(
     ];
     validate_result(&result)?;
     Ok(result)
-}
-
-fn solve_linear<const ORDER: usize>(
-    mut coefficients: [[f64; ORDER]; ORDER],
-    mut right_hand_side: [f64; ORDER],
-) -> Result<[f64; ORDER], TransformMatrixError> {
-    let mut row_scales = coefficients.map(|row| {
-        row.into_iter()
-            .fold(0.0_f64, |largest, value| largest.max(value.abs()))
-    });
-    let tolerance = f64::EPSILON
-        * f64::from(u32::try_from(ORDER).map_err(|_| TransformMatrixError::NumericalFailure)?)
-        * 8.0;
-
-    for column in 0..ORDER {
-        let pivot_row = (column..ORDER)
-            .filter(|&row| row_scales[row] > 0.0)
-            .max_by(|&left, &right| {
-                let left_ratio = coefficients[left][column].abs() / row_scales[left];
-                let right_ratio = coefficients[right][column].abs() / row_scales[right];
-                left_ratio.total_cmp(&right_ratio)
-            })
-            .ok_or(TransformMatrixError::DegenerateGeometry)?;
-        if coefficients[pivot_row][column].abs() <= tolerance * row_scales[pivot_row] {
-            return Err(TransformMatrixError::DegenerateGeometry);
-        }
-        if pivot_row != column {
-            coefficients.swap(column, pivot_row);
-            right_hand_side.swap(column, pivot_row);
-            row_scales.swap(column, pivot_row);
-        }
-
-        let pivot = coefficients[column][column];
-        let pivot_coefficients = coefficients[column];
-        for row in column + 1..ORDER {
-            let factor = coefficients[row][column] / pivot;
-            coefficients[row][column] = 0.0;
-            for (target, pivot_target) in coefficients[row][column + 1..]
-                .iter_mut()
-                .zip(&pivot_coefficients[column + 1..])
-            {
-                *target = factor.mul_add(-pivot_target, *target);
-            }
-            right_hand_side[row] = factor.mul_add(-right_hand_side[column], right_hand_side[row]);
-        }
-    }
-
-    let mut solution = [0.0; ORDER];
-    for row in (0..ORDER).rev() {
-        let known = (row + 1..ORDER)
-            .map(|column| coefficients[row][column] * solution[column])
-            .sum::<f64>();
-        solution[row] = (right_hand_side[row] - known) / coefficients[row][row];
-    }
-    validate_result(&solution)?;
-    Ok(solution)
-}
-
-fn validate_points<const COUNT: usize>(
-    points: &[[f64; 2]; COUNT],
-) -> Result<(), TransformMatrixError> {
-    validate_finite(points.iter().flatten().copied())
-}
-
-fn validate_finite(values: impl IntoIterator<Item = f64>) -> Result<(), TransformMatrixError> {
-    if values.into_iter().all(f64::is_finite) {
-        Ok(())
-    } else {
-        Err(TransformMatrixError::NonFiniteInput)
-    }
 }
 
 fn validate_result(values: &[f64]) -> Result<(), TransformMatrixError> {
@@ -410,7 +357,7 @@ mod tests {
         let source = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
         let destination = [[1.0, 2.0], [2.0, 7.0 / 6.0], [2.0, 19.0 / 7.0], [1.2, 4.0]];
 
-        let matrix = perspective_transform(&source, &destination).expect("valid quadrilaterals");
+        let matrix = perspective_transform(&source, &destination, 0).expect("valid quadrilaterals");
 
         assert_close(
             &matrix,
@@ -436,11 +383,31 @@ mod tests {
     }
 
     #[test]
+    fn perspective_lu_qr_and_normal_flags_preserve_correspondences() {
+        let source = [[0., 0.], [4., 0.], [4., 4.], [0., 4.]];
+        let target = [[1., 1.], [5., 0.], [4., 5.], [0., 4.]];
+        for method in [0, 4, 16, 20] {
+            let m = perspective_transform(&source, &target, method).unwrap();
+            for ([x, y], [u, v]) in source.into_iter().zip(target) {
+                let w = m[6] * x + m[7] * y + m[8];
+                assert!(((m[0] * x + m[1] * y + m[2]) / w - u).abs() < 1e-10);
+                assert!(((m[3] * x + m[4] * y + m[5]) / w - v).abs() < 1e-10);
+            }
+        }
+        assert!(perspective_transform(&source, &target, 1).is_err());
+        assert!(
+            perspective_transform(&[[f64::NAN, 0.]; 4], &target, 0)
+                .unwrap()
+                .into_iter()
+                .all(f64::is_nan)
+        );
+    }
+    #[test]
     fn invalid_perspective_geometry_is_rejected() {
         let source = [[0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0]];
         let destination = [[0.0, 0.0], [1.0, 1.0], [2.0, 1.0], [3.0, 2.0]];
         assert_eq!(
-            perspective_transform(&source, &destination),
+            perspective_transform(&source, &destination, 0),
             Err(TransformMatrixError::DegenerateGeometry)
         );
     }

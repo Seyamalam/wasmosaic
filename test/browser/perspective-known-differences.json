@@ -1,0 +1,210 @@
+[
+  {
+    "actual": {
+      "name": "get/zero",
+      "error": true
+    },
+    "expected": {
+      "name": "get/zero",
+      "result": {
+        "rows": 3,
+        "columns": 3,
+        "channels": 1,
+        "depth": 6,
+        "values": [
+          -1.7886160597136e-17, -2.2755993170561582e-17, 4.357881996052623e-33, -0.7071067811865475,
+          -6.7027281615480414e-18, -4.357881996052628e-33, 0.7071067811865475,
+          2.5225760457106414e-17, 1.470785173667761e-32
+        ]
+      },
+      "source": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [0, 0, 0, 0, 0, 0, 0, 0]
+      },
+      "target": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [1, 0, 5, 1, 6, 4, 0, 3]
+      }
+    },
+    "reason": "Degenerate inputs require an unimplemented homogeneous SVD fallback."
+  },
+  {
+    "actual": {
+      "name": "get/collinear",
+      "error": true
+    },
+    "expected": {
+      "name": "get/collinear",
+      "result": {
+        "rows": 3,
+        "columns": 3,
+        "channels": 1,
+        "depth": 6,
+        "values": [
+          -9.36944629151314e-32, 4.5324665183683945e-17, -6.972611193684198e-32,
+          -2.178940998026312e-31, 0.7071067811865476, -6.754717093881567e-32,
+          1.3923432977388132e-30, 0.7071067811865475, 6.8854535537631455e-31
+        ]
+      },
+      "source": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [0, 0, 1, 0, 2, 0, 3, 0]
+      },
+      "target": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [1, 0, 5, 1, 6, 4, 0, 3]
+      }
+    },
+    "reason": "Degenerate inputs require an unimplemented homogeneous SVD fallback."
+  },
+  {
+    "actual": {
+      "name": "get/boolean",
+      "error": true
+    },
+    "expected": {
+      "name": "get/boolean",
+      "result": {
+        "rows": 3,
+        "columns": 3,
+        "channels": 1,
+        "depth": 6,
+        "values": [
+          0.7647058823529423, -0.24999999999999883, 1.0000000000000002, 0.18627450980392243,
+          0.4852941176470583, 3.122502256758253e-16, 0.019607843137255193, -0.08823529411764687, 1
+        ]
+      },
+      "source": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [0, 0, 6, 0, 6, 4, 0, 4]
+      },
+      "target": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [1, 0, 5, 1, 6, 4, 0, 3]
+      }
+    },
+    "reason": "This decomposition method is not implemented for perspective construction."
+  },
+  {
+    "actual": {
+      "name": "get/svd",
+      "error": true
+    },
+    "expected": {
+      "name": "get/svd",
+      "result": {
+        "rows": 3,
+        "columns": 3,
+        "channels": 1,
+        "depth": 6,
+        "values": [
+          0.7647058823529423, -0.24999999999999883, 1.0000000000000002, 0.18627450980392243,
+          0.4852941176470583, 3.122502256758253e-16, 0.019607843137255193, -0.08823529411764687, 1
+        ]
+      },
+      "source": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [0, 0, 6, 0, 6, 4, 0, 4]
+      },
+      "target": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [1, 0, 5, 1, 6, 4, 0, 3]
+      }
+    },
+    "reason": "This decomposition method is not implemented for perspective construction."
+  },
+  {
+    "actual": {
+      "name": "get/eigen",
+      "error": true
+    },
+    "expected": {
+      "name": "get/eigen",
+      "result": {
+        "rows": 3,
+        "columns": 3,
+        "channels": 1,
+        "depth": 6,
+        "values": [
+          -0.447077670454137, 0.14616000764846696, -0.5846400305938682, -0.10890353511062338,
+          -0.2837223677882017, 7.227316750556206e-16, -0.011463530011644713, 0.05158588505240025,
+          -0.5846400305938698
+        ]
+      },
+      "source": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [0, 0, 6, 0, 6, 4, 0, 4]
+      },
+      "target": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [1, 0, 5, 1, 6, 4, 0, 3]
+      }
+    },
+    "reason": "This decomposition method is not implemented for perspective construction."
+  },
+  {
+    "actual": {
+      "name": "get/cholesky",
+      "error": true
+    },
+    "expected": {
+      "name": "get/cholesky",
+      "result": {
+        "rows": 3,
+        "columns": 3,
+        "channels": 1,
+        "depth": 6,
+        "values": [
+          -0.447077670454137, 0.14616000764846696, -0.5846400305938682, -0.10890353511062338,
+          -0.2837223677882017, 7.227316750556206e-16, -0.011463530011644713, 0.05158588505240025,
+          -0.5846400305938698
+        ]
+      },
+      "source": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [0, 0, 6, 0, 6, 4, 0, 4]
+      },
+      "target": {
+        "rows": 4,
+        "columns": 1,
+        "channels": 2,
+        "depth": 5,
+        "values": [1, 0, 5, 1, 6, 4, 0, 3]
+      }
+    },
+    "reason": "This decomposition method is not implemented for perspective construction."
+  }
+]

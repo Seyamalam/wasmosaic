@@ -179,6 +179,7 @@ export const OPENCV_OPERATIONS = [
   { method: "transform", wasmExport: "matTransform" },
   { method: "vconcat", wasmExport: "matVconcat2" },
   { method: "warpAffine", wasmExport: "matWarpAffineInto" },
+  { method: "warpPerspective", wasmExport: "matWarpPerspectiveInto" },
 ] as const;
 
 /** Name of a public operation tracked by the compatibility ledger. */
