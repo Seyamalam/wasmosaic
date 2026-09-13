@@ -12,6 +12,39 @@ Loads the generated WebAssembly module and returns `Promise<OpenCv>`. Call it in
 
 Creates a client from an object that implements `OpenCvBackend`. This is useful for alternate runtimes and tests. Application code should normally call `initOpenCv()`.
 
+## Template matching
+
+### `matchTemplate(image, template, result, method, mask?)`
+
+Compares a template with every image window of the same size and writes a single-channel F32 score map into `result`. Image and template must have matching U8 or F32 depths and one through four channels. For an image of width W and height H and a template of width w and height h, the result has width W-w+1 and height H-h+1. An unmasked call also accepts the reversed size relationship when both dimensions fit after swapping.
+
+| Method                          | Best match                                             |
+| ------------------------------- | ------------------------------------------------------ |
+| `TM_SQDIFF`, `TM_SQDIFF_NORMED` | Minimum squared difference                             |
+| `TM_CCORR`, `TM_CCORR_NORMED`   | Maximum correlation                                    |
+| `TM_CCOEFF`, `TM_CCOEFF_NORMED` | Maximum correlation after removing each channel's mean |
+
+The constants are available on the initialized client and as named exports. `TemplateMatchMode` is their TypeScript union. The normalized methods divide by template and window norms.
+
+A nonempty mask must have the template's dimensions and either one channel or the template's channel count. U8 masks treat every nonzero value as selected. F32 masks supply weights. An empty `Mat` selects the unmasked path; explicitly passing `undefined` as the fifth argument rejects. With a nonempty mask, zero norms can produce NaN or infinity. The unmasked path uses the pinned zero-norm conventions, including a score of one for a constant template under `TM_CCOEFF_NORMED`.
+
+```ts
+const cv = await initOpenCv();
+const image = cv.matFromU8(3, 3, 1, new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]));
+const template = cv.matFromU8(2, 2, 1, new Uint8Array([5, 6, 8, 9]));
+const scores = cv.emptyMat();
+try {
+  cv.matchTemplate(image, template, scores, cv.TM_SQDIFF);
+  const { minLoc } = cv.minMaxLoc(scores); // { x: 1, y: 1 }
+} finally {
+  image.dispose();
+  template.dispose();
+  scores.dispose();
+}
+```
+
+Strided inputs and compatible destination ROIs work; incompatible destinations are replaced. WASMosaic snapshots inputs before writing any result. Template/result overlap therefore differs from the pinned OpenCV.js behavior in one recorded case. Use a separate result matrix when comparing libraries. The family remains partial, with finite-input browser coverage and documented floating-point tolerances; exhaustive extreme-value and error-detail parity is unfinished. This first scalar implementation is intended for correctness and benchmarking, with runtime proportional to the number of output windows times template area and channel count.
+
 ## Images
 
 ### `RgbaImage`

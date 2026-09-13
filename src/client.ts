@@ -101,6 +101,15 @@ import {
 } from "./interpolation.js";
 import type { Interpolation } from "./interpolation.js";
 import {
+  TM_SQDIFF,
+  TM_SQDIFF_NORMED,
+  TM_CCORR,
+  TM_CCORR_NORMED,
+  TM_CCOEFF,
+  TM_CCOEFF_NORMED,
+} from "./template-matching.js";
+import type { TemplateMatchMode } from "./template-matching.js";
+import {
   THRESH_BINARY,
   THRESH_BINARY_INV,
   THRESH_DRYRUN,
@@ -132,6 +141,12 @@ import type {
 } from "./types.js";
 
 class WasmOpenCv implements OpenCv {
+  readonly TM_SQDIFF = TM_SQDIFF;
+  readonly TM_SQDIFF_NORMED = TM_SQDIFF_NORMED;
+  readonly TM_CCORR = TM_CCORR;
+  readonly TM_CCORR_NORMED = TM_CCORR_NORMED;
+  readonly TM_CCOEFF = TM_CCOEFF;
+  readonly TM_CCOEFF_NORMED = TM_CCOEFF_NORMED;
   readonly RETR_EXTERNAL = RETR_EXTERNAL;
   readonly RETR_LIST = RETR_LIST;
   readonly RETR_CCOMP = RETR_CCOMP;
@@ -682,6 +697,31 @@ class WasmOpenCv implements OpenCv {
     this.#backend.matEqualizeHistInto(
       matHandleForBinding(source),
       matHandleForBinding(destination),
+    );
+  }
+
+  matchTemplate(image: Mat, template: Mat, result: Mat, method: TemplateMatchMode): void;
+  matchTemplate(image: Mat, template: Mat, result: Mat, method: TemplateMatchMode, mask: Mat): void;
+  matchTemplate(
+    ...args:
+      | [image: Mat, template: Mat, result: Mat, method: TemplateMatchMode]
+      | [image: Mat, template: Mat, result: Mat, method: TemplateMatchMode, mask: Mat]
+  ): void {
+    requireArityRange(args.length, 4, 5, "matchTemplate");
+    const image = matHandleForBinding(args[0]);
+    const template = matHandleForBinding(args[1]);
+    const result = matHandleForBinding(args[2]);
+    const method = toWasmI32(args[3]);
+    if (args.length === 4) {
+      this.#backend.matMatchTemplateInto(image, template, result, method);
+      return;
+    }
+    this.#backend.matMatchTemplateMaskedInto(
+      image,
+      template,
+      result,
+      method,
+      matHandleForBinding(args[4]),
     );
   }
 

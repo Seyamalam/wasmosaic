@@ -1,5 +1,6 @@
 /** Public operation entry points backed by Rust and mapped to the parity ledger. */
 export const OPENCV_OPERATIONS = [
+  { method: "matchTemplate", wasmExport: "matMatchTemplateInto" },
   { method: "Canny", wasmExport: "matCannyInto" },
   { method: "GaussianBlur", wasmExport: "matGaussianBlurInto" },
   { method: "Sobel", wasmExport: "matSobelInto" },

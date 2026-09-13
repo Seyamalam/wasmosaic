@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WASMosaic template matching benchmark</title>
+  </head>
+  <body>
+    <h1>Template matching scalar benchmark</h1>
+    <p>
+      U8 and F32, one and four channels, 8×8 templates, TM_CCOEFF_NORMED. Each library runs
+      separately in a worker.
+    </p>
+    <output id="result">Running...</output>
+    <pre id="report"></pre>
+    <script type="module">
+      const output = document.querySelector("#result");
+      const reportElement = document.querySelector("#report");
+      const workers = {
+        package: new Worker("./template-matching-benchmark-worker.js"),
+        reference: new Worker("./template-matching-benchmark-worker.js"),
+      };
+      const report = {
+        startedAt: new Date().toISOString(),
+        browser: navigator.userAgent,
+        platform: navigator.platform,
+        logicalProcessors: navigator.hardwareConcurrency,
+        referenceVersion: "4.13.0",
+        referenceSha256: "63366510248adf3a7eddf3e793dd825404efb7df3749f4d6f8557c7fa4ca8aa0",
+        scope:
+          "Portable scalar template matching baseline; allocation counts are not instrumented. This is not a full performance-contract report.",
+        cases: [],
+      };
+      globalThis.templateMatchingBenchmark = report;
+      function run(implementation, config) {
+        return new Promise((resolve, reject) => {
+          const worker = workers[implementation];
+          const timeout = setTimeout(
+            () => reject(new Error("Benchmark case exceeded five minutes")),
+            300000,
+          );
+          worker.onmessage = ({ data }) => {
+            clearTimeout(timeout);
+            if (data.error) reject(new Error(data.error));
+            else resolve(data.result);
+          };
+          worker.onerror = (event) => {
+            clearTimeout(timeout);
+            reject(new Error(event.message));
+          };
+          worker.postMessage({ ...config, implementation });
+        });
+      }
+      try {
+        for (const { rows, columns } of [
+          { rows: 256, columns: 256 },
+          { rows: 1080, columns: 1920 },
+          { rows: 2160, columns: 3840 },
+        ]) {
+          for (const channels of [1, 4]) {
+            for (const depth of [0, 5]) {
+              const config = {
+                rows,
+                columns,
+                channels,
+                depth,
+                templateRows: 8,
+                templateColumns: 8,
+                method: 5,
+              };
+              for (const implementation of ["package", "reference"]) {
+                output.textContent = `Running ${implementation}: ${columns}×${rows}, ${channels} channels, ${depth === 0 ? "U8" : "F32"}; ${report.cases.length}/24 cases complete`;
+                report.cases.push(await run(implementation, config));
+                reportElement.textContent = JSON.stringify(report, null, 2);
+              }
+            }
+          }
+        }
+        report.finishedAt = new Date().toISOString();
+        reportElement.textContent = JSON.stringify(report, null, 2);
+        output.textContent = "PASS 24 template matching benchmark cases complete";
+      } catch (error) {
+        report.error = String(error);
+        output.textContent = `FAIL ${error}`;
+      } finally {
+        workers.package.terminate();
+        workers.reference.terminate();
+      }
+    </script>
+  </body>
+</html>

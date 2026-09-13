@@ -4,6 +4,15 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ## [Unreleased]
 
+### Added
+
+- Original Rust `matchTemplate` for U8/F32 images with one through four channels, all six matching methods, optional binary U8 and weighted F32 masks, and mutable F32 score maps. Strict TypeScript constants and overloads support matching followed by `minMaxLoc`.
+- Dedicated pinned-browser template-matching fixtures and a reproducible scalar benchmark covering 256×256, 1080p, and 4K images with one/four channels and both input depths.
+
+### Compatibility
+
+- Template matching remains partial. Inputs are snapshotted before destination writes, which differs from one pinned OpenCV.js template/result overlap case. Extreme floating-point behavior and complete error details remain unverified.
+
 ## [0.2.0] - 2026-08-28
 
 ### Changed

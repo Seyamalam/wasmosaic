@@ -243,6 +243,19 @@ declare module "#wasm" {
     l2Gradient: boolean,
   ): void;
   export function matEqualizeHistInto(source: WasmMatHandle, destination: WasmMatHandle): void;
+  export function matMatchTemplateInto(
+    image: WasmMatHandle,
+    template: WasmMatHandle,
+    result: WasmMatHandle,
+    method: number,
+  ): void;
+  export function matMatchTemplateMaskedInto(
+    image: WasmMatHandle,
+    template: WasmMatHandle,
+    result: WasmMatHandle,
+    method: number,
+    mask: WasmMatHandle,
+  ): void;
   export function matWarpAffineInto(
     source: WasmMatHandle,
     destination: WasmMatHandle,

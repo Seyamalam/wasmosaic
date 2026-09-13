@@ -77,6 +77,7 @@
     "release:check": "bun scripts/check-release.ts",
     "test": "bun test",
     "test:browser:prepare": "bun scripts/cache-opencv-reference.ts",
+    "test:browser:serve": "bun scripts/serve-browser-tests.ts",
     "test:rust": "cargo test --workspace --all-targets",
     "test:wasm": "bun scripts/smoke-wasm.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",

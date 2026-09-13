@@ -37,6 +37,12 @@ import {
   MORPH_DILATE,
   MORPH_ERODE,
   RETR_EXTERNAL,
+  TM_SQDIFF,
+  TM_SQDIFF_NORMED,
+  TM_CCORR,
+  TM_CCORR_NORMED,
+  TM_CCOEFF,
+  TM_CCOEFF_NORMED,
 } from "../src/index.js";
 import type {
   Mat,
@@ -1018,6 +1024,32 @@ function writeMeanStdDev(
 }
 
 class CopyingBackend implements OpenCvBackend {
+  readonly templateMatchCalls: Array<{
+    image: WasmMatHandle;
+    template: WasmMatHandle;
+    result: WasmMatHandle;
+    method: number;
+    mask: WasmMatHandle | undefined;
+  }> = [];
+
+  matMatchTemplateInto(
+    image: WasmMatHandle,
+    template: WasmMatHandle,
+    result: WasmMatHandle,
+    method: number,
+  ): void {
+    this.templateMatchCalls.push({ image, template, result, method, mask: undefined });
+  }
+
+  matMatchTemplateMaskedInto(
+    image: WasmMatHandle,
+    template: WasmMatHandle,
+    result: WasmMatHandle,
+    method: number,
+    mask: WasmMatHandle,
+  ): void {
+    this.templateMatchCalls.push({ image, template, result, method, mask });
+  }
   #agastFeatureDetectorFreeCount = 0;
   #akazeFreeCount = 0;
   #fastFeatureDetectorFreeCount = 0;
@@ -3135,6 +3167,77 @@ describe("createRgbaImage", () => {
 });
 
 describe("OpenCv client", () => {
+  test("template matching exposes six constants and dispatches both overloads", () => {
+    const backend = new CopyingBackend();
+    const cv = createOpenCv(backend);
+    const image = cv.matFromU8(1, 3, 1, new Uint8Array([1, 2, 3]));
+    const template = cv.matFromU8(1, 2, 1, new Uint8Array([1, 2]));
+    const result = cv.emptyMat();
+    const mask = cv.emptyMat();
+    expect([
+      cv.TM_SQDIFF,
+      cv.TM_SQDIFF_NORMED,
+      cv.TM_CCORR,
+      cv.TM_CCORR_NORMED,
+      cv.TM_CCOEFF,
+      cv.TM_CCOEFF_NORMED,
+    ]).toEqual([
+      TM_SQDIFF,
+      TM_SQDIFF_NORMED,
+      TM_CCORR,
+      TM_CCORR_NORMED,
+      TM_CCOEFF,
+      TM_CCOEFF_NORMED,
+    ]);
+    expect(cv.matchTemplate.length).toBe(0);
+    expect(cv.matchTemplate(image, template, result, TM_SQDIFF)).toBeUndefined();
+    expect(cv.matchTemplate(image, template, result, TM_CCOEFF_NORMED, mask)).toBeUndefined();
+    expect(backend.templateMatchCalls).toEqual([
+      {
+        image: image.handleForBackend(),
+        template: template.handleForBackend(),
+        result: result.handleForBackend(),
+        method: 0,
+        mask: undefined,
+      },
+      {
+        image: image.handleForBackend(),
+        template: template.handleForBackend(),
+        result: result.handleForBackend(),
+        method: 5,
+        mask: mask.handleForBackend(),
+      },
+    ]);
+    for (const mat of [image, template, result, mask]) mat.dispose();
+  });
+
+  test("template matching checks arity, scalar conversion, and matrix lifetime before dispatch", () => {
+    const backend = new CopyingBackend();
+    const cv = createOpenCv(backend);
+    const image = cv.emptyMat();
+    const template = cv.emptyMat();
+    const result = cv.emptyMat();
+    // @ts-expect-error Deliberately exercise the JavaScript caller boundary.
+    expect(() => cv.matchTemplate(image, template, result)).toThrow(BindingError);
+    // @ts-expect-error Deliberately exercise the JavaScript caller boundary.
+    expect(() => cv.matchTemplate(image, template, result, 0, image, image)).toThrow(BindingError);
+    // @ts-expect-error Explicit undefined selects the five-argument Mat overload.
+    expect(() => cv.matchTemplate(image, template, result, 0, undefined)).toThrow(TypeError);
+    // @ts-expect-error Null is not a valid Mat binding.
+    expect(() => cv.matchTemplate(image, template, result, 0, null)).toThrow(BindingError);
+    // @ts-expect-error Method strings do not use JavaScript numeric coercion.
+    expect(() => cv.matchTemplate(image, template, result, "2")).toThrow(TypeError);
+    // @ts-expect-error Embind truncates fractional numeric input at runtime.
+    cv.matchTemplate(image, template, result, 2.9);
+    // @ts-expect-error Embind converts NaN to signed integer zero.
+    cv.matchTemplate(image, template, result, Number.NaN);
+    expect(backend.templateMatchCalls.map((call) => call.method)).toEqual([2, 0]);
+    template.dispose();
+    expect(() => cv.matchTemplate(image, template, result, TM_CCORR)).toThrow();
+    expect(backend.templateMatchCalls).toHaveLength(2);
+    image.dispose();
+    result.dispose();
+  });
   const client = createOpenCv(new CopyingBackend());
   const image = createRgbaImage(1, 1, new Uint8Array([1, 2, 3, 255]));
 

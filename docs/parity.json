@@ -1958,6 +1958,17 @@
       "status": "planned",
       "upstream": "cv.warpPerspective",
       "upstreamId": "imgproc.function.warp-perspective"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "matchTemplate",
+      "module": "imgproc",
+      "notes": "All six methods for finite U8/F32 images with one through four channels, optional binary U8 or weighted F32 masks, per-channel means, F32 destinations, and strided inputs/outputs. Browser fixtures cover zero norms and location recovery. Destination aliases snapshot inputs and differ from the pinned template/result-overlap behavior; exhaustive floating-point and error contracts remain.",
+      "sources": ["https://docs.opencv.org/4.13.0/df/dfb/group__imgproc__object.html"],
+      "status": "partial",
+      "upstream": "cv.matchTemplate",
+      "upstreamId": "imgproc.function.match-template",
+      "wasmExport": "matMatchTemplateInto"
     }
   ],
   "inventoryPolicy": "Independently authored from public documentation and runtime behavior",

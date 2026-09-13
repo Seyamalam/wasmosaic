@@ -1,0 +1,19 @@
+{
+  "referenceVersion": "4.13.0",
+  "referenceSha256": "63366510248adf3a7eddf3e793dd825404efb7df3749f4d6f8557c7fa4ca8aa0",
+  "browser": "Chrome/152.0.7977.83",
+  "date": "2026-09-13",
+  "status": "PASS OpenCV.js 4.13.0 template matching: 259 numeric cases, 16 error cases; 1 documented alias difference",
+  "report": {
+    "cases": 259,
+    "errorCases": 16,
+    "maxAbsoluteError": 0.015625,
+    "knownDifferences": [
+      {
+        "label": "destination template",
+        "packageValues": [64, 36, 4, 0],
+        "referenceValues": [106509, 121329, 138069, 195268]
+      }
+    ]
+  }
+}

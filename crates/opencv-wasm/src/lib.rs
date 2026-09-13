@@ -58,6 +58,8 @@ mod imgproc_histogram;
 mod imgproc_histogram_wasm;
 mod imgproc_resize;
 mod imgproc_resize_wasm;
+mod imgproc_template;
+mod imgproc_template_wasm;
 mod imgproc_threshold;
 mod imgproc_threshold_wasm;
 mod imgproc_transform_matrices;

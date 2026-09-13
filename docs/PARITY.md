@@ -89,7 +89,7 @@ One hundred twenty-four families meet the full-family definition. Current full p
 
 ## Working partial families
 
-Fifty-three families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 177 families in total.
+Fifty-four families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 178 families in total.
 
 | Package methods                                                       | OpenCV.js families                                        | Current limit                                             |
 | --------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
@@ -122,6 +122,7 @@ Fifty-three families have useful original Rust/WASM slices but do not meet the f
 | `findContours`                                                        | `cv.findContours`                                         | External/list U8 contours, simple/none chains, MatVector  |
 | `warpAffine`                                                          | `cv.warpAffine`                                           | U8 nearest/linear warps and constant/replicate borders    |
 | `equalizeHist`                                                        | `cv.equalizeHist`                                         | Exact single-channel U8 histogram equalization            |
+| `matchTemplate`                                                       | `cv.matchTemplate`                                        | Six U8/F32 methods, binary/weighted masks, F32 score maps |
 | `createTonemapDrago`, `createTonemapMantiuk`, `createTonemapReinhard` | Matching global `cv.createTonemap*` functions             | Global factories absent; pixel processing remains         |
 
 The fixture passes the complete pinned contracts for `arcLength`, `contourArea`, and `boundingRect`. It covers `arcLength`'s exact two-argument arity, `contourArea`'s runtime length of zero and one- or two-argument overloads, and `boundingRect`'s exact one-argument arity. It also checks JavaScript truthiness, I32 and F32 contours in `Nx1C2`, `1xNC2`, and `Nx2C1` layouts, deleted inputs, canonical empty bounds, and rejection of F64, U8, and invalid shapes. The package rejects typed empty contours before entering upstream paths that do not return a safe JavaScript error.
@@ -153,6 +154,12 @@ The fixture exposes the direct `MSER` constructor and verifies nine configuratio
 The fixture exposes the direct `ORB` constructor and verifies eleven configuration methods. It covers constructor defaults, exact method arity, signed i32 and number conversion, the ORB score enum namespace and structural setter conversion, validation, deletion, repeat deletion, and calls after deletion. Detection and descriptors remain outside this slice. The artifact omits the config-listed static `ORB.create`, so the package convenience factory remains partial.
 
 The fixture exposes the direct `TonemapDrago`, `TonemapMantiuk`, and `TonemapReinhard` constructors and the shared inherited gamma methods. Sixteen state methods pass the complete pinned browser matrix for defaults, exact arity, number and boolean conversion, float32 narrowing, signed zero and non-finite values, undefined setter returns, and const-versus-mutable deleted-pointer errors. Pixel processing remains outside this slice. The pinned artifact omits the three config-listed global factories, so the package conveniences remain partial.
+
+### Template matching differential coverage
+
+The dedicated template-matching fixture checks 259 numeric cases and 16 rejection cases against the pinned OpenCV.js 4.13.0 runtime. It covers all six methods, U8/F32 inputs, one through four channels, strided templates, binary and weighted masks, empty masks, zero norms, destination replacement, ROI writes, and finding a planted template with `minMaxLoc`. Numeric comparisons allow `0.0001 + 0.00002 * abs(reference)` because the original scalar F64 accumulation differs from the reference's F32 correlation rounding. Non-finite result comparisons require matching NaN or infinity classifications.
+
+One template/result overlap case is recorded separately as a known difference. WASMosaic snapshots all inputs and returns the mathematical score map; the pinned build produces different values for that alias. This difference, unverified extreme/non-finite inputs, channel counts above four, and incomplete error-detail coverage keep the family partial. Run `bun run test:browser:prepare`, `bun run build`, and `bun run test:browser:serve`, then open `/test/browser/template-matching.html`. Run `/test/browser/differential.html` for the existing full regression fixture.
 
 ## Tracked planned sample
 

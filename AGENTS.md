@@ -8,9 +8,9 @@ Build a browser-first image-processing library in original Rust, WebAssembly, an
 
 - Public npm package: `wasmosaic`
 - Public repository: `https://github.com/Seyamalam/wasmosaic`
-- Latest published version: `0.1.0`
-- Published release tag: `v0.1.0`
-- Parity checkpoint: 124 of 488 families fully implemented, 46 partial, 170 supported
+- Latest published version: `0.2.0`
+- Published release tag: `v0.2.0`
+- Read `README.md` and `docs/parity.json` for current parity counts; unreleased work can exceed the published checkpoint.
 - Local checkout path: `/Users/seyam/Work/bun_opencv`
 
 Do not rename the package back to a name containing `OpenCV`. OpenCV is the compatibility target, not the product identity.
@@ -61,3 +61,5 @@ Make focused commits and push completed checkpoints frequently. Preserve unrelat
 ## Next API work
 
 Use [the next API priorities](docs/NEXT_API_PRIORITIES.md) as the default implementation order. Favor complete user workflows over isolated configuration methods. Re-rank when dependency work or browser benchmarks change the cost-to-value ratio.
+
+Template matching has a separate browser fixture at `test/browser/template-matching.html` and a scalar benchmark at `test/browser/template-matching-benchmark.html`. Serve them with `bun run test:browser:serve` after building and verifying the comparator cache. Keep the documented template/result alias difference visible when extending coverage.

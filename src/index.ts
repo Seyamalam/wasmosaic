@@ -122,6 +122,15 @@ export {
 } from "./interpolation.js";
 export type { Interpolation } from "./interpolation.js";
 export {
+  TM_SQDIFF,
+  TM_SQDIFF_NORMED,
+  TM_CCORR,
+  TM_CCORR_NORMED,
+  TM_CCOEFF,
+  TM_CCOEFF_NORMED,
+} from "./template-matching.js";
+export type { TemplateMatchMode } from "./template-matching.js";
+export {
   THRESH_BINARY,
   THRESH_BINARY_INV,
   THRESH_DRYRUN,

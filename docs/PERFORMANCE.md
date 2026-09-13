@@ -38,3 +38,13 @@ Use enough iterations to produce at least one second of measured work per case. 
 7. Consider WebGPU or WebNN for large operations with a measured win and a scalar fallback.
 
 Every optimized implementation must pass the same fixtures as the scalar implementation.
+
+## Template matching baseline
+
+Run `bun run test:browser:prepare`, `bun run build`, and `bun run test:browser:serve`. Open `http://127.0.0.1:8766/test/browser/template-matching.html` to check numeric behavior first, then `http://127.0.0.1:8766/test/browser/template-matching-benchmark.html` to measure it. The benchmark exposes its JSON as `globalThis.templateMatchingBenchmark` and renders it on the page.
+
+The benchmark uses independently generated pixels, an 8×8 template, and `TM_CCOEFF_NORMED`. It includes every combination of U8/F32, one/four channels, and 256×256/1920×1080/3840×2160 images. Separate workers initialize each library; measured calls run serially to avoid competition between the two libraries. Input creation, output inspection, and locating the planted template happen outside timing. Each case records its first call, three subsequent warm-ups, and at least five samples totaling at least one second. Results include all samples, p50, p95, and fresh-worker initialization time. That initialization measurement is not a fully cold browser start.
+
+The [2026-09-13 baseline](../benchmarks/template-matching/2026-09-13-chromium.json) records Chrome 152 on an Apple M5 Pro with macOS 26.6.2. On the 1080p U8 cases, package p50 was 317.8 ms for one channel and 894.0 ms for four channels; the pinned reference measured 36.0 ms and 135.3 ms respectively. This direct scalar kernel is slower than OpenCV.js in every measured case. These results identify work to optimize, not a speed target achieved.
+
+This is a scoped baseline, not a complete performance-contract report. It covers one matching method and unmasked inputs; internal allocation counts are uninstrumented, and machine-wide background load was not controlled. Timed calls transfer handles and scalars only, with zero pixel bytes copied across the JavaScript/WASM boundary. The package still snapshots inputs and allocates intermediates inside WASM. The saved artifact also records source/build hashes, WASM bytes, and the dry-run package size.

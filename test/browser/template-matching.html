@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WASMosaic template matching differential test</title>
+    <script type="importmap">
+      { "imports": { "#wasm": "/wasm/wasmosaic_wasm.js" } }
+    </script>
+  </head>
+  <body>
+    <h1>Template matching differential test</h1>
+    <output id="result">Running...</output>
+    <script type="module">
+      import { initOpenCv } from "/dist/index.js";
+      import { packageTemplateApi } from "./template-matching-adapters.js";
+      import { templateMatchingCases, compareTemplateMatching } from "./template-matching-cases.js";
+
+      const output = document.querySelector("#result");
+      const worker = new Worker("./template-matching-worker.js");
+      const timeout = setTimeout(() => {
+        worker.terminate();
+        output.textContent = "FAIL reference timed out";
+      }, 180000);
+      worker.addEventListener("message", async ({ data }) => {
+        clearTimeout(timeout);
+        try {
+          if (data.error) throw new Error(data.error);
+          const cv = await initOpenCv();
+          const actual = templateMatchingCases(packageTemplateApi(cv));
+          const report = compareTemplateMatching(actual, data.result);
+          globalThis.templateMatchingReport = report;
+          output.textContent = `PASS OpenCV.js 4.13.0 template matching: ${report.cases} numeric cases, ${report.errorCases} error cases; ${report.knownDifferences.length} documented alias difference`;
+        } catch (error) {
+          output.textContent = `FAIL ${error instanceof Error ? error.stack : error}`;
+        } finally {
+          worker.terminate();
+        }
+      });
+      worker.addEventListener("error", (event) => {
+        clearTimeout(timeout);
+        worker.terminate();
+        output.textContent = `FAIL ${event.message}`;
+      });
+      worker.postMessage({});
+    </script>
+  </body>
+</html>

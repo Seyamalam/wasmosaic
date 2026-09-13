@@ -31,6 +31,7 @@ import type { Mat, WasmMatHandle } from "./mat.js";
 import type { MatVector, WasmMatVectorHandle } from "./mat-vector.js";
 import type { ColorConversionCode } from "./color.js";
 import type { Interpolation } from "./interpolation.js";
+import type { TemplateMatchMode } from "./template-matching.js";
 
 /** An RGBA image whose data contains four bytes per pixel. */
 export interface RgbaImage {
@@ -94,6 +95,19 @@ export interface MinMaxLocation {
 
 /** Low-level contract implemented by the generated WebAssembly module. */
 export interface OpenCvBackend {
+  matMatchTemplateInto(
+    image: WasmMatHandle,
+    template: WasmMatHandle,
+    result: WasmMatHandle,
+    method: number,
+  ): void;
+  matMatchTemplateMaskedInto(
+    image: WasmMatHandle,
+    template: WasmMatHandle,
+    result: WasmMatHandle,
+    method: number,
+    mask: WasmMatHandle,
+  ): void;
   matEqualizeHistInto(source: WasmMatHandle, destination: WasmMatHandle): void;
   matWarpAffineInto(
     source: WasmMatHandle,
@@ -492,6 +506,16 @@ export interface OpenCvBackend {
 
 /** Initialized image processing client. */
 export interface OpenCv {
+  readonly TM_SQDIFF: 0;
+  readonly TM_SQDIFF_NORMED: 1;
+  readonly TM_CCORR: 2;
+  readonly TM_CCORR_NORMED: 3;
+  readonly TM_CCOEFF: 4;
+  readonly TM_CCOEFF_NORMED: 5;
+  /** Writes a single-channel F32 score map for U8/F32 images with one through four channels. */
+  matchTemplate(image: Mat, template: Mat, result: Mat, method: TemplateMatchMode): void;
+  /** U8 masks select nonzero pixels; F32 masks supply weights, shared or per channel. */
+  matchTemplate(image: Mat, template: Mat, result: Mat, method: TemplateMatchMode, mask: Mat): void;
   readonly RETR_EXTERNAL: 0;
   readonly RETR_LIST: 1;
   readonly RETR_CCOMP: 2;

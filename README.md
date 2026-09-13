@@ -227,6 +227,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `findContours`                              | `cv.findContours`                              | Partial | External/list U8 contours and MatVector    |
 | imgproc    | `warpAffine`                                | `cv.warpAffine`                                | Partial | U8 nearest/linear affine image warps       |
 | imgproc    | `equalizeHist`                              | `cv.equalizeHist`                              | Partial | Exact single-channel U8 equalization       |
+| imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks |
 | imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Planned | Not started                                |
 | photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process    |
 | photo      | `createTonemapMantiuk`                      | `cv.createTonemapMantiuk`                      | Partial | Global factory absent; no pixel process    |
@@ -248,7 +249,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | photo      | `TonemapReinhard.setIntensity`              | `cv.TonemapReinhard.setIntensity`              | Full    | Exact float coercion and call contract     |
 | photo      | `TonemapReinhard.setLightAdaptation`        | `cv.TonemapReinhard.setLightAdaptation`        | Full    | Exact float coercion and call contract     |
 
-Current full parity is **124 of 488 (25.41%)**. There are **53 partial families**, for **177 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
+Current full parity is **124 of 488 (25.41%)**. There are **54 partial families**, for **178 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
 
 The fixture passes the complete pinned browser contract for `determinant`. The function requires exactly one live `Mat` and accepts only nonempty square single-channel F32 or F64 matrices, including non-contiguous regions. It preserves the input, matches the direct 1x1, 2x2, and 3x3 paths with signed-zero and non-finite propagation, and keeps F32 and F64 arithmetic distinct during elimination for larger matrices. The audit locks the absolute pivot cutoffs, exact cutoff acceptance, row-swap signs, singular positive zero, stored-F32 widening in the small formulas, and Hilbert precision. Integer, multichannel, nonsquare, empty, deleted, and non-Mat inputs reject before computation.
 
@@ -292,7 +293,7 @@ Read [the inventory](docs/INVENTORY.md) and [complete parity contract](docs/PARI
 
 The Rust `Mat` owns U8, I8, U16, I16, I32, F32, and F64 storage, plus channels, dimensions, byte strides, zero-copy regions, mutable destinations, WASM allocation, and deterministic disposal. The next foundation broadens arithmetic and image-processing families across every scalar depth while differential fixtures lock behavior to the pinned browser baseline.
 
-The active image-processing slice finishes the remaining color conversions, then adds the resize interpolation modes in the pinned OpenCV.js baseline, convolution, Gaussian blur, Sobel gradients, and Canny. Each operation needs upstream differential fixtures and real-browser benchmarks before its parity status changes to implemented.
+The initial image-processing batch and `matchTemplate` now have working slices. Template matching locates U8/F32 patches using six methods and optional masks; its [API notes](docs/API.md#template-matching) describe the remaining alias and numerical differences. Next are polygon approximation and contour hierarchy, followed by perspective image warps. Each family needs complete browser-contract evidence before its parity status changes to implemented.
 
 The performance goal is at least 2x the OpenCV.js geometric mean for warmed 1080p hot kernels and at least 4x for fused pipelines. Those are targets, not current results. Reports will include p50 and p95 timing, initialization, allocation counts, package bytes, scalar fallback results, and SIMD results. See [the performance contract](docs/PERFORMANCE.md).
 
