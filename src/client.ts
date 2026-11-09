@@ -1427,19 +1427,28 @@ class WasmOpenCv implements OpenCv {
     type: number,
   ): number;
   threshold(
-    ...arguments_:
-      | [image: RgbaImage, threshold: number]
-      | [source: Mat, destination: Mat, threshold: number, maximum: number, type: number]
+    source: Mat | RgbaImage,
+    destination: Mat | number,
+    threshold?: number,
+    maximum?: number,
+    type?: number,
   ): RgbaImage | number {
-    requireOverloadArity(arguments_.length, 2, 5, "threshold");
-    if (arguments_.length === 2) {
-      const [image, threshold] = arguments_;
-      validateRgbaImage(image);
-      validateThreshold(threshold);
-      const data = this.#backend.thresholdRgba(image.data, image.width, image.height, threshold);
-      return createRgbaImage(image.width, image.height, data);
+    requireOverloadArity(arguments.length, 2, 5, "threshold");
+    if (arguments.length === 2 && !(source instanceof Mat)) {
+      validateRgbaImage(source);
+      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- This is the JS-to-Embind scalar parser boundary.
+      if (typeof destination !== "number") {
+        throw new OpenCvInputError("threshold must be an integer from 0 through 255");
+      }
+      validateThreshold(destination);
+      const data = this.#backend.thresholdRgba(
+        source.data,
+        source.width,
+        source.height,
+        destination,
+      );
+      return createRgbaImage(source.width, source.height, data);
     }
-    const [source, destination, threshold, maximum, type] = arguments_;
     return this.#backend.matThresholdInto(
       matHandleForBinding(source),
       matHandleForBinding(destination),
@@ -1782,7 +1791,8 @@ function toWasmF64(value: unknown): number {
   return value;
 }
 
-function matHandleForBinding(value: Mat): ReturnType<Mat["handleForBackend"]> {
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- This validator is the JS-to-Embind Mat boundary.
+function matHandleForBinding(value: unknown): ReturnType<Mat["handleForBackend"]> {
   if (value === null) {
     throw new BindingError("null is not a valid Mat");
   }
@@ -1790,6 +1800,7 @@ function matHandleForBinding(value: Mat): ReturnType<Mat["handleForBackend"]> {
     throw new TypeError("Cannot read properties of undefined (reading '$$')");
   }
   if (!(value instanceof Mat)) {
+    // oxlint-disable-next-line typescript/no-base-to-string -- Embind error text formats the rejected value verbatim.
     throw new BindingError(`Cannot pass "${String(value)}" as a Mat`);
   }
   return value.handleForBackend();

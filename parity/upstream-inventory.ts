@@ -183,6 +183,7 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.is-contour-convex": { overloadCount: 1, runtimeArity: 1 },
   "imgproc.function.point-polygon-test": { overloadCount: 1, runtimeArity: 3 },
   "imgproc.function.resize": { overloadCount: 4, runtimeArity: 0 },
+  "imgproc.function.threshold": { overloadCount: 1, runtimeArity: 5 },
   "photo.tonemap.get-gamma": { overloadCount: 1, runtimeArity: 0 },
   "photo.tonemap.set-gamma": { overloadCount: 1, runtimeArity: 1 },
   "photo.tonemap-drago.get-bias": { overloadCount: 1, runtimeArity: 0 },

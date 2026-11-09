@@ -1756,9 +1756,9 @@ export const PARITY_MANIFEST = {
       method: "threshold",
       module: "imgproc",
       notes:
-        "Mutable U8 Mat destinations for all five fixed threshold modes and single-channel Otsu selection, with returned threshold values and pinned-browser output fixtures; Triangle selection and wider documented depths remain.",
+        "Exact five-parameter Mat contract plus the RGBA convenience overload across all supported depths, modes, and channels: Otsu and Triangle selection, THRESH_DRYRUN, destination reallocation, overlapping regions, invalid-argument ordering, and pinned-browser output fixtures.",
       sources: [IMGPROC_MISC_SOURCE],
-      status: "partial",
+      status: "implemented",
       upstream: "cv.threshold",
       upstreamId: "imgproc.function.threshold",
       wasmExport: "matThresholdInto",

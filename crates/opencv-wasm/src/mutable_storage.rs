@@ -301,10 +301,28 @@ impl MutableStorage {
         let mut data = self.data.borrow_mut();
         let mut input = vec![0; scalar_width];
         let mut output = vec![0; scalar_width];
+        let mut output2 = vec![0; scalar_width];
         for row in 0..self.rows {
             let source_row = source.offset + row * source.row_stride;
             let destination_row = self.offset + row * self.row_stride;
-            for scalar in 0..scalars_per_row {
+            // Single-byte rows commit in read-pair/write-pair blocks for the aligned
+            // prefix, then fall back to element-wise order for the trailing scalars.
+            let paired_end = if scalar_width == 1 {
+                scalars_per_row - scalars_per_row % 4
+            } else {
+                0
+            };
+            let mut scalar = 0;
+            while scalar < paired_end {
+                input.copy_from_slice(&data[source_row + scalar..source_row + scalar + 1]);
+                operation(&input, &mut output);
+                input.copy_from_slice(&data[source_row + scalar + 1..source_row + scalar + 2]);
+                operation(&input, &mut output2);
+                data[destination_row + scalar] = output[0];
+                data[destination_row + scalar + 1] = output2[0];
+                scalar += 2;
+            }
+            for scalar in scalar..scalars_per_row {
                 let source_start = source_row + scalar * scalar_width;
                 input.copy_from_slice(&data[source_start..source_start + scalar_width]);
                 operation(&input, &mut output);

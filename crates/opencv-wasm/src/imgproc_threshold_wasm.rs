@@ -2,12 +2,12 @@ use wasm_bindgen::prelude::*;
 
 use crate::{imgproc_threshold, mat::Mat};
 
-/// Applies fixed or Otsu-selected thresholding to a U8 matrix.
+/// Applies fixed, Otsu-selected, or Triangle-selected thresholding to a matrix.
 ///
 /// # Errors
 ///
-/// Returns an error for empty or non-U8 sources, unsupported modes, invalid automatic-mode
-/// combinations, or multichannel Otsu input.
+/// Returns an error for empty sources, unsupported modes or depths, invalid automatic-mode
+/// combinations, or multichannel automatic input.
 #[wasm_bindgen(js_name = matThresholdInto)]
 pub fn mat_threshold_into(
     source: &Mat,
