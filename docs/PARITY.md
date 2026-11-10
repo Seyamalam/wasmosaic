@@ -97,13 +97,13 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `add`, `subtract`, `absdiff`, `min`, `max`                            | `cv.add`, `cv.subtract`, `cv.absdiff`, `cv.min`, `cv.max` | All depths, masks, dtype, and reallocated destinations    |
 | `bitwiseAnd`, `bitwiseOr`, `bitwiseXor`                               | `cv.bitwise_and`, `cv.bitwise_or`, `cv.bitwise_xor`       | All depths on raw bit patterns with optional masks        |
 | `compare`, `inRange`                                                  | `cv.compare`, `cv.inRange`                                | Six comparison modes and all-depth bounds                 |
-| `split`, `merge`                                                      | `cv.split`, `cv.merge`                                    | All depths; selected array call forms                     |
-| `hconcat`, `vconcat`                                                  | `cv.hconcat`, `cv.vconcat`                                | All depths; two through four inputs                       |
+| `split`, `merge`                                                      | `cv.split`, `cv.merge`                                    | Full MatVector contracts across all depths                |
+| `hconcat`, `vconcat`                                                  | `cv.hconcat`, `cv.vconcat`                                | Full MatVector contracts across all depths                |
 | `copyMakeBorder`                                                      | `cv.copyMakeBorder`                                       | All depths and five border modes                          |
 | `lut`                                                                 | `cv.LUT`                                                  | Byte sources and every table depth                        |
 | `norm`, `normalize`                                                   | `cv.norm`, `cv.normalize`                                 | All depths, masks, and major norm modes                   |
 | `meanStdDev`, `reduce`                                                | `cv.meanStdDev`, `cv.reduce`                              | All depths and mutable outputs                            |
-| `mixChannels`                                                         | `cv.mixChannels`                                          | One source and destination; MatVector remains             |
+| `mixChannels`                                                         | `cv.mixChannels`                                          | Full vector-to-vector routing contract                    |
 | `randu`, `randn`, `setRNGSeed`                                        | Matching `cv` random families                             | Package RNG sequences differ from OpenCV                  |
 | `getLogLevel`, `setLogLevel`                                          | Matching `cv` logging families                            | Log bindings stay absent from upstream browser artifact.  |
 | `transform`, `perspectiveTransform`                                   | `cv.transform`, `cv.perspectiveTransform`                 | Selected channel and coefficient forms                    |

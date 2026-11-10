@@ -14,6 +14,10 @@ impl MatVector {
     pub(crate) fn replace(&self, values: Vec<Mat>) {
         self.values.replace(values);
     }
+
+    pub(crate) fn mats(&self) -> Vec<Mat> {
+        self.values.borrow().clone()
+    }
 }
 
 impl Default for MatVector {

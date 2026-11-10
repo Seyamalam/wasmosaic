@@ -10,6 +10,7 @@ use crate::{
         mix_channels, split,
     },
     mat::{Mat, MatDepth, MatError},
+    mat_vector::MatVector,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -263,6 +264,192 @@ fn mix_channels_mat(
     Ok(())
 }
 
+/// Splits an interleaved matrix into single-channel planes stored in `destination`.
+///
+/// The vector contents are replaced, matching upstream `cv.split(source, vector)` semantics.
+///
+/// # Errors
+///
+/// Returns an error when output sizing overflows or allocation fails.
+#[wasm_bindgen(js_name = matSplitVecInto)]
+pub fn mat_split_vec_into(source: &Mat, destination: &MatVector) -> Result<(), JsError> {
+    let planes = split_mat(source).map_err(JsError::from)?;
+    destination.replace(planes);
+    Ok(())
+}
+
+/// Merges every matrix in `sources` into one interleaved destination.
+///
+/// Sources may carry different channel counts; each source contributes its channel run
+/// contiguously per pixel. The destination is reallocated to the merged layout.
+///
+/// # Errors
+///
+/// Returns an error for an empty vector, incompatible layouts or depths, or allocation failure.
+#[wasm_bindgen(js_name = matMergeVecInto)]
+pub fn mat_merge_vec_into(sources: &MatVector, destination: &Mat) -> Result<(), JsError> {
+    let mats = sources.mats();
+    let merged = merge_mats(&mats.iter().collect::<Vec<_>>()).map_err(JsError::from)?;
+    destination
+        .write_output(
+            merged.compact_bytes(),
+            merged.rows(),
+            merged.columns(),
+            merged.channels(),
+            merged.depth(),
+        )
+        .map_err(ChannelWasmError::from)
+        .map_err(JsError::from)
+}
+
+/// Routes channels between matrix vectors using flattened channel index pairs.
+///
+/// Each `from_to` pair maps a source channel index (counted across the source vector) to a
+/// destination channel index (counted across the destination vector). Destination matrices must
+/// already carry the final layout; channels not named by a mapping are preserved. Empty
+/// destination matrices keep their empty layout.
+///
+/// # Errors
+///
+/// Returns an error for an odd mapping length, empty sources or destinations, incompatible
+/// layouts or depths, or an out-of-range channel index. Validation completes before any
+/// destination byte changes.
+#[wasm_bindgen(js_name = matMixChannelsVec)]
+pub fn mat_mix_channels_vec(
+    sources: &MatVector,
+    destinations: &MatVector,
+    from_to: &[u16],
+) -> Result<(), JsError> {
+    mix_channels_vecs(sources, destinations, from_to).map_err(JsError::from)
+}
+
+fn mix_channels_vecs(
+    sources: &MatVector,
+    destinations: &MatVector,
+    from_to: &[u16],
+) -> Result<(), ChannelWasmError> {
+    if from_to.len() % 2 != 0 {
+        return Err(ChannelWasmError::OddMappingLength(from_to.len()));
+    }
+    let source_mats = sources.mats();
+    let destination_mats = destinations.mats();
+    let first = source_mats
+        .first()
+        .ok_or(ChannelError::EmptySources)?
+        .clone();
+    if destination_mats.is_empty() {
+        return Err(ChannelError::EmptyDestinations.into());
+    }
+    for source in &source_mats {
+        if source.depth() != first.depth() {
+            return Err(ChannelWasmError::IncompatibleDepth {
+                expected: first.depth(),
+                actual: source.depth(),
+            });
+        }
+        if source.rows() != first.rows() || source.columns() != first.columns() {
+            return Err(ChannelWasmError::Kernel(ChannelError::IncompatibleShape));
+        }
+    }
+    for destination in &destination_mats {
+        if destination.depth() != first.depth() {
+            return Err(ChannelWasmError::IncompatibleDepth {
+                expected: first.depth(),
+                actual: destination.depth(),
+            });
+        }
+        if (destination.rows() != 0 || destination.columns() != 0)
+            && (destination.rows() != first.rows() || destination.columns() != first.columns())
+        {
+            return Err(ChannelWasmError::Kernel(ChannelError::IncompatibleShape));
+        }
+    }
+
+    let source_kernels = source_mats
+        .iter()
+        .map(channel_matrix)
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut destination_kernels = Vec::new();
+    for destination in &destination_mats {
+        if destination.rows() == 0 && destination.columns() == 0 {
+            // An empty destination keeps its layout but still occupies channel slots; give the
+            // kernel a scratch buffer with the shared shape so mappings resolve.
+            let scratch = usize::try_from(first.rows())
+                .ok()
+                .and_then(|rows| rows.checked_mul(first.columns() as usize))
+                .and_then(|pixels| {
+                    pixels.checked_mul(usize::from(destination.channels()))
+                })
+                .and_then(|elements| {
+                    elements.checked_mul(usize::from(source_kernels[0].element_byte_width()))
+                })
+                .ok_or(ChannelError::BufferSizeOverflow)?;
+            destination_kernels.push(ChannelMatrix::new(
+                vec![0; scratch],
+                first.rows(),
+                first.columns(),
+                destination.channels(),
+                source_kernels[0].element_byte_width(),
+            )?);
+        } else {
+            destination_kernels.push(channel_matrix(destination)?);
+        }
+    }
+
+    let offsets = |mats: &[Mat]| -> Vec<u16> {
+        let mut result = Vec::with_capacity(mats.len());
+        let mut offset = 0_u16;
+        for mat in mats {
+            result.push(offset);
+            offset = offset.saturating_add(mat.channels());
+        }
+        result
+    };
+    let resolve = |flat: u16, mats: &[Mat], offsets: &[u16]| -> Option<(usize, u16)> {
+        for (index, (mat, offset)) in mats.iter().zip(offsets).enumerate() {
+            if flat < *offset {
+                break;
+            }
+            if flat - offset < mat.channels() {
+                return Some((index, flat - offset));
+            }
+        }
+        None
+    };
+    let source_offsets = offsets(&source_mats);
+    let destination_offsets = offsets(&destination_mats);
+    let mut mappings = Vec::with_capacity(from_to.len() / 2);
+    for pair in from_to.chunks_exact(2) {
+        let (source_index, source_channel) = resolve(pair[0], &source_mats, &source_offsets)
+            .ok_or(ChannelError::SourceChannelOutOfBounds {
+                index: usize::MAX,
+                channel: pair[0],
+            })?;
+        let (destination_index, destination_channel) =
+            resolve(pair[1], &destination_mats, &destination_offsets).ok_or(
+                ChannelError::DestinationChannelOutOfBounds {
+                    index: usize::MAX,
+                    channel: pair[1],
+                },
+            )?;
+        mappings.push(ChannelMapping {
+            source_index,
+            source_channel,
+            destination_index,
+            destination_channel,
+        });
+    }
+
+    mix_channels(&source_kernels, &mut destination_kernels, &mappings)?;
+    for (mat, kernel) in destination_mats.iter().zip(destination_kernels.iter()) {
+        if mat.rows() == 0 && mat.columns() == 0 {
+            continue;
+        }
+        mat.write_compact_bytes(kernel.bytes())?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -398,5 +585,38 @@ mod tests {
             Err(ChannelWasmError::OddMappingLength(3))
         ));
         assert_eq!(matrix.to_u8_array(), before);
+    }
+}
+
+#[cfg(test)]
+mod vec_tests {
+    use super::*;
+    use crate::mat_vector::mat_vector_new;
+
+    #[test]
+    fn mix_channels_vec_routes_flat_pairs() {
+        let sources = mat_vector_new();
+        sources.push_back(
+            &Mat::from_owned_bytes((0..12).collect(), 2, 2, 3, MatDepth::U8).unwrap(),
+        );
+        sources.push_back(
+            &Mat::from_owned_bytes(vec![40, 41, 42, 43], 2, 2, 1, MatDepth::U8).unwrap(),
+        );
+        let destinations = mat_vector_new();
+        destinations.push_back(
+            &Mat::from_owned_bytes(vec![0; 4], 2, 2, 1, MatDepth::U8).unwrap(),
+        );
+        destinations.push_back(
+            &Mat::from_owned_bytes(vec![0; 8], 2, 2, 2, MatDepth::U8).unwrap(),
+        );
+        mix_channels_vecs(&sources, &destinations, &[2, 0, 3, 1, 0, 2]).unwrap();
+        assert_eq!(
+            destinations.get(0).unwrap().compact_bytes(),
+            vec![2, 5, 8, 11]
+        );
+        assert_eq!(
+            destinations.get(1).unwrap().compact_bytes(),
+            vec![40, 0, 41, 3, 42, 6, 43, 9]
+        );
     }
 }

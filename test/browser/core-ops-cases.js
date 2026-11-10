@@ -492,6 +492,166 @@ export function runCoreOpsCases(cv, reference) {
     return { destination: api.summary(destination) };
   });
 
+  // ---- merge/split/hconcat/vconcat/mixChannels vector forms
+  const vec = () => (reference ? new cv.MatVector() : cv.createMatVector());
+  const vecSummary = (vector) => {
+    const planes = [];
+    for (let index = 0; index < vector.size(); index += 1) {
+      const mat = vector.get(index);
+      planes.push(api.summary(mat));
+      api.dispose(mat);
+    }
+    return planes;
+  };
+
+  for (const depth of depths)
+    for (const variant of ["two", "ch31", "five", "badRows", "badDepth"]) {
+      run(`merge/${depth}/${variant}`, (handles) => {
+        const rows = 2,
+          columns = 3;
+        const vector = track(handles, vec());
+        const make = (rowsArg, chs, depthArg, offset) =>
+          track(
+            handles,
+            api.mat(
+              rowsArg,
+              columns,
+              chs,
+              depthArg,
+              arrays[depthArg](rowsArg * columns * chs).map((v) =>
+                Number.isInteger(v) ? v + offset : v + offset * 0.01,
+              ),
+            ),
+          );
+        if (variant === "two") {
+          vector.push_back(make(rows, 1, depth, 0));
+          vector.push_back(make(rows, 1, depth, 7));
+        } else if (variant === "ch31") {
+          vector.push_back(make(rows, 3, depth, 0));
+          vector.push_back(make(rows, 1, depth, 7));
+        } else if (variant === "five") {
+          for (let index = 0; index < 5; index += 1)
+            vector.push_back(make(rows, 1, depth, index * 3));
+        } else if (variant === "badRows") {
+          vector.push_back(make(rows, 1, depth, 0));
+          vector.push_back(make(rows + 1, 1, depth, 0));
+        } else {
+          vector.push_back(make(rows, 1, depth, 0));
+          vector.push_back(make(rows, 1, depth === 0 ? 5 : 0, 0));
+        }
+        const destination = track(handles, api.empty());
+        cv.merge(vector, destination);
+        return { destination: api.summary(destination) };
+      });
+    }
+
+  for (const depth of depths)
+    for (const channels of [1, 3, 4]) {
+      run(`split/${depth}/${channels}`, (handles) => {
+        const source = track(
+          handles,
+          api.mat(2, 3, channels, depth, arrays[depth](2 * 3 * channels)),
+        );
+        const destination = track(handles, vec());
+        if (channels === 4)
+          destination.push_back(track(handles, api.mat(9, 9, 9, depth, arrays[depth](9 * 9 * 9))));
+        cv.split(source, destination);
+        return { planes: vecSummary(destination) };
+      });
+    }
+
+  for (const depth of depths)
+    for (const axis of ["h", "v"])
+      for (const variant of ["two", "three", "badDims", "badDepth", "badChannels", "empty"]) {
+        run(`concat/${axis}/${depth}/${variant}`, (handles) => {
+          const fn = axis === "h" ? (a, b) => cv.hconcat(a, b) : (a, b) => cv.vconcat(a, b);
+          const vector = track(handles, vec());
+          const make = (rowsArg, colsArg, chs, depthArg, offset) =>
+            track(
+              handles,
+              api.mat(
+                rowsArg,
+                colsArg,
+                chs,
+                depthArg,
+                arrays[depthArg](rowsArg * colsArg * chs).map((v) =>
+                  Number.isInteger(v) ? v + offset : v + offset * 0.01,
+                ),
+              ),
+            );
+          const baseRows = 2,
+            baseCols = 3;
+          const otherDim = axis === "h" ? baseRows : baseCols;
+          if (variant === "two" || variant === "three") {
+            vector.push_back(make(baseRows, baseCols, 1, depth, 0));
+            vector.push_back(make(baseRows, baseCols, 1, depth, 5));
+            if (variant === "three") vector.push_back(make(baseRows, baseCols, 1, depth, 9));
+          } else if (variant === "badDims") {
+            vector.push_back(make(baseRows, baseCols, 1, depth, 0));
+            vector.push_back(
+              axis === "h"
+                ? make(otherDim + 1, baseCols, 1, depth, 0)
+                : make(baseRows, otherDim + 1, 1, depth, 0),
+            );
+          } else if (variant === "badDepth") {
+            vector.push_back(make(baseRows, baseCols, 1, depth, 0));
+            vector.push_back(make(baseRows, baseCols, 1, depth === 0 ? 2 : 0, 0));
+          } else if (variant === "badChannels") {
+            vector.push_back(make(baseRows, baseCols, 1, depth, 0));
+            vector.push_back(make(baseRows, baseCols, 3, depth, 0));
+          }
+          const destination = track(handles, api.empty());
+          fn(vector, destination);
+          return { destination: api.summary(destination) };
+        });
+      }
+
+  for (const depth of [0, 1, 4, 5, 6])
+    for (const variant of ["reroute", "partial", "oddPairs", "badChannel", "badSize", "emptyDst"]) {
+      run(`mixChannels/${depth}/${variant}`, (handles) => {
+        const sourceVector = track(handles, vec());
+        sourceVector.push_back(track(handles, api.mat(2, 2, 3, depth, arrays[depth](12))));
+        sourceVector.push_back(
+          track(
+            handles,
+            api.mat(
+              2,
+              2,
+              1,
+              depth,
+              arrays[depth](4).map((v) => (Number.isInteger(v) ? v + 40 : v + 1)),
+            ),
+          ),
+        );
+        const destinationVector = track(handles, vec());
+        if (variant !== "emptyDst") {
+          destinationVector.push_back(
+            track(
+              handles,
+              api.mat(
+                variant === "badSize" ? 3 : 2,
+                variant === "badSize" ? 3 : 2,
+                1,
+                depth,
+                arrays[depth](variant === "badSize" ? 9 : 4),
+              ),
+            ),
+          );
+          destinationVector.push_back(track(handles, api.mat(2, 2, 2, depth, arrays[depth](8))));
+        }
+        const pairs = {
+          reroute: [2, 0, 3, 1, 0, 2],
+          partial: [2, 0],
+          oddPairs: [2, 0, 1],
+          badChannel: [9, 0],
+          badSize: [2, 0],
+          emptyDst: [2, 0],
+        }[variant];
+        cv.mixChannels(sourceVector, destinationVector, pairs);
+        return { planes: vecSummary(destinationVector) };
+      });
+    }
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -514,6 +674,11 @@ export function runCoreOpsCases(cv, reference) {
       bitwiseAnd: (reference ? cv.bitwise_and : cv.bitwiseAnd).length,
       bitwiseOr: (reference ? cv.bitwise_or : cv.bitwiseOr).length,
       bitwiseXor: (reference ? cv.bitwise_xor : cv.bitwiseXor).length,
+      merge: cv.merge.length,
+      split: cv.split.length,
+      hconcat: cv.hconcat.length,
+      vconcat: cv.vconcat.length,
+      mixChannels: cv.mixChannels.length,
     },
   }));
 

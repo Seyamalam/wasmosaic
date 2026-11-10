@@ -10,6 +10,7 @@ use crate::{
         repeat_bytes, rotate_bytes, transpose_bytes, vconcat_bytes,
     },
     mat::{Mat, MatDepth, MatError},
+    mat_vector::MatVector,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -323,6 +324,85 @@ pub fn mat_vconcat3(first: &Mat, second: &Mat, third: &Mat) -> Result<Mat, JsErr
 #[wasm_bindgen(js_name = matVconcat4)]
 pub fn mat_vconcat4(first: &Mat, second: &Mat, third: &Mat, fourth: &Mat) -> Result<Mat, JsError> {
     apply_concat(&[first, second, third, fourth], vconcat_bytes).map_err(JsError::from)
+}
+
+/// Horizontally concatenates every matrix in `sources` into `destination`.
+///
+/// All sources must share rows, channels, and depth. An empty vector is a no-op and leaves the
+/// destination untouched, matching upstream `cv.hconcat` behavior.
+///
+/// # Errors
+///
+/// Returns an error when source metadata is incompatible or the output cannot be allocated.
+#[wasm_bindgen(js_name = matHconcatVecInto)]
+pub fn mat_hconcat_vec_into(sources: &MatVector, destination: &Mat) -> Result<(), JsError> {
+    concat_vec_into(sources, destination, hconcat_bytes).map_err(JsError::from)
+}
+
+/// Vertically concatenates every matrix in `sources` into `destination`.
+///
+/// All sources must share columns, channels, and depth. An empty vector is a no-op and leaves the
+/// destination untouched, matching upstream `cv.vconcat` behavior.
+///
+/// # Errors
+///
+/// Returns an error when source metadata is incompatible or the output cannot be allocated.
+#[wasm_bindgen(js_name = matVconcatVecInto)]
+pub fn mat_vconcat_vec_into(sources: &MatVector, destination: &Mat) -> Result<(), JsError> {
+    concat_vec_into(sources, destination, vconcat_bytes).map_err(JsError::from)
+}
+
+fn concat_vec_into(
+    sources: &MatVector,
+    destination: &Mat,
+    kernel: impl FnOnce(&[ByteMatrix<'_>]) -> Result<OwnedByteMatrix, LayoutError>,
+) -> Result<(), LayoutWasmError> {
+    let mats = sources.mats();
+    if mats.is_empty() {
+        return Ok(());
+    }
+    let depth = mats[0].depth();
+    for (index, source) in mats.iter().enumerate().skip(1) {
+        if source.depth() != depth {
+            return Err(LayoutWasmError::IncompatibleSourceDepth {
+                index,
+                expected: depth,
+                actual: source.depth(),
+            });
+        }
+    }
+    let element_width = u8::try_from(depth.byte_width())
+        .map_err(|_| LayoutWasmError::ElementWidthOverflow(depth.byte_width()))?;
+    let snapshots = mats
+        .iter()
+        .map(|source| source.compact_bytes())
+        .collect::<Vec<_>>();
+    let layouts = mats
+        .iter()
+        .map(|source| {
+            MatLayout::new(
+                source.rows(),
+                source.columns(),
+                source.channels(),
+                element_width,
+            )
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let matrices = snapshots
+        .iter()
+        .zip(layouts)
+        .map(|(bytes, layout)| ByteMatrix::new(bytes, layout))
+        .collect::<Result<Vec<_>, _>>()?;
+    let output = kernel(&matrices)?;
+    let (bytes, layout) = output.into_parts();
+    destination.write_output(
+        bytes,
+        layout.rows(),
+        layout.columns(),
+        layout.channels(),
+        depth,
+    )?;
+    Ok(())
 }
 
 fn apply_concat(

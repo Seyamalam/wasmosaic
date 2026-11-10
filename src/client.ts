@@ -915,7 +915,15 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  hconcat(
+  hconcat(sources: MatVector, destination: Mat): void {
+    requireExactArity(arguments.length, 2, "hconcat");
+    this.#backend.matHconcatVecInto(
+      matVectorHandleForBinding(sources),
+      matHandleForBinding(destination),
+    );
+  }
+
+  hconcatPlanes(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat {
     return this.#concat(sources, "horizontal");
@@ -1163,7 +1171,15 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  merge(
+  merge(sources: MatVector, destination: Mat): void {
+    requireExactArity(arguments.length, 2, "merge");
+    this.#backend.matMergeVecInto(
+      matVectorHandleForBinding(sources),
+      matHandleForBinding(destination),
+    );
+  }
+
+  mergePlanes(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat {
     const handles = sources.map((source) => source.handleForBackend());
@@ -1198,7 +1214,16 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  mixChannels(source: Mat, destination: Mat, fromTo: Uint16Array): void {
+  mixChannels(sources: MatVector, destinations: MatVector, fromTo: ArrayLike<number>): void {
+    requireExactArity(arguments.length, 3, "mixChannels");
+    this.#backend.matMixChannelsVec(
+      matVectorHandleForBinding(sources),
+      matVectorHandleForBinding(destinations),
+      Uint16Array.from(fromTo),
+    );
+  }
+
+  mixChannelsMat(source: Mat, destination: Mat, fromTo: Uint16Array): void {
     if (fromTo.length % 2 !== 0) {
       throw new OpenCvInputError("fromTo must contain source/destination channel pairs");
     }
@@ -1591,7 +1616,15 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  split(source: Mat): Mat[] {
+  split(source: Mat, destination: MatVector): void {
+    requireExactArity(arguments.length, 2, "split");
+    this.#backend.matSplitVecInto(
+      matHandleForBinding(source),
+      matVectorHandleForBinding(destination),
+    );
+  }
+
+  splitPlanes(source: Mat): Mat[] {
     return this.#backend.matSplit(source.handleForBackend()).map((handle) => new Mat(handle));
   }
 
@@ -1630,7 +1663,15 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  vconcat(
+  vconcat(sources: MatVector, destination: Mat): void {
+    requireExactArity(arguments.length, 2, "vconcat");
+    this.#backend.matVconcatVecInto(
+      matVectorHandleForBinding(sources),
+      matHandleForBinding(destination),
+    );
+  }
+
+  vconcatPlanes(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat {
     return this.#concat(sources, "vertical");
@@ -1910,6 +1951,23 @@ function toWasmF64(value: unknown): number {
     throw new TypeError(`Cannot convert "${String(value)}" to double`);
   }
   return value;
+}
+
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- This validator is the JS-to-Embind Mat boundary.
+function matVectorHandleForBinding(value: unknown): ReturnType<MatVector["handleForBackend"]> {
+  if (value === null) {
+    throw new BindingError("null is not a valid MatVector");
+  }
+  if (value === undefined) {
+    throw new TypeError("Cannot read properties of undefined (reading '$$')");
+  }
+  if (!(value instanceof MatVector)) {
+    throw new BindingError(
+      // oxlint-disable-next-line typescript/no-base-to-string -- Embind error text formats the rejected value verbatim.
+      `Expected null or instance of MatVector, got an instance of ${String(value)}`,
+    );
+  }
+  return value.handleForBackend();
 }
 
 // oxlint-disable-next-line anti-slop/no-unknown-parameters -- This validator is the JS-to-Embind Mat boundary.

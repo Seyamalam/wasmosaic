@@ -369,6 +369,15 @@ export interface OpenCvBackend {
   matInvertInto(source: WasmMatHandle, destination: WasmMatHandle, method: number): number;
   matIsContourConvex(contour: WasmMatHandle): boolean;
   matSplit(source: WasmMatHandle): WasmMatHandle[];
+  matSplitVecInto(source: WasmMatHandle, destination: WasmMatVectorHandle): void;
+  matMergeVecInto(sources: WasmMatVectorHandle, destination: WasmMatHandle): void;
+  matMixChannelsVec(
+    sources: WasmMatVectorHandle,
+    destinations: WasmMatVectorHandle,
+    fromTo: Uint16Array,
+  ): void;
+  matHconcatVecInto(sources: WasmMatVectorHandle, destination: WasmMatHandle): void;
+  matVconcatVecInto(sources: WasmMatVectorHandle, destination: WasmMatHandle): void;
   matMerge(first: WasmMatHandle, second: WasmMatHandle): WasmMatHandle;
   matMerge3(first: WasmMatHandle, second: WasmMatHandle, third: WasmMatHandle): WasmMatHandle;
   matMerge4(
@@ -797,7 +806,8 @@ export interface OpenCv {
     offset?: Point,
   ): void;
   grayscale(image: RgbaImage): RgbaImage;
-  hconcat(
+  hconcat(sources: MatVector, destination: Mat): void;
+  hconcatPlanes(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat;
   getAffineTransform(source: Mat, destination: Mat): Mat;
@@ -839,13 +849,15 @@ export interface OpenCv {
   mean(source: Mat): Scalar;
   mean(source: Mat, mask: Mat): Scalar;
   meanStdDev(source: Mat, means: Mat, standardDeviations: Mat, mask?: Mat): void;
-  merge(
+  merge(sources: MatVector, destination: Mat): void;
+  mergePlanes(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat;
   minMaxLoc(source: Mat): MinMaxLocation;
   minMaxLoc(source: Mat, mask: Mat): MinMaxLocation;
   min(source1: Mat, source2: Mat, destination: Mat): void;
-  mixChannels(source: Mat, destination: Mat, fromTo: Uint16Array): void;
+  mixChannels(sources: MatVector, destinations: MatVector, fromTo: ArrayLike<number>): void;
+  mixChannelsMat(source: Mat, destination: Mat, fromTo: Uint16Array): void;
   multiply(a: Mat, b: Mat, destination: Mat, scale?: number, dtype?: number): void;
   multiplyAlloc(a: Mat, b: Mat, scale?: number): Mat;
   morphologyEx(
@@ -921,7 +933,8 @@ export interface OpenCv {
   subtract(source1: Mat, source2: Mat, destination: Mat): void;
   subtract(source1: Mat, source2: Mat, destination: Mat, mask: Mat): void;
   subtract(source1: Mat, source2: Mat, destination: Mat, mask: Mat, dtype: number): void;
-  split(source: Mat): Mat[];
+  split(source: Mat, destination: MatVector): void;
+  splitPlanes(source: Mat): Mat[];
   sqrt(source: Mat, destination: Mat): void;
   sqrtAlloc(source: Mat): Mat;
   sum(source: Mat): Scalar;
@@ -929,7 +942,8 @@ export interface OpenCv {
   transposeAlloc(source: Mat): Mat;
   trace(source: Mat): Scalar;
   transform(source: Mat, destination: Mat, coefficients: Mat): void;
-  vconcat(
+  vconcat(sources: MatVector, destination: Mat): void;
+  vconcatPlanes(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat;
   warpPerspective(

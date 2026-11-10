@@ -1465,6 +1465,57 @@ class CopyingBackend implements OpenCvBackend {
     return new CopyingMatVectorHandle();
   }
 
+  matSplitVecInto(source: WasmMatHandle, destination: WasmMatVectorHandle): void {
+    if (!(destination instanceof CopyingMatVectorHandle)) {
+      throw new OpenCvInputError("mock vector must use CopyingMatVectorHandle");
+    }
+    for (const handle of this.matSplit(source)) destination.push_back(handle);
+  }
+
+  matMergeVecInto(sources: WasmMatVectorHandle, destination: WasmMatHandle): void {
+    const merged = this.matMerge(sources.get(0), sources.get(1));
+    if (!(destination instanceof CopyingMatHandle)) {
+      throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+    }
+    destination.replaceFrom(merged, merged.toUint8Array());
+  }
+
+  matMixChannelsVec(
+    _sources: WasmMatVectorHandle,
+    _destinations: WasmMatVectorHandle,
+    _fromTo: Uint16Array,
+  ): void {
+    throw new OpenCvInputError("mock mixChannelsVec is not implemented");
+  }
+
+  matHconcatVecInto(sources: WasmMatVectorHandle, destination: WasmMatHandle): void {
+    if (sources.size() === 0) return;
+    const merged =
+      sources.size() === 2
+        ? this.matHconcat2(sources.get(0), sources.get(1))
+        : sources.size() === 3
+          ? this.matHconcat3(sources.get(0), sources.get(1), sources.get(2))
+          : this.matHconcat4(sources.get(0), sources.get(1), sources.get(2), sources.get(3));
+    if (!(destination instanceof CopyingMatHandle)) {
+      throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+    }
+    destination.replaceFrom(merged, merged.toUint8Array());
+  }
+
+  matVconcatVecInto(sources: WasmMatVectorHandle, destination: WasmMatHandle): void {
+    if (sources.size() === 0) return;
+    const merged =
+      sources.size() === 2
+        ? this.matVconcat2(sources.get(0), sources.get(1))
+        : sources.size() === 3
+          ? this.matVconcat3(sources.get(0), sources.get(1), sources.get(2))
+          : this.matVconcat4(sources.get(0), sources.get(1), sources.get(2), sources.get(3));
+    if (!(destination instanceof CopyingMatHandle)) {
+      throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+    }
+    destination.replaceFrom(merged, merged.toUint8Array());
+  }
+
   approximationCalls: { epsilon: number; closed: boolean }[] = [];
 
   matApproxPolyDPInto(
@@ -4908,13 +4959,13 @@ describe("OpenCv client", () => {
 
   test("splits, merges, extracts, and inserts channels", () => {
     const source = client.matFromU8(1, 2, 3, new Uint8Array([1, 10, 100, 2, 20, 200]));
-    const planes = client.split(source);
+    const planes = client.splitPlanes(source);
     expect(planes.map((plane) => plane.toUint8Array())).toEqual([
       new Uint8Array([1, 2]),
       new Uint8Array([10, 20]),
       new Uint8Array([100, 200]),
     ]);
-    const merged = client.merge([planes[0]!, planes[1]!, planes[2]!]);
+    const merged = client.mergePlanes([planes[0]!, planes[1]!, planes[2]!]);
     expect(merged.toUint8Array()).toEqual(source.toUint8Array());
     const extracted = client.extractChannel(source, 1);
     expect(extracted.toUint8Array()).toEqual(new Uint8Array([10, 20]));
@@ -4922,7 +4973,7 @@ describe("OpenCv client", () => {
     client.insertChannel(extracted, destination, 2);
     expect(destination.toUint8Array()).toEqual(new Uint8Array([0, 0, 10, 0, 0, 20]));
     const routed = client.matFromU8(1, 2, 3, new Uint8Array([7, 8, 9, 70, 80, 90]));
-    client.mixChannels(source, routed, new Uint16Array([2, 0, 0, 2]));
+    client.mixChannelsMat(source, routed, new Uint16Array([2, 0, 0, 2]));
     expect(routed.toUint8Array()).toEqual(new Uint8Array([100, 8, 1, 200, 80, 2]));
     routed.dispose();
     destination.dispose();
@@ -5118,14 +5169,14 @@ describe("OpenCv client", () => {
   test("concatenates matrices in both axes", () => {
     const left = client.matFromU8(2, 1, 1, new Uint8Array([1, 2]));
     const right = client.matFromU8(2, 2, 1, new Uint8Array([3, 4, 5, 6]));
-    const horizontal = client.hconcat([left, right]);
+    const horizontal = client.hconcatPlanes([left, right]);
     expect(horizontal.rows).toBe(2);
     expect(horizontal.columns).toBe(3);
     expect(horizontal.toUint8Array()).toEqual(new Uint8Array([1, 3, 4, 2, 5, 6]));
 
     const top = client.matFromU8(1, 2, 1, new Uint8Array([7, 8]));
     const bottom = client.matFromU8(2, 2, 1, new Uint8Array([9, 10, 11, 12]));
-    const vertical = client.vconcat([top, bottom]);
+    const vertical = client.vconcatPlanes([top, bottom]);
     expect(vertical.rows).toBe(3);
     expect(vertical.columns).toBe(2);
     expect(vertical.toUint8Array()).toEqual(new Uint8Array([7, 8, 9, 10, 11, 12]));

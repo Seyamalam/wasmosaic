@@ -1150,23 +1150,23 @@
       "implementationOrigin": "original",
       "method": "hconcat",
       "module": "core",
-      "notes": "Two through four all-depth inputs; MatVector and mutable destination forms remain.",
+      "notes": "MatVector input with strict two-argument contract, all scalar depths, destination reallocation, empty-vector no-op, and dimension/depth/channel mismatch errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.hconcat",
       "upstreamId": "core.function.hconcat",
-      "wasmExport": "matHconcat2"
+      "wasmExport": "matHconcatVecInto"
     },
     {
       "implementationOrigin": "original",
       "method": "vconcat",
       "module": "core",
-      "notes": "Two through four all-depth inputs; MatVector and mutable destination forms remain.",
+      "notes": "MatVector input with strict two-argument contract, all scalar depths, destination reallocation, empty-vector no-op, and dimension/depth/channel mismatch errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.vconcat",
       "upstreamId": "core.function.vconcat",
-      "wasmExport": "matVconcat2"
+      "wasmExport": "matVconcatVecInto"
     },
     {
       "implementationOrigin": "original",
@@ -1623,34 +1623,34 @@
       "implementationOrigin": "original",
       "method": "merge",
       "module": "core",
-      "notes": "Two through four all-depth Mat inputs are supported; MatVector and caller-provided destination forms remain.",
+      "notes": "MatVector input of any length with mixed channel counts, all scalar depths, destination reallocation, and empty or incompatible-vector errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.merge",
       "upstreamId": "core.function.merge",
-      "wasmExport": "matMerge"
+      "wasmExport": "matMergeVecInto"
     },
     {
       "implementationOrigin": "original",
       "method": "mixChannels",
       "module": "core",
-      "notes": "All scalar depths, strided regions, alias-safe mutable output, and arbitrary channel pairs for one source and one destination; MatVector input/output forms and differential fixtures remain.",
+      "notes": "Source and destination MatVectors with flattened channel-index pairs, pre-sized destinations preserving unmapped channels, all scalar depths, and odd-length or out-of-range mapping errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.mixChannels",
       "upstreamId": "core.function.mix-channels",
-      "wasmExport": "matMixChannels"
+      "wasmExport": "matMixChannelsVec"
     },
     {
       "implementationOrigin": "original",
       "method": "split",
       "module": "core",
-      "notes": "All scalar depths, channels, and strided regions are supported; the MatVector destination form remains.",
+      "notes": "MatVector destination replaced per upstream semantics, all scalar depths and channel counts, ROI sources, and single-channel output planes; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.split",
       "upstreamId": "core.function.split",
-      "wasmExport": "matSplit"
+      "wasmExport": "matSplitVecInto"
     },
     {
       "implementationOrigin": "original",

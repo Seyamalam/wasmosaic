@@ -87,7 +87,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | core       | `flip`                                      | `cv.flip`                                      | Full    | Exact all-depth mutable-output contract    |
 | core       | `getLogLevel`                               | `cv.getLogLevel`                               | Partial | Package-owned log level 0 through 6        |
 | core       | `getOptimalDFTSize`                         | `cv.getOptimalDFTSize`                         | Full    | Exact i32 contract and smooth result       |
-| core       | `hconcat`                                   | `cv.hconcat`                                   | Partial | All depths, two through four inputs        |
+| core       | `hconcat`                                   | `cv.hconcat`                                   | Full    | MatVector input, all depths                |
 | core       | `inRange`                                   | `cv.inRange`                                   | Partial | U8 matrix bounds                           |
 | core       | `invert`                                    | `cv.invert`                                    | Partial | Square matrices and three methods          |
 | core       | `log`                                       | `cv.log`                                       | Full    | Exact F32/F64 mutable-output contract      |
@@ -96,10 +96,10 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | core       | `max`                                       | `cv.max`                                       | Partial | U8 matrix operands                         |
 | core       | `mean`                                      | `cv.mean`                                      | Full    | Exact all-depth optional-mask contract     |
 | core       | `meanStdDev`                                | `cv.meanStdDev`                                | Partial | All depths, masks, and F64 outputs         |
-| core       | `merge`                                     | `cv.merge`                                     | Partial | Two through four all-depth inputs          |
+| core       | `merge`                                     | `cv.merge`                                     | Full    | MatVector input with mixed channels        |
 | core       | `min`                                       | `cv.min`                                       | Partial | U8 matrix operands                         |
 | core       | `minMaxLoc`                                 | `cv.minMaxLoc`                                 | Full    | Exact all-depth optional-mask contract     |
-| core       | `mixChannels`                               | `cv.mixChannels`                               | Partial | One source and destination, all depths     |
+| core       | `mixChannels`                               | `cv.mixChannels`                               | Full    | Vector-to-vector channel routing           |
 | core       | `multiply`                                  | `cv.multiply`                                  | Full    | Exact all-depth mutable-output contract    |
 | core       | `norm`                                      | `cv.norm`                                      | Partial | All depths, masks, and norm modes          |
 | core       | `normalize`                                 | `cv.normalize`                                 | Partial | All depths and mutable destinations        |
@@ -116,12 +116,12 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | core       | `setRNGSeed`                                | `cv.setRNGSeed`                                | Partial | Deterministic package-owned RNG            |
 | core       | `solve`                                     | `cv.solve`                                     | Partial | LU, Cholesky, and QR methods               |
 | core       | `subtract`                                  | `cv.subtract`                                  | Partial | Saturating U8 matrix operands              |
-| core       | `split`                                     | `cv.split`                                     | Partial | All depths and strided regions             |
+| core       | `split`                                     | `cv.split`                                     | Full    | MatVector output, all depths               |
 | core       | `sqrt`                                      | `cv.sqrt`                                      | Full    | Exact F32/F64 mutable-output contract      |
 | core       | `transpose`                                 | `cv.transpose`                                 | Full    | Exact all-depth mutable-output contract    |
 | core       | `trace`                                     | `cv.trace`                                     | Full    | Exact all-depth four-lane Scalar           |
 | core       | `transform`                                 | `cv.transform`                                 | Partial | All depths and F32/F64 coefficients        |
-| core       | `vconcat`                                   | `cv.vconcat`                                   | Partial | All depths, two through four inputs        |
+| core       | `vconcat`                                   | `cv.vconcat`                                   | Full    | MatVector input, all depths                |
 | features2d | `createAKAZE`                               | `cv.AKAZE.create`                              | Partial | Configuration handle only; no detection    |
 | features2d | `AKAZE.getDefaultName`                      | `cv.AKAZE.getDefaultName`                      | Full    | Exact name, arity, and lifecycle           |
 | features2d | `AKAZE.getDescriptorChannels`               | `cv.AKAZE.getDescriptorChannels`               | Full    | Exact signed i32 state and lifecycle       |

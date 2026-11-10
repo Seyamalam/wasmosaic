@@ -187,7 +187,11 @@ pub fn split(source: &ChannelMatrix) -> Result<Vec<ChannelMatrix>, ChannelError>
     Ok(planes)
 }
 
-/// Merges compatible single-channel planes into one compact interleaved matrix.
+/// Merges compatible planes into one compact interleaved matrix.
+///
+/// Each source may carry multiple channels; its channel run stays contiguous in the output, so a
+/// three-channel plane followed by a single-channel plane produces four-channel pixels ordered
+/// `a0, a1, a2, b0`.
 ///
 /// # Errors
 ///
@@ -195,11 +199,14 @@ pub fn split(source: &ChannelMatrix) -> Result<Vec<ChannelMatrix>, ChannelError>
 /// allocation failure.
 pub fn merge(planes: &[ChannelMatrix]) -> Result<ChannelMatrix, ChannelError> {
     let first = planes.first().ok_or(ChannelError::EmptySources)?;
-    if first.channels != 1 || planes.iter().any(|plane| plane.channels != 1) {
-        return Err(ChannelError::SourceMustHaveOneChannel);
-    }
     ensure_compatible(planes, first)?;
-    let channels = u16::try_from(planes.len()).map_err(|_| ChannelError::BufferSizeOverflow)?;
+    let mut channels = 0_u32;
+    for plane in planes {
+        channels = channels
+            .checked_add(u32::from(plane.channels))
+            .ok_or(ChannelError::BufferSizeOverflow)?;
+    }
+    let channels = u16::try_from(channels).map_err(|_| ChannelError::BufferSizeOverflow)?;
     let length = checked_byte_length(
         first.rows,
         first.columns,
@@ -209,11 +216,13 @@ pub fn merge(planes: &[ChannelMatrix]) -> Result<ChannelMatrix, ChannelError> {
     let mut bytes = zeroed_bytes(length)?;
     let width = usize::from(first.element_byte_width);
     for pixel in 0..first.pixel_count() {
-        for (channel, plane) in planes.iter().enumerate() {
-            let source_start = pixel * width;
-            let destination_start = (pixel * planes.len() + channel) * width;
-            bytes[destination_start..destination_start + width]
-                .copy_from_slice(&plane.bytes[source_start..source_start + width]);
+        let mut destination_start = pixel * usize::from(channels) * width;
+        for plane in planes {
+            let run = usize::from(plane.channels) * width;
+            let source_start = pixel * run;
+            bytes[destination_start..destination_start + run]
+                .copy_from_slice(&plane.bytes[source_start..source_start + run]);
+            destination_start += run;
         }
     }
     ChannelMatrix::new(
