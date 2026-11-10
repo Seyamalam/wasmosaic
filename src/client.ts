@@ -157,6 +157,11 @@ import type {
   ThresholdType,
 } from "./types.js";
 
+function contourPoints(pts: MatVector | Mat): Int32Array {
+  const mat = pts instanceof MatVector ? pts.get(0) : pts;
+  return Int32Array.from(mat.toInt32Array());
+}
+
 class WasmOpenCv implements OpenCv {
   readonly TM_SQDIFF = TM_SQDIFF;
   readonly TM_SQDIFF_NORMED = TM_SQDIFF_NORMED;
@@ -2099,6 +2104,175 @@ class WasmOpenCv implements OpenCv {
       this.#backend.matEmpty(),
       toWasmI32(groupThreshold),
       eps,
+    );
+  }
+
+  line(
+    ...arguments_: [
+      image: Mat,
+      pt1: Point,
+      pt2: Point,
+      color: Scalar,
+      thickness?: number,
+      lineType?: number,
+      shift?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "line");
+    const [image, pt1, pt2, color, thickness = 1, lineType = 8, shift = 0] = arguments_;
+    this.#backend.matLineInto(
+      matHandleForBinding(image),
+      toWasmI32(pt1.x),
+      toWasmI32(pt1.y),
+      toWasmI32(pt2.x),
+      toWasmI32(pt2.y),
+      scalarForBinding(color),
+      toWasmI32(thickness),
+      toWasmI32(lineType),
+      toWasmI32(shift),
+    );
+  }
+
+  rectangle(
+    ...arguments_: [
+      image: Mat,
+      pt1: Point,
+      pt2: Point,
+      color: Scalar,
+      thickness?: number,
+      lineType?: number,
+      shift?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "rectangle");
+    const [image, pt1, pt2, color, thickness = 1] = arguments_;
+    this.#backend.matRectangleInto(
+      matHandleForBinding(image),
+      toWasmI32(pt1.x),
+      toWasmI32(pt1.y),
+      toWasmI32(pt2.x),
+      toWasmI32(pt2.y),
+      scalarForBinding(color),
+      toWasmI32(thickness),
+    );
+  }
+
+  circle(
+    ...arguments_: [
+      image: Mat,
+      center: Point,
+      radius: number,
+      color: Scalar,
+      thickness?: number,
+      lineType?: number,
+      shift?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "circle");
+    const [image, center, radius, color, thickness = 1] = arguments_;
+    this.#backend.matCircleInto(
+      matHandleForBinding(image),
+      toWasmI32(center.x),
+      toWasmI32(center.y),
+      toWasmI32(radius),
+      scalarForBinding(color),
+      toWasmI32(thickness),
+    );
+  }
+
+  ellipse(
+    ...arguments_: [
+      image: Mat,
+      center: Point,
+      axes: Size,
+      angle: number,
+      startAngle: number,
+      endAngle: number,
+      color: Scalar,
+      thickness?: number,
+      lineType?: number,
+      shift?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 7, 10, "ellipse");
+    const [image, center, axes, angle, startAngle, endAngle, color, thickness = 1] = arguments_;
+    this.#backend.matEllipseInto(
+      matHandleForBinding(image),
+      center.x,
+      center.y,
+      axes.width / 2,
+      axes.height / 2,
+      angle,
+      startAngle,
+      endAngle,
+      scalarForBinding(color),
+      toWasmI32(thickness),
+    );
+  }
+
+  fillPoly(
+    ...arguments_: [
+      image: Mat,
+      pts: MatVector | Mat,
+      color: Scalar,
+      lineType?: number,
+      shift?: number,
+      offset?: Point,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 6, "fillPoly");
+    const [image, pts, color] = arguments_;
+    this.#backend.matFillPolyInto(
+      matHandleForBinding(image),
+      contourPoints(pts),
+      true,
+      scalarForBinding(color),
+    );
+  }
+
+  drawMarker(
+    ...arguments_: [
+      image: Mat,
+      position: Point,
+      color: Scalar,
+      markerType?: number,
+      markerSize?: number,
+      thickness?: number,
+      lineType?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 7, "drawMarker");
+    const [image, position, color, markerType = 0, markerSize = 20, thickness = 1] = arguments_;
+    this.#backend.matDrawMarkerInto(
+      matHandleForBinding(image),
+      toWasmI32(position.x),
+      toWasmI32(position.y),
+      scalarForBinding(color),
+      toWasmI32(markerType),
+      toWasmI32(markerSize),
+      toWasmI32(thickness),
+    );
+  }
+
+  polylines(
+    ...arguments_: [
+      image: Mat,
+      pts: MatVector | Mat,
+      isClosed: boolean,
+      color: Scalar,
+      thickness?: number,
+      lineType?: number,
+      shift?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "polylines");
+    const [image, pts, isClosed, color, thickness = 1] = arguments_;
+    this.#backend.matPolylinesInto(
+      matHandleForBinding(image),
+      contourPoints(pts),
+      isClosed,
+      scalarForBinding(color),
+      toWasmI32(thickness),
     );
   }
 

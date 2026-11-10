@@ -1652,6 +1652,72 @@ export function runCoreOpsCases(cv, reference) {
     return { count, rects: api.summary(rects) };
   });
 
+  // ---- drawing primitives
+  const drawSrc = () => api.mat(7, 7, 1, 0, Array.from({ length: 49 }).fill(0));
+  run("line/h", (handles) => {
+    const image = track(handles, drawSrc());
+    cv.line(image, { x: 1, y: 2 }, { x: 5, y: 2 }, [255, 0, 0, 0], 1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  run("line/d", (handles) => {
+    const image = track(handles, drawSrc());
+    cv.line(image, { x: 1, y: 1 }, { x: 5, y: 5 }, [255, 0, 0, 0], 1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  run("line/slope", (handles) => {
+    const image = track(handles, api.mat(8, 8, 1, 0, Array.from({ length: 64 }).fill(0)));
+    cv.line(image, { x: 1, y: 1 }, { x: 6, y: 4 }, [255, 0, 0, 0], 1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  run("rectangle", (handles) => {
+    const image = track(handles, drawSrc());
+    cv.rectangle(image, { x: 1, y: 1 }, { x: 5, y: 4 }, [255, 0, 0, 0], 1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  run("rectangle/fill", (handles) => {
+    const image = track(handles, drawSrc());
+    cv.rectangle(image, { x: 1, y: 1 }, { x: 5, y: 4 }, [255, 0, 0, 0], -1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  run("circle", (handles) => {
+    const image = track(handles, api.mat(9, 9, 1, 0, Array.from({ length: 81 }).fill(0)));
+    cv.circle(image, { x: 4, y: 4 }, 3, [255, 0, 0, 0], 1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  run("circle/fill", (handles) => {
+    const image = track(handles, api.mat(9, 9, 1, 0, Array.from({ length: 81 }).fill(0)));
+    cv.circle(image, { x: 4, y: 4 }, 3, [255, 0, 0, 0], -1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  for (const mt of [0, 1]) {
+    run(`drawMarker/${mt}`, (handles) => {
+      const image = track(handles, api.mat(9, 9, 1, 0, Array.from({ length: 81 }).fill(0)));
+      cv.drawMarker(image, { x: 4, y: 4 }, [255, 0, 0, 0], mt, 10, 1, 8);
+      return { image: api.summary(image) };
+    });
+  }
+  run("polylines", (handles) => {
+    const image = track(handles, drawSrc());
+    const pts = track(handles, api.mat(1, 4, 2, 3, [1, 1, 5, 1, 5, 5, 1, 5]));
+    const mv = reference ? new cv.MatVector() : cv.createMatVector();
+    mv.push_back(pts);
+    cv.polylines(image, mv, true, [255, 0, 0, 0], 1, 8, 0);
+    return { image: api.summary(image) };
+  });
+  run("fillPoly", (handles) => {
+    const image = track(handles, drawSrc());
+    const pts = track(handles, api.mat(1, 3, 2, 3, [1, 1, 5, 1, 3, 5]));
+    const mv = reference ? new cv.MatVector() : cv.createMatVector();
+    mv.push_back(pts);
+    cv.fillPoly(image, mv, [255, 0, 0, 0], 8, 0, { x: 0, y: 0 });
+    return { image: api.summary(image) };
+  });
+  run("ellipse", (handles) => {
+    const image = track(handles, api.mat(11, 11, 1, 0, Array.from({ length: 121 }).fill(0)));
+    cv.ellipse(image, { x: 5, y: 5 }, { width: 6, height: 4 }, 0, 0, 360, [255, 0, 0, 0], 1, 8, 0);
+    return { image: api.summary(image) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1733,6 +1799,13 @@ export function runCoreOpsCases(cv, reference) {
       calcBackProject: cv.calcBackProject.length,
       warpPolar: cv.warpPolar.length,
       groupRectangles: cv.groupRectangles.length,
+      line: cv.line.length,
+      rectangle: cv.rectangle.length,
+      circle: cv.circle.length,
+      ellipse: cv.ellipse.length,
+      fillPoly: cv.fillPoly.length,
+      drawMarker: cv.drawMarker.length,
+      polylines: cv.polylines.length,
     },
   }));
 

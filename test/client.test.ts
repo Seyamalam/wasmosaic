@@ -2142,6 +2142,33 @@ class CopyingBackend implements OpenCvBackend {
   matGroupRectanglesInto(): number {
     throw new OpenCvInputError("mock groupRectangles is not implemented");
   }
+  matLineInto(): void {
+    throw new OpenCvInputError("mock line is not implemented");
+  }
+
+  matRectangleInto(): void {
+    throw new OpenCvInputError("mock rectangle is not implemented");
+  }
+
+  matCircleInto(): void {
+    throw new OpenCvInputError("mock circle is not implemented");
+  }
+
+  matEllipseInto(): void {
+    throw new OpenCvInputError("mock ellipse is not implemented");
+  }
+
+  matFillPolyInto(): void {
+    throw new OpenCvInputError("mock fillPoly is not implemented");
+  }
+
+  matDrawMarkerInto(): void {
+    throw new OpenCvInputError("mock drawMarker is not implemented");
+  }
+
+  matPolylinesInto(): void {
+    throw new OpenCvInputError("mock polylines is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,

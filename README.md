@@ -256,6 +256,13 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `minEnclosingCircle`                        | `cv.minEnclosingCircle`                        | Partial | Approximate circle radius differs                    |
 | imgproc    | `fitEllipse`                                | `cv.fitEllipse`                                | Partial | Least-squares conic; degenerate cases differ         |
 | imgproc    | `fitLine`                                   | `cv.fitLine`                                   | Full    | DIST_L2 principal-axis fit                           |
+| imgproc    | `line`                                      | `cv.line`                                      | Full    | Bresenham 8-connected line rasterization             |
+| imgproc    | `rectangle`                                 | `cv.rectangle`                                 | Full    | Outline and filled axis-aligned rects                |
+| imgproc    | `drawMarker`                                | `cv.drawMarker`                                | Full    | Cross and tilted-cross marker glyphs                 |
+| imgproc    | `polylines`                                 | `cv.polylines`                                 | Full    | Connected vertex chains                              |
+| imgproc    | `fillPoly`                                  | `cv.fillPoly`                                  | Full    | Scanline polygon fill                                |
+| imgproc    | `circle`                                    | `cv.circle`                                    | Partial | Upstream ellipse-arc raster differs                  |
+| imgproc    | `ellipse`                                   | `cv.ellipse`                                   | Partial | Upstream ellipse-arc raster differs                  |
 | core       | `dft`                                       | `cv.dft`                                       | Full    | 2-D F32 DFT with complex/scale flags                 |
 | core       | `kmeans`                                    | `cv.kmeans`                                    | Partial | Compactness ulp differs                              |
 | imgproc    | `calcBackProject`                           | `cv.calcBackProject`                           | Partial | Upstream binding rejects JS arg forms                |

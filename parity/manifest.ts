@@ -32,6 +32,7 @@ const IMGPROC_TRANSFORM_SOURCE =
   "https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html";
 const IMGPROC_MISC_SOURCE = "https://docs.opencv.org/4.13.0/d7/d1b/group__imgproc__misc.html";
 const IMGPROC_HISTOGRAM_SOURCE = "https://docs.opencv.org/4.13.0/d6/dc7/group__imgproc__hist.html";
+const IMGPROC_DRAWING_SOURCE = "https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html";
 const IMGPROC_SOURCE = "https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html";
 const PHOTO_SOURCE = "https://docs.opencv.org/4.13.0/d1/d0d/group__photo.html";
 
@@ -2560,6 +2561,84 @@ export const PARITY_MANIFEST = {
       upstream: "groupRectangles",
       upstreamId: "objdetect.function.group-rectangles",
       wasmExport: "matGroupRectanglesInto",
+    },
+
+    {
+      implementationOrigin: "original",
+      method: "line",
+      module: "imgproc",
+      notes: "Bresenham 8-connected line rasterization",
+      sources: [IMGPROC_DRAWING_SOURCE],
+      status: "implemented",
+      upstream: "line",
+      upstreamId: "imgproc.function.line",
+      wasmExport: "matLineInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "rectangle",
+      module: "imgproc",
+      notes: "Axis-aligned rect outline/fill",
+      sources: [IMGPROC_DRAWING_SOURCE],
+      status: "implemented",
+      upstream: "rectangle",
+      upstreamId: "imgproc.function.rectangle",
+      wasmExport: "matRectangleInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "circle",
+      module: "imgproc",
+      notes: "Circle raster; upstream uses the ellipse-arc raster path",
+      sources: [IMGPROC_DRAWING_SOURCE],
+      status: "partial",
+      upstream: "circle",
+      upstreamId: "imgproc.function.circle",
+      wasmExport: "matCircleInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "ellipse",
+      module: "imgproc",
+      notes: "Ellipse arc; upstream raster differs from parametric",
+      sources: [IMGPROC_DRAWING_SOURCE],
+      status: "partial",
+      upstream: "ellipse",
+      upstreamId: "imgproc.function.ellipse",
+      wasmExport: "matEllipseInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "fillPoly",
+      module: "imgproc",
+      notes: "Scanline polygon fill",
+      sources: [IMGPROC_DRAWING_SOURCE],
+      status: "implemented",
+      upstream: "fillPoly",
+      upstreamId: "imgproc.function.fill-poly",
+      wasmExport: "matFillPolyInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "drawMarker",
+      module: "imgproc",
+      notes: "Cross/X marker glyphs",
+      sources: [IMGPROC_DRAWING_SOURCE],
+      status: "implemented",
+      upstream: "drawMarker",
+      upstreamId: "imgproc.function.draw-marker",
+      wasmExport: "matDrawMarkerInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "polylines",
+      module: "imgproc",
+      notes: "Connected vertex chains",
+      sources: [IMGPROC_DRAWING_SOURCE],
+      status: "implemented",
+      upstream: "polylines",
+      upstreamId: "imgproc.function.polylines",
+      wasmExport: "matPolylinesInto",
     },
     {
       implementationOrigin: "original",

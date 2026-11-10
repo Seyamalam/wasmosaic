@@ -2369,6 +2369,83 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "line",
+      "module": "imgproc",
+      "notes": "Bresenham 8-connected line rasterization",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "implemented",
+      "upstream": "line",
+      "upstreamId": "imgproc.function.line",
+      "wasmExport": "matLineInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "rectangle",
+      "module": "imgproc",
+      "notes": "Axis-aligned rect outline/fill",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "implemented",
+      "upstream": "rectangle",
+      "upstreamId": "imgproc.function.rectangle",
+      "wasmExport": "matRectangleInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "circle",
+      "module": "imgproc",
+      "notes": "Circle raster; upstream uses the ellipse-arc raster path",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "partial",
+      "upstream": "circle",
+      "upstreamId": "imgproc.function.circle",
+      "wasmExport": "matCircleInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "ellipse",
+      "module": "imgproc",
+      "notes": "Ellipse arc; upstream raster differs from parametric",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "partial",
+      "upstream": "ellipse",
+      "upstreamId": "imgproc.function.ellipse",
+      "wasmExport": "matEllipseInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "fillPoly",
+      "module": "imgproc",
+      "notes": "Scanline polygon fill",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "implemented",
+      "upstream": "fillPoly",
+      "upstreamId": "imgproc.function.fill-poly",
+      "wasmExport": "matFillPolyInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "drawMarker",
+      "module": "imgproc",
+      "notes": "Cross/X marker glyphs",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "implemented",
+      "upstream": "drawMarker",
+      "upstreamId": "imgproc.function.draw-marker",
+      "wasmExport": "matDrawMarkerInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "polylines",
+      "module": "imgproc",
+      "notes": "Connected vertex chains",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "implemented",
+      "upstream": "polylines",
+      "upstreamId": "imgproc.function.polylines",
+      "wasmExport": "matPolylinesInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "integral",
       "module": "imgproc",
       "notes": "Sum-only integral images with pinned source-depth gates, per-depth allowed sum depths, and multi-channel output.",

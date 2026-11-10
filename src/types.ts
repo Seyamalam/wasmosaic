@@ -577,6 +577,68 @@ export interface OpenCvBackend {
     groupThreshold: number,
     eps: number,
   ): number;
+  matLineInto(
+    image: WasmMatHandle,
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    color: Float64Array | number[],
+    thickness: number,
+    lineType: number,
+    shift: number,
+  ): void;
+  matRectangleInto(
+    image: WasmMatHandle,
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    color: Float64Array | number[],
+    thickness: number,
+  ): void;
+  matCircleInto(
+    image: WasmMatHandle,
+    cx: number,
+    cy: number,
+    radius: number,
+    color: Float64Array | number[],
+    thickness: number,
+  ): void;
+  matEllipseInto(
+    image: WasmMatHandle,
+    cx: number,
+    cy: number,
+    ax: number,
+    ay: number,
+    angleDeg: number,
+    startDeg: number,
+    endDeg: number,
+    color: Float64Array | number[],
+    thickness: number,
+  ): void;
+  matFillPolyInto(
+    image: WasmMatHandle,
+    points: Int32Array | number[],
+    closed: boolean,
+    color: Float64Array | number[],
+  ): void;
+  matDrawMarkerInto(
+    image: WasmMatHandle,
+    x: number,
+    y: number,
+    color: Float64Array | number[],
+    markerType: number,
+    markerSize: number,
+    thickness: number,
+  ): void;
+  matPolylinesInto(
+    image: WasmMatHandle,
+    points: Int32Array | number[],
+    closed: boolean,
+    color: Float64Array | number[],
+    thickness: number,
+  ): void;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1466,6 +1528,71 @@ export interface OpenCv {
     flags: number,
   ): void;
   groupRectangles(rects: Mat, weights: Mat, groupThreshold: number, eps?: number): number;
+  line(
+    image: Mat,
+    pt1: Point,
+    pt2: Point,
+    color: Scalar,
+    thickness?: number,
+    lineType?: number,
+    shift?: number,
+  ): void;
+  rectangle(
+    image: Mat,
+    pt1: Point,
+    pt2: Point,
+    color: Scalar,
+    thickness?: number,
+    lineType?: number,
+    shift?: number,
+  ): void;
+  circle(
+    image: Mat,
+    center: Point,
+    radius: number,
+    color: Scalar,
+    thickness?: number,
+    lineType?: number,
+    shift?: number,
+  ): void;
+  ellipse(
+    image: Mat,
+    center: Point,
+    axes: Size,
+    angle: number,
+    startAngle: number,
+    endAngle: number,
+    color: Scalar,
+    thickness?: number,
+    lineType?: number,
+    shift?: number,
+  ): void;
+  fillPoly(
+    image: Mat,
+    pts: MatVector | Mat,
+    color: Scalar,
+    lineType?: number,
+    shift?: number,
+    offset?: Point,
+  ): void;
+  drawMarker(
+    image: Mat,
+    position: Point,
+    color: Scalar,
+    markerType?: number,
+    markerSize?: number,
+    thickness?: number,
+    lineType?: number,
+  ): void;
+  polylines(
+    image: Mat,
+    pts: MatVector | Mat,
+    isClosed: boolean,
+    color: Scalar,
+    thickness?: number,
+    lineType?: number,
+    shift?: number,
+  ): void;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

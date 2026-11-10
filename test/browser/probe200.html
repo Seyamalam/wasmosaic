@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8" />
+<pre id="out">loading…</pre>
+<script>
+  const out = document.getElementById("out");
+  const lines = [];
+  const worker = new Worker("/test/browser/probe200-worker.js");
+  worker.onmessage = (e) => {
+    lines.push(e.data);
+    out.textContent = lines.join("\n");
+  };
+  worker.onerror = (e) => {
+    out.textContent = "ERR " + e.message;
+  };
+</script>

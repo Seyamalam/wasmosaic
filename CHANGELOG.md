@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Drawing batch: `line` (Bresenham 8-connected rasterization with thickness), `rectangle` (outline and filled), `drawMarker` (cross and tilted-cross glyphs), `polylines` (connected vertex chains), and `fillPoly` (scanline polygon fill). `circle` and `ellipse` ship as partials: the pinned rasterizer uses a distinct ellipse-arc path that differs from midpoint-circle and parametric rasterization. **Full parity is now 189 of 488 families.**
+
+### Added
+
 - Clustering and transform batch: `dft` (2-D F32 discrete Fourier transform with `DFT_COMPLEX_OUTPUT` and `DFT_SCALE` flags). `kmeans` ships as a partial (farthest-point seeded Lloyd iterations; compactness accumulation differs at f32-ulp level), `calcBackProject` (histogram lookup; the pinned upstream binding rejects every JS argument form), `warpPolar` (polar warping; upstream output is nondeterministic across identical calls), and `groupRectangles` (rect clustering; upstream requires `RectVector`). **Full parity is now 184 of 488 families.**
 
 ### Added

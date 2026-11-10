@@ -61,6 +61,8 @@ mod imgproc_color_wasm;
 mod imgproc_contours;
 mod imgproc_contours_wasm;
 mod imgproc_correlate;
+mod imgproc_draw;
+mod imgproc_draw_wasm;
 mod imgproc_correlate_wasm;
 mod imgproc_filter;
 mod imgproc_filter_wasm;
