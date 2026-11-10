@@ -211,6 +211,11 @@ pub(crate) fn ellipse_poly(
             y: axis_y,
         });
     }
+    let (arc_start, arc_end) = if arc_start <= arc_end {
+        (arc_start, arc_end)
+    } else {
+        (arc_end, arc_start)
+    };
     if !(0..=360).contains(&arc_start) || !(arc_start..=360).contains(&arc_end) {
         return Err(HelperError::InvalidArc {
             start: arc_start,
@@ -219,6 +224,9 @@ pub(crate) fn ellipse_poly(
     }
     if !(1..=180).contains(&delta) {
         return Err(HelperError::InvalidAngularStep(delta));
+    }
+    if arc_start == arc_end {
+        return Ok(vec![Point { x: 0, y: 0 }, Point { x: 0, y: 0 }]);
     }
 
     let rotation = f64::from(rotation_degrees.rem_euclid(360)).to_radians();
@@ -245,6 +253,9 @@ pub(crate) fn ellipse_poly(
             break;
         }
         degrees = degrees.saturating_add(delta).min(arc_end);
+    }
+    if points.len() == 1 {
+        points.push(points[0]);
     }
     Ok(points)
 }
@@ -441,9 +452,9 @@ mod tests {
             ]
         );
 
-        let rotated =
-            ellipse_poly(Point { x: 0, y: 0 }, 10, 5, 90, 0, 0, 10).expect("valid rotated point");
-        assert_eq!(rotated, [Point { x: 0, y: 10 }]);
+        let degenerate =
+            ellipse_poly(Point { x: 0, y: 0 }, 10, 5, 90, 0, 0, 10).expect("valid empty arc");
+        assert_eq!(degenerate, [Point { x: 0, y: 0 }, Point { x: 0, y: 0 }]);
     }
 
     #[test]
@@ -482,7 +493,7 @@ mod tests {
         ));
         assert_eq!(hanning_window(1, 3), Err(HelperError::WindowTooSmall));
         assert!(matches!(
-            ellipse_poly(Point { x: 0, y: 0 }, 3, 2, 0, 90, 0, 1),
+            ellipse_poly(Point { x: 0, y: 0 }, 3, 2, 0, 370, 400, 1),
             Err(HelperError::InvalidArc { .. })
         ));
         assert_eq!(
@@ -490,7 +501,7 @@ mod tests {
             Err(HelperError::InvalidAngularStep(0))
         );
         assert_eq!(
-            ellipse_poly(Point { x: i32::MAX, y: 0 }, 1, 1, 0, 0, 0, 1),
+            ellipse_poly(Point { x: i32::MAX, y: 0 }, 1, 1, 0, 0, 90, 1),
             Err(HelperError::CoordinateOverflow)
         );
         assert_eq!(

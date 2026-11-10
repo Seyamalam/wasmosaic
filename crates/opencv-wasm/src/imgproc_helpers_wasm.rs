@@ -215,12 +215,55 @@ pub fn ellipse_2_poly(
     Ok(flatten_points(&points))
 }
 
+/// Reports whether a line segment intersects the inclusive pixel bounds of a rectangle.
+///
+/// Matches the pinned `cv.clipLine` binding: only the boolean result is observable because the
+/// caller's point objects cannot be mutated through Embind. Degenerate or empty rectangles return
+/// `false` instead of raising.
+#[must_use]
+#[wasm_bindgen(js_name = clipLineBool)]
+#[allow(clippy::too_many_arguments)]
+pub fn clip_line_bool(
+    rectangle_x: i32,
+    rectangle_y: i32,
+    rectangle_width: i32,
+    rectangle_height: i32,
+    start_x: i32,
+    start_y: i32,
+    end_x: i32,
+    end_y: i32,
+) -> bool {
+    if rectangle_width <= 0 || rectangle_height <= 0 {
+        return false;
+    }
+    let Ok(width) = u32::try_from(rectangle_width) else {
+        return false;
+    };
+    let Ok(height) = u32::try_from(rectangle_height) else {
+        return false;
+    };
+    clip_line(
+        Rect {
+            x: rectangle_x,
+            y: rectangle_y,
+            width,
+            height,
+        },
+        Point {
+            x: start_x,
+            y: start_y,
+        },
+        Point { x: end_x, y: end_y },
+    )
+    .is_ok_and(|clipped| clipped.is_some())
+}
+
 /// Clips a line segment to the inclusive pixel bounds of an integer rectangle.
 ///
 /// A visible segment returns `[x1, y1, x2, y2]`; a disjoint segment returns an empty
 /// `Int32Array`. Width and height must be positive, and the inclusive right and bottom edges must
-/// fit signed 32-bit coordinates. This partial binding returns coordinates rather than mutating
-/// caller-owned point objects.
+/// fit signed 32-bit coordinates. This coordinate-returning extension complements the
+/// bool-only upstream form.
 ///
 /// # Errors
 ///

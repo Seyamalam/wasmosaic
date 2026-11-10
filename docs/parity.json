@@ -1095,12 +1095,12 @@
       "implementationOrigin": "original",
       "method": "copyMakeBorder",
       "module": "core",
-      "notes": "All depths, constant/replicate/reflect/wrap/reflect101 modes, isolated bit, and scalar constants; public destination form remains.",
+      "notes": "Destination form across all scalar depths and channels, five border modes plus the isolated bit, optional scalar value, asymmetric sizes, destination reallocation, and error paths; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.copyMakeBorder",
       "upstreamId": "core.function.copy-make-border",
-      "wasmExport": "matCopyMakeBorder"
+      "wasmExport": "matCopyMakeBorderInto"
     },
     {
       "implementationOrigin": "original",
@@ -1425,9 +1425,9 @@
       "implementationOrigin": "original",
       "method": "ellipse2Poly",
       "module": "imgproc",
-      "notes": "Non-negative integer axes, ordered arc bounds from 0 through 360 degrees, and angular steps from 1 through 180 return deduplicated integer points; arc normalization, swapped bounds, mutable output, and differential fixtures remain.",
+      "notes": "Seven-argument PointVector destination form with truncated float parameters, normalized swapped arcs, deduplicated endpoint handling, degenerate two-point output, and arc/delta validation; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.ellipse2Poly",
       "upstreamId": "imgproc.function.ellipse2-poly",
       "wasmExport": "ellipse2Poly"
@@ -1436,12 +1436,12 @@
       "implementationOrigin": "original",
       "method": "clipLine",
       "module": "imgproc",
-      "notes": "Signed 32-bit integer segments clip against positive-size integer rectangles with inclusive pixel bounds; the package returns points instead of mutating caller-owned point objects, and differential fixtures remain.",
+      "notes": "Strict three-argument contract returning the boolean intersection result, Rect field validation, truncated float inputs, and false for degenerate rectangles; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.clipLine",
       "upstreamId": "imgproc.function.clip-line",
-      "wasmExport": "clipLine"
+      "wasmExport": "clipLineBool"
     },
     {
       "implementationOrigin": "original",
@@ -1956,9 +1956,9 @@
       "implementationOrigin": "original",
       "method": "equalizeHist",
       "module": "imgproc",
-      "notes": "Single-channel U8 histogram equalization with a Rust-owned cumulative histogram and lookup table, mutable destinations, constant-image preservation, and pinned-browser differential evidence; CLAHE is a separate unimplemented family.",
+      "notes": "Single-channel U8 histogram equalization across histogram shapes, constant images, ROI sources, mutable and reallocated destinations, multi-channel and non-U8 rejection, and empty matrices; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d6/dc7/group__imgproc__hist.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.equalizeHist",
       "upstreamId": "imgproc.function.equalize-hist",
       "wasmExport": "matEqualizeHistInto"

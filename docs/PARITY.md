@@ -99,7 +99,7 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `compare`, `inRange`                                                  | `cv.compare`, `cv.inRange`                                | Six comparison modes and all-depth bounds                 |
 | `split`, `merge`                                                      | `cv.split`, `cv.merge`                                    | Full MatVector contracts across all depths                |
 | `hconcat`, `vconcat`                                                  | `cv.hconcat`, `cv.vconcat`                                | Full MatVector contracts across all depths                |
-| `copyMakeBorder`                                                      | `cv.copyMakeBorder`                                       | All depths and five border modes                          |
+| `copyMakeBorder`                                                      | `cv.copyMakeBorder`                                       | Full pinned contract                                      |
 | `lut`                                                                 | `cv.LUT`                                                  | Byte sources and every table depth                        |
 | `norm`, `normalize`                                                   | `cv.norm`, `cv.normalize`                                 | All depths, masks, and major norm modes                   |
 | `meanStdDev`, `reduce`                                                | `cv.meanStdDev`, `cv.reduce`                              | All depths and mutable outputs                            |
@@ -108,7 +108,7 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `getLogLevel`, `setLogLevel`                                          | Matching `cv` logging families                            | Log bindings stay absent from upstream browser artifact.  |
 | `transform`, `perspectiveTransform`                                   | `cv.transform`, `cv.perspectiveTransform`                 | Selected channel and coefficient forms                    |
 | `invert`, `solve`                                                     | `cv.invert`, `cv.solve`                                   | Selected dense single-channel methods                     |
-| `ellipse2Poly`, `clipLine`                                            | Matching `cv` integer geometry helpers                    | Selected integer argument and return forms                |
+| `ellipse2Poly`, `clipLine`                                            | Matching `cv` integer geometry helpers                    | Full pinned contract                                      |
 | `getPerspectiveTransform`                                             | `cv.getPerspectiveTransform`                              | Continuous F32 points; LU/QR with F64 output              |
 | `createAKAZE`                                                         | `cv.AKAZE.create`                                         | Static factory is absent from the pinned artifact         |
 | `createKAZE`                                                          | `cv.KAZE.create`                                          | Static factory is absent from the pinned artifact         |
@@ -123,7 +123,7 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `approxPolyDP`                                                        | `cv.approxPolyDP`                                         | I32/F32 open/closed curves and mutable destinations       |
 | `findContours`                                                        | `cv.findContours`                                         | U8 holes, nested hierarchy, SIMPLE/NONE chains            |
 | `warpAffine`                                                          | `cv.warpAffine`                                           | U8 nearest/linear warps and constant/replicate borders    |
-| `equalizeHist`                                                        | `cv.equalizeHist`                                         | Exact single-channel U8 histogram equalization            |
+| `equalizeHist`                                                        | `cv.equalizeHist`                                         | Full pinned contract                                      |
 | `matchTemplate`                                                       | `cv.matchTemplate`                                        | Six U8/F32 methods, binary/weighted masks, F32 score maps |
 | `createTonemapDrago`, `createTonemapMantiuk`, `createTonemapReinhard` | Matching global `cv.createTonemap*` functions             | Global factories absent; pixel processing remains         |
 

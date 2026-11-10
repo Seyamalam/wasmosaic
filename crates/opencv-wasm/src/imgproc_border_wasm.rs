@@ -103,15 +103,14 @@ pub fn mat_copy_make_border_into(
 ) -> Result<(), JsError> {
     let output = make_border(source, top, bottom, left, right, border_type, constant)
         .map_err(JsError::from)?;
-    if destination.rows() != output.rows()
-        || destination.columns() != output.columns()
-        || destination.channels() != output.channels()
-        || destination.depth() != output.depth()
-    {
-        return Err(JsError::from(BorderWasmError::DestinationMetadata));
-    }
     destination
-        .write_compact_bytes(&output.compact_bytes())
+        .write_output(
+            output.compact_bytes(),
+            output.rows(),
+            output.columns(),
+            output.channels(),
+            output.depth(),
+        )
         .map_err(JsError::from)
 }
 

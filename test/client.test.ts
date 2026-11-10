@@ -1312,6 +1312,31 @@ class CopyingBackend implements OpenCvBackend {
     return new Int32Array();
   }
 
+  clipLineBool(
+    rectangleX: number,
+    rectangleY: number,
+    rectangleWidth: number,
+    rectangleHeight: number,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+  ): boolean {
+    if (rectangleWidth <= 0 || rectangleHeight <= 0) return false;
+    return (
+      this.clipLine(
+        rectangleX,
+        rectangleY,
+        rectangleWidth,
+        rectangleHeight,
+        startX,
+        startY,
+        endX,
+        endY,
+      ).length > 0
+    );
+  }
+
   createHanningWindow(columns: number, rows: number, depth: number): WasmMatHandle {
     const values = Array.from({ length: rows * columns }, (_, index) => {
       const row = Math.floor(index / columns);
@@ -2445,9 +2470,11 @@ class CopyingBackend implements OpenCvBackend {
     borderType: number,
     constant: Float64Array,
   ): void {
-    destination.copyFromBytes(
-      this.matCopyMakeBorder(source, top, bottom, left, right, borderType, constant).toUint8Array(),
-    );
+    const output = this.matCopyMakeBorder(source, top, bottom, left, right, borderType, constant);
+    if (!(destination instanceof CopyingMatHandle)) {
+      throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+    }
+    destination.replaceFrom(output, output.toUint8Array());
   }
 
   matAbsdiffU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle {
@@ -4189,18 +4216,24 @@ describe("OpenCv client", () => {
     const allocatedWindow = client.createHanningWindowAlloc({ width: 3, height: 3 }, "f64");
     expect(allocatedWindow.toFloat64Array()).toEqual(new Float64Array([0, 0, 0, 0, 1, 0, 0, 0, 0]));
 
-    expect(client.ellipse2Poly({ x: 0, y: 0 }, { width: 10, height: 5 }, 0, 0, 90, 90)).toEqual([
+    expect(
+      client.ellipse2PolyPoints({ x: 0, y: 0 }, { width: 10, height: 5 }, 0, 0, 90, 90),
+    ).toEqual([
       { x: 10, y: 0 },
       { x: 0, y: 5 },
     ]);
     expect(
-      client.clipLine({ x: 10, y: 20, width: 5, height: 4 }, { x: 8, y: 21 }, { x: 16, y: 21 }),
+      client.clipLinePoints(
+        { x: 10, y: 20, width: 5, height: 4 },
+        { x: 8, y: 21 },
+        { x: 16, y: 21 },
+      ),
     ).toEqual([
       { x: 10, y: 21 },
       { x: 14, y: 21 },
     ]);
     expect(
-      client.clipLine({ x: 10, y: 20, width: 5, height: 4 }, { x: 0, y: 0 }, { x: 1, y: 1 }),
+      client.clipLinePoints({ x: 10, y: 20, width: 5, height: 4 }, { x: 0, y: 0 }, { x: 1, y: 1 }),
     ).toBeUndefined();
     expect(() => client.createHanningWindow(window, { width: 1, height: 3 }, 5)).toThrow();
 
@@ -5241,7 +5274,7 @@ describe("OpenCv client", () => {
 
   test("adds typed matrix borders", () => {
     const source = client.matFromU8(1, 2, 1, new Uint8Array([7, 8]));
-    const bordered = client.copyMakeBorder(source, 1, 1, 1, 1, 0, [9, 0, 0, 0]);
+    const bordered = client.copyMakeBorderAlloc(source, 1, 1, 1, 1, 0, [9, 0, 0, 0]);
     expect(bordered.rows).toBe(3);
     expect(bordered.columns).toBe(4);
     expect(bordered.toUint8Array()).toEqual(new Uint8Array([9, 9, 9, 9, 9, 7, 8, 9, 9, 9, 9, 9]));

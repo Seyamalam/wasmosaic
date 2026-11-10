@@ -29,6 +29,7 @@ import type {
 } from "./feature-detectors.js";
 import type { Mat, WasmMatHandle } from "./mat.js";
 import type { MatVector, WasmMatVectorHandle } from "./mat-vector.js";
+import type { PointVector } from "./point-vector.js";
 import type { ColorConversionCode } from "./color.js";
 import type { Interpolation } from "./interpolation.js";
 import type { TemplateMatchMode } from "./template-matching.js";
@@ -163,6 +164,16 @@ export interface OpenCvBackend {
   readonly TonemapDrago: WasmTonemapDragoFactory;
   readonly TonemapMantiuk: WasmTonemapMantiukFactory;
   readonly TonemapReinhard: WasmTonemapReinhardFactory;
+  clipLineBool(
+    rectangleX: number,
+    rectangleY: number,
+    rectangleWidth: number,
+    rectangleHeight: number,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+  ): boolean;
   clipLine(
     rectangleX: number,
     rectangleY: number,
@@ -523,6 +534,16 @@ export interface OpenCvBackend {
     alpha: number,
     beta: number,
   ): void;
+  matCopyMakeBorderInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    top: number,
+    bottom: number,
+    left: number,
+    right: number,
+    borderType: number,
+    constant: Float64Array,
+  ): void;
   matCopyMakeBorder(
     source: WasmMatHandle,
     top: number,
@@ -730,7 +751,8 @@ export interface OpenCv {
   approxPolyDP(curve: Mat, approximation: Mat, epsilon: number, closed: boolean): void;
   arcLength(contour: Mat, closed: boolean): number;
   boundingRect(contour: Mat): Rect;
-  clipLine(rectangle: Rect, start: Point, end: Point): readonly [Point, Point] | undefined;
+  clipLine(rectangle: Rect, start: Point, end: Point): boolean;
+  clipLinePoints(rectangle: Rect, start: Point, end: Point): readonly [Point, Point] | undefined;
   compare(source1: Mat, source2: Mat, destination: Mat, compareOp: number): void;
   compareEqual(left: Mat, right: Mat): Mat;
   cartToPolar(x: Mat, y: Mat, magnitude: Mat, angle: Mat, degrees?: boolean): void;
@@ -754,6 +776,7 @@ export interface OpenCv {
   createGFTTDetector(options?: GFTTDetectorOptions): GFTTDetector;
   createMSER(options?: MSEROptions): MSER;
   createMatVector(): MatVector;
+  createPointVector(): PointVector;
   createTonemapDrago(gamma?: number, saturation?: number, bias?: number): TonemapDrago;
   createTonemapMantiuk(gamma?: number, scale?: number, saturation?: number): TonemapMantiuk;
   createTonemapReinhard(
@@ -766,6 +789,16 @@ export interface OpenCv {
   convertScaleAbs(source: Mat, destination: Mat, alpha?: number, beta?: number): void;
   convertScaleAbsAlloc(source: Mat, alpha?: number, beta?: number): Mat;
   copyMakeBorder(
+    source: Mat,
+    destination: Mat,
+    top: number,
+    bottom: number,
+    left: number,
+    right: number,
+    borderType: BorderType,
+    value?: Scalar,
+  ): void;
+  copyMakeBorderAlloc(
     source: Mat,
     top: number,
     bottom: number,
@@ -784,6 +817,15 @@ export interface OpenCv {
   divideAlloc(a: Mat, b: Mat, scale?: number): Mat;
   extractChannel(source: Mat, channel: number): Mat;
   ellipse2Poly(
+    center: Point,
+    axes: Size,
+    rotationDegrees: number,
+    arcStart: number,
+    arcEnd: number,
+    delta: number,
+    points: PointVector,
+  ): void;
+  ellipse2PolyPoints(
     center: Point,
     axes: Size,
     rotationDegrees: number,

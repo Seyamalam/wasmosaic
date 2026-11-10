@@ -43,6 +43,7 @@ import {
 import { BindingError, OpenCvInputError } from "./error.js";
 import { Mat, validateMatrixDimension, validateMatrixInput } from "./mat.js";
 import { MatVector } from "./mat-vector.js";
+import { PointVector } from "./point-vector.js";
 import {
   COLOR_BGR2BGRA,
   COLOR_BGR2GRAY,
@@ -415,7 +416,24 @@ class WasmOpenCv implements OpenCv {
     return rectangleFromArray(this.#backend.matBoundingRect(matHandleForBinding(contour)));
   }
 
-  clipLine(rectangle: Rect, start: Point, end: Point): readonly [Point, Point] | undefined {
+  clipLine(rectangle: Rect, start: Point, end: Point): boolean {
+    requireExactArity(arguments.length, 3, "clipLine");
+    const rect = rectForBinding(rectangle);
+    const startPoint = pointForBinding(start, "start");
+    const endPoint = pointForBinding(end, "end");
+    return this.#backend.clipLineBool(
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+      startPoint.x,
+      startPoint.y,
+      endPoint.x,
+      endPoint.y,
+    );
+  }
+
+  clipLinePoints(rectangle: Rect, start: Point, end: Point): readonly [Point, Point] | undefined {
     validateRect(rectangle);
     validateIntegerPoint(start, "start");
     validateIntegerPoint(end, "end");
@@ -586,6 +604,10 @@ class WasmOpenCv implements OpenCv {
     return new MatVector(this.#backend.matVectorNew());
   }
 
+  createPointVector(): PointVector {
+    return new PointVector();
+  }
+
   createTonemapDrago(
     ...arguments_:
       | []
@@ -685,6 +707,37 @@ class WasmOpenCv implements OpenCv {
   }
 
   copyMakeBorder(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      top: number,
+      bottom: number,
+      left: number,
+      right: number,
+      borderType: BorderType,
+      value?: Scalar,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 7, 8, "copyMakeBorder");
+    const [source, destination, top, bottom, left, right, borderType] = arguments_;
+    const constant = arguments_.length === 8 ? scalarForBinding(arguments_[7]) : [0, 0, 0, 0];
+    validateBorderSize(top, "top");
+    validateBorderSize(bottom, "bottom");
+    validateBorderSize(left, "left");
+    validateBorderSize(right, "right");
+    this.#backend.matCopyMakeBorderInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      top,
+      bottom,
+      left,
+      right,
+      toWasmI32(borderType),
+      Float64Array.from(constant),
+    );
+  }
+
+  copyMakeBorderAlloc(
     source: Mat,
     top: number,
     bottom: number,
@@ -767,25 +820,46 @@ class WasmOpenCv implements OpenCv {
     arcStart: number,
     arcEnd: number,
     delta: number,
+    points: PointVector,
+  ): void {
+    requireExactArity(arguments.length, 7, "ellipse2Poly");
+    const flat = this.ellipsePolyFlat(center, axes, rotationDegrees, arcStart, arcEnd, delta);
+    const vector = pointVectorHandleForBinding(points);
+    for (let index = 0; index < flat.length; index += 2) {
+      vector.push_back({ x: flat[index] ?? 0, y: flat[index + 1] ?? 0 });
+    }
+  }
+
+  ellipsePolyFlat(
+    center: Point,
+    axes: Size,
+    rotationDegrees: number,
+    arcStart: number,
+    arcEnd: number,
+    delta: number,
+  ): Int32Array {
+    return this.#backend.ellipse2Poly(
+      toWasmI32(center?.x),
+      toWasmI32(center?.y),
+      toWasmI32(axes?.width),
+      toWasmI32(axes?.height),
+      toWasmI32(rotationDegrees),
+      toWasmI32(arcStart),
+      toWasmI32(arcEnd),
+      toWasmI32(delta),
+    );
+  }
+
+  ellipse2PolyPoints(
+    center: Point,
+    axes: Size,
+    rotationDegrees: number,
+    arcStart: number,
+    arcEnd: number,
+    delta: number,
   ): Point[] {
-    validateIntegerPoint(center, "center");
-    validateNonNegativeInteger(axes.width, "axes.width");
-    validateNonNegativeInteger(axes.height, "axes.height");
-    validateSignedInteger(rotationDegrees, "rotationDegrees");
-    validateSignedInteger(arcStart, "arcStart");
-    validateSignedInteger(arcEnd, "arcEnd");
-    validateSignedInteger(delta, "delta");
     return pointsFromArray(
-      this.#backend.ellipse2Poly(
-        center.x,
-        center.y,
-        axes.width,
-        axes.height,
-        rotationDegrees,
-        arcStart,
-        arcEnd,
-        delta,
-      ),
+      this.ellipsePolyFlat(center, axes, rotationDegrees, arcStart, arcEnd, delta),
     );
   }
 
@@ -1970,6 +2044,58 @@ function matVectorHandleForBinding(value: unknown): ReturnType<MatVector["handle
   return value.handleForBackend();
 }
 
+function rectForBinding(rectangle: Rect): Rect {
+  if (
+    rectangle === null ||
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- This is the JS-to-Embind Rect boundary.
+    typeof rectangle !== "object"
+  ) {
+    throw new BindingError(`Cannot convert "${String(rectangle)}" to Rect`);
+  }
+  for (const field of ["x", "y", "width", "height"] as const) {
+    if (!(field in rectangle)) {
+      throw new BindingError(`Rect is missing field ${field}`);
+    }
+  }
+  return {
+    x: toWasmI32(rectangle.x),
+    y: toWasmI32(rectangle.y),
+    width: toWasmI32(rectangle.width),
+    height: toWasmI32(rectangle.height),
+  };
+}
+
+function pointForBinding(point: Point, name: string): Point {
+  if (
+    point === null ||
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- This is the JS-to-Embind Point boundary.
+    typeof point !== "object"
+  ) {
+    throw new BindingError(`Cannot convert "${String(point)}" to Point`);
+  }
+  if (!("x" in point) || !("y" in point)) {
+    throw new BindingError(`${name} is missing field x or y`);
+  }
+  return { x: toWasmI32(point.x), y: toWasmI32(point.y) };
+}
+
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- This validator is the JS-to-Embind PointVector boundary.
+function pointVectorHandleForBinding(value: unknown): PointVector {
+  if (value === null) {
+    throw new BindingError("null is not a valid PointVector");
+  }
+  if (value === undefined) {
+    throw new TypeError("Cannot read properties of undefined (reading '$$')");
+  }
+  if (!(value instanceof PointVector)) {
+    throw new BindingError(
+      // oxlint-disable-next-line typescript/no-base-to-string -- Embind error text formats the rejected value verbatim.
+      `Expected null or instance of PointVector, got an instance of ${String(value)}`,
+    );
+  }
+  return value;
+}
+
 // oxlint-disable-next-line anti-slop/no-unknown-parameters -- This validator is the JS-to-Embind Mat boundary.
 function matHandleForBinding(value: unknown): ReturnType<Mat["handleForBackend"]> {
   if (value === null) {
@@ -2082,12 +2208,6 @@ function requireArityRange(actual: number, minimum: number, maximum: number, met
     throw new BindingError(
       `function ${method} called with ${actual} arguments, expected ${minimum} to ${maximum} args!`,
     );
-  }
-}
-
-function validateNonNegativeInteger(value: number, name: string): void {
-  if (!Number.isSafeInteger(value) || value < 0 || value > 2_147_483_647) {
-    throw new OpenCvInputError(`${name} must be a non-negative signed 32-bit integer`);
   }
 }
 

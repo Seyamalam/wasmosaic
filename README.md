@@ -79,7 +79,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | core       | `compare`                                   | `cv.compare`                                   | Full    | All-depth six-operator contract            |
 | core       | `countNonZero`                              | `cv.countNonZero`                              | Full    | Exact all-depth single-channel reduction   |
 | core       | `convertScaleAbs`                           | `cv.convertScaleAbs`                           | Full    | Exact all-depth mutable-output contract    |
-| core       | `copyMakeBorder`                            | `cv.copyMakeBorder`                            | Partial | All depths and five border modes           |
+| core       | `copyMakeBorder`                            | `cv.copyMakeBorder`                            | Full    | All depths, five modes, dst form           |
 | core       | `determinant`                               | `cv.determinant`                               | Full    | Exact F32/F64 square-matrix contract       |
 | core       | `divide`                                    | `cv.divide`                                    | Full    | Exact all-depth mutable-output contract    |
 | core       | `cartToPolar`                               | `cv.cartToPolar`                               | Full    | Exact paired F32/F64 output contract       |
@@ -206,7 +206,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | features2d | `GFTTDetector.setQualityLevel`              | `cv.GFTTDetector.setQualityLevel`              | Full    | Exact number coercion and call contract    |
 | imgproc    | `arcLength`                                 | `cv.arcLength`                                 | Full    | Exact I32/F32 contour contract             |
 | imgproc    | `boundingRect`                              | `cv.boundingRect`                              | Full    | Exact I32/F32 contour bounds               |
-| imgproc    | `clipLine`                                  | `cv.clipLine`                                  | Partial | Integer rectangle and segment form         |
+| imgproc    | `clipLine`                                  | `cv.clipLine`                                  | Full    | Boolean 3-arg contract                     |
 | imgproc    | `contourArea`                               | `cv.contourArea`                               | Full    | Exact I32/F32 contour area                 |
 | imgproc    | `createHanningWindow`                       | `cv.createHanningWindow`                       | Full    | Exact F32/F64 mutable window contract      |
 | imgproc    | `ellipse2Poly`                              | `cv.ellipse2Poly`                              | Partial | Ordered integer ellipse arcs               |
@@ -227,7 +227,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `approxPolyDP`                              | `cv.approxPolyDP`                              | Partial | I32/F32 open/closed simplification         |
 | imgproc    | `findContours`                              | `cv.findContours`                              | Partial | U8 holes, trees, chains and MatVector      |
 | imgproc    | `warpAffine`                                | `cv.warpAffine`                                | Partial | U8 nearest/linear affine image warps       |
-| imgproc    | `equalizeHist`                              | `cv.equalizeHist`                              | Partial | Exact single-channel U8 equalization       |
+| imgproc    | `equalizeHist`                              | `cv.equalizeHist`                              | Full    | U8 single-channel, dst form                |
 | imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks |
 | imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Partial | Nearest/linear projective sampling         |
 | photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process    |

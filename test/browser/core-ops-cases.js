@@ -6,6 +6,15 @@ function trackMat(handles, mat) {
 }
 
 const depths = [0, 1, 2, 3, 4, 5, 6];
+const pt = (x, y) => ({ x, y });
+const vecPoints = (vector) => {
+  const points = [];
+  for (let index = 0; index < vector.size(); index += 1) {
+    const p = vector.get(index);
+    points.push([p.x, p.y]);
+  }
+  return points;
+};
 const arrays = {
   0: (n) => Array.from({ length: n }, (_, i) => (i * 37 + 11) % 256),
   1: (n) => Array.from({ length: n }, (_, i) => ((i * 31 + 7) % 255) - 128),
@@ -652,6 +661,113 @@ export function runCoreOpsCases(cv, reference) {
       });
     }
 
+  // ---- clipLine: rectangle/point acceptance and boolean result
+  for (const [name, rect, a, b] of /** @type {[string, object, object, object][]} */ ([
+    ["inside", { x: 0, y: 0, width: 10, height: 10 }, pt(1, 1), pt(5, 5)],
+    ["outside", { x: 0, y: 0, width: 10, height: 10 }, pt(-5, -5), pt(-1, -1)],
+    ["cross", { x: 0, y: 0, width: 10, height: 10 }, pt(-5, 5), pt(15, 5)],
+    ["neg-rect", { x: -2, y: -2, width: 5, height: 5 }, pt(-5, 0), pt(10, 0)],
+    ["float-rect", { x: 0.5, y: 0.5, width: 9.7, height: 9.3 }, pt(-5, 5), pt(15, 5)],
+    ["float-pts", { x: 0, y: 0, width: 10, height: 10 }, pt(1.5, 1.5), pt(8.9, 8.9)],
+    ["degenerate", { x: 0, y: 0, width: 10, height: 10 }, pt(5, 5), pt(5, 5)],
+    ["bad-width", { x: 0, y: 0, width: -10, height: 10 }, pt(1, 1), pt(5, 5)],
+    ["zero-size", { x: 0, y: 0, width: 0, height: 0 }, pt(1, 1), pt(5, 5)],
+    ["bad-rect", { width: 10, height: 10 }, pt(1, 1), pt(5, 5)],
+    ["bad-point", { x: 0, y: 0, width: 10, height: 10 }, pt(1, 1), { y: 2 }],
+  ])) {
+    run(`clipLine/${name}`, () => ({ result: cv.clipLine(rect, a, b) }));
+  }
+
+  // ---- copyMakeBorder: dst form, all depths, five modes, optional value
+  const borderTypes = [0, 1, 2, 3, 4];
+  for (const depth of depths)
+    for (const borderType of borderTypes)
+      for (const variant of ["value", "default", "asymmetric", "isolated"]) {
+        run(`copyMakeBorder/${depth}/${borderType}/${variant}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(2, 3, depth === 6 ? 1 : 2, depth, arrays[depth](2 * 3 * (depth === 6 ? 1 : 2))),
+          );
+          const destination = track(handles, api.empty());
+          const top = variant === "asymmetric" ? 2 : 1;
+          const left = variant === "asymmetric" ? 0 : 1;
+          const type = variant === "isolated" ? borderType | 16 : borderType;
+          if (variant === "value") {
+            cv.copyMakeBorder(source, destination, top, 1, left, 1, type, [9, 8, 7, 6]);
+          } else {
+            cv.copyMakeBorder(source, destination, top, 1, left, 1, type);
+          }
+          return { destination: api.summary(destination) };
+        });
+      }
+
+  // ---- ellipse2Poly: arcs, steps, swaps, rotation
+  const ptsvec = () => (reference ? new cv.PointVector() : cv.createPointVector());
+  for (const variant of [
+    "full-90",
+    "quarter-30",
+    "swapped",
+    "rotated",
+    "delta-1",
+    "big-delta",
+    "empty-arc",
+    "zero-axes",
+    "neg-center",
+    "float-args",
+    "bad-delta",
+  ]) {
+    run(`ellipse2Poly/${variant}`, (handles) => {
+      const vector = track(handles, ptsvec());
+      const args = {
+        "full-90": [{ x: 0, y: 0 }, { width: 6, height: 4 }, 0, 0, 360, 90],
+        "quarter-30": [{ x: 5, y: 5 }, { width: 4, height: 2 }, 0, 0, 90, 30],
+        swapped: [{ x: 0, y: 0 }, { width: 4, height: 2 }, 0, 300, 60, 30],
+        rotated: [{ x: 0, y: 0 }, { width: 4, height: 2 }, 45, 0, 360, 90],
+        "delta-1": [{ x: 0, y: 0 }, { width: 3, height: 2 }, 0, 0, 360, 1],
+        "big-delta": [{ x: 0, y: 0 }, { width: 4, height: 2 }, 0, 0, 360, 400],
+        "empty-arc": [{ x: 0, y: 0 }, { width: 4, height: 2 }, 0, 10, 10, 30],
+        "zero-axes": [{ x: 0, y: 0 }, { width: 0, height: 0 }, 0, 0, 360, 90],
+        "neg-center": [{ x: -5, y: -5 }, { width: 4, height: 2 }, 0, 0, 360, 90],
+        "float-args": [{ x: 1.9, y: 2.1 }, { width: 4.6, height: 2.4 }, 0.9, 0.2, 360.7, 90.3],
+        "bad-delta": [{ x: 0, y: 0 }, { width: 4, height: 2 }, 0, 0, 360, 0],
+      }[variant];
+      cv.ellipse2Poly(args[0], args[1], args[2], args[3], args[4], args[5], vector);
+      return { points: vecPoints(vector) };
+    });
+  }
+
+  // ---- equalizeHist: histogram shapes, constants, channel/empty errors
+  for (const [
+    name,
+    values,
+    rows,
+    columns,
+    channels,
+  ] of /** @type {[string, number[], number, number, number][]} */ ([
+    ["gradient", [0, 1, 2, 3, 4, 5, 6, 7], 1, 8, 1],
+    ["clustered", [0, 0, 1, 1, 2, 3, 3, 3], 1, 8, 1],
+    ["constant", [7, 7, 7, 7], 1, 4, 1],
+    ["two-peak", [0, 0, 0, 255, 255, 255], 2, 3, 1],
+    ["wide", arrays[0](48), 6, 8, 1],
+    ["three-channel", arrays[0](24), 2, 4, 3],
+    ["bad-depth", arrays[5](8), 2, 4, 1],
+    ["roi", arrays[0](36), 6, 6, 1],
+  ])) {
+    run(`equalizeHist/${name}`, (handles) => {
+      let source = track(
+        handles,
+        api.mat(rows, columns, channels, name === "bad-depth" ? 5 : 0, values),
+      );
+      if (name === "roi") {
+        source = api.roi(track(handles, source), 1, 1, 4, 4);
+        handles.push(source);
+      }
+      const destination = track(handles, api.empty());
+      cv.equalizeHist(source, destination);
+      return { destination: api.summary(destination) };
+    });
+  }
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -679,6 +795,10 @@ export function runCoreOpsCases(cv, reference) {
       hconcat: cv.hconcat.length,
       vconcat: cv.vconcat.length,
       mixChannels: cv.mixChannels.length,
+      clipLine: cv.clipLine.length,
+      copyMakeBorder: cv.copyMakeBorder.length,
+      ellipse2Poly: cv.ellipse2Poly.length,
+      equalizeHist: cv.equalizeHist.length,
     },
   }));
 
