@@ -1590,6 +1590,68 @@ export function runCoreOpsCases(cv, reference) {
     });
   }
 
+  // ---- kmeans / dft / calcBackProject / warpPolar / groupRectangles
+  run("kmeans", (handles) => {
+    const samples = track(handles, api.mat(6, 1, 2, 5, [0, 0, 1, 0, 0, 1, 10, 10, 11, 10, 10, 11]));
+    const labels = track(handles, api.empty());
+    const centers = track(handles, api.empty());
+    const r = cv.kmeans(
+      samples,
+      2,
+      labels,
+      { type: 3, maxCount: 10, epsilon: 0.01 },
+      3,
+      2,
+      centers,
+    );
+    return {
+      r,
+      labels: api.summary(labels),
+      centers: api.summary(centers),
+    };
+  });
+  for (const flags of [0, 16, 18]) {
+    run(`dft/f${flags}`, (handles) => {
+      const source = track(handles, api.mat(2, 2, 1, 5, [1, 2, 3, 4]));
+      const destination = track(handles, api.empty());
+      cv.dft(source, destination, flags, 0);
+      return { destination: api.summary(destination) };
+    });
+  }
+  run("calcBackProject", (handles) => {
+    const source = track(
+      handles,
+      api.mat(4, 4, 1, 0, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+    );
+    const hist = track(
+      handles,
+      api.mat(4, 4, 1, 5, [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0]),
+    );
+    const destination = track(handles, api.empty());
+    const mv = reference ? new cv.MatVector() : cv.createMatVector();
+    mv.push_back(source);
+    cv.calcBackProject(mv, [0], hist, destination, [0, 16], 1.0);
+    return { destination: api.summary(destination) };
+  });
+  for (const mode of ["lin", "log"]) {
+    run(`warpPolar/${mode}`, (handles) => {
+      const source = track(
+        handles,
+        api.mat(4, 4, 1, 0, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+      );
+      const destination = track(handles, api.empty());
+      const flags = mode === "lin" ? 1 + 256 : 1 + 256 + 8;
+      cv.warpPolar(source, destination, { width: 4, height: 4 }, { x: 1.5, y: 1.5 }, 1.5, flags);
+      return { destination: api.summary(destination) };
+    });
+  }
+  run("groupRectangles", (handles) => {
+    const rects = track(handles, api.mat(3, 1, 4, 3, [0, 0, 10, 10, 1, 0, 10, 10, 50, 50, 10, 10]));
+    const weights = track(handles, api.mat(3, 1, 1, 3, [0, 0, 0]));
+    const count = cv.groupRectangles(rects, weights, 1, 0.2);
+    return { count, rects: api.summary(rects) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1666,6 +1728,11 @@ export function runCoreOpsCases(cv, reference) {
       demosaicing: cv.demosaicing.length,
       calcHist: cv.calcHist.length,
       compareHist: cv.compareHist.length,
+      kmeans: cv.kmeans.length,
+      dft: cv.dft.length,
+      calcBackProject: cv.calcBackProject.length,
+      warpPolar: cv.warpPolar.length,
+      groupRectangles: cv.groupRectangles.length,
     },
   }));
 

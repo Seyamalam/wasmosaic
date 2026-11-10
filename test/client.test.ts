@@ -2123,6 +2123,25 @@ class CopyingBackend implements OpenCvBackend {
   matCompareHist(): number {
     throw new OpenCvInputError("mock compareHist is not implemented");
   }
+  matKmeansInto(): number {
+    throw new OpenCvInputError("mock kmeans is not implemented");
+  }
+
+  matDftInto(): void {
+    throw new OpenCvInputError("mock dft is not implemented");
+  }
+
+  matCalcBackProjectInto(): void {
+    throw new OpenCvInputError("mock calcBackProject is not implemented");
+  }
+
+  matWarpPolarInto(): void {
+    throw new OpenCvInputError("mock warpPolar is not implemented");
+  }
+
+  matGroupRectanglesInto(): number {
+    throw new OpenCvInputError("mock groupRectangles is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,

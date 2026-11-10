@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Clustering and transform batch: `dft` (2-D F32 discrete Fourier transform with `DFT_COMPLEX_OUTPUT` and `DFT_SCALE` flags). `kmeans` ships as a partial (farthest-point seeded Lloyd iterations; compactness accumulation differs at f32-ulp level), `calcBackProject` (histogram lookup; the pinned upstream binding rejects every JS argument form), `warpPolar` (polar warping; upstream output is nondeterministic across identical calls), and `groupRectangles` (rect clustering; upstream requires `RectVector`). **Full parity is now 184 of 488 families.**
+
+### Added
+
 - Resampling and histogram batch: `remap` (F32-map nearest/bilinear resampling), `convertMaps` (CV_16SC2 + CV_16UC1 fixed-point packing), `getRectSubPix` (bilinear sub-pixel patch extraction), `calcHist` (F32 histogram bin counting), and `compareHist` (correlation, chi-square, intersection, and Bhattacharyya). `demosaicing` ships as a partial: the Bayer decode runs but its interpolation pattern differs. **Full parity is now 183 of 488 families.**
 
 ### Added

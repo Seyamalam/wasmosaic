@@ -94,6 +94,13 @@ export interface Size {
 /** Integer rectangle with an inclusive pixel extent. */
 export interface Rect extends Size, Point {}
 
+/** Iteration stop rule for clustering and iterative solvers. */
+export interface TermCriteria {
+  readonly type: number;
+  readonly maxCount: number;
+  readonly epsilon: number;
+}
+
 /** Structuring-element kind: rectangle, cross, ellipse, or diamond. */
 export type StructuringElementKind = 0 | 1 | 2 | 3;
 
@@ -535,6 +542,41 @@ export interface OpenCvBackend {
     accumulate: boolean,
   ): void;
   matCompareHist(h1: WasmMatHandle, h2: WasmMatHandle, method: number): number;
+  matKmeansInto(
+    samples: WasmMatHandle,
+    k: number,
+    labels: WasmMatHandle,
+    centers: WasmMatHandle,
+    maxIters: number,
+    epsilon: number,
+    attempts: number,
+  ): number;
+  matDftInto(source: WasmMatHandle, destination: WasmMatHandle, flags: number): void;
+  matCalcBackProjectInto(
+    source: WasmMatHandle,
+    channels: number,
+    hist: WasmMatHandle,
+    destination: WasmMatHandle,
+    rangeLow: number,
+    rangeHigh: number,
+    scale: number,
+  ): void;
+  matWarpPolarInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+    maxRadius: number,
+    flags: number,
+  ): void;
+  matGroupRectanglesInto(
+    rects: WasmMatHandle,
+    destination: WasmMatHandle,
+    groupThreshold: number,
+    eps: number,
+  ): number;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1397,6 +1439,33 @@ export interface OpenCv {
     accumulate?: boolean,
   ): void;
   compareHist(h1: Mat, h2: Mat, method: number): number;
+  kmeans(
+    data: Mat,
+    k: number,
+    bestLabels: Mat,
+    criteria: TermCriteria,
+    attempts: number,
+    flags: number,
+    centers?: Mat,
+  ): number;
+  dft(source: Mat, destination: Mat, flags?: number, nonzeroRows?: number): void;
+  calcBackProject(
+    image: Mat | MatVector,
+    channels: number[],
+    hist: Mat,
+    destination: Mat,
+    ranges: number[],
+    scale: number,
+  ): void;
+  warpPolar(
+    source: Mat,
+    destination: Mat,
+    dsize: Size,
+    center: Point,
+    maxRadius: number,
+    flags: number,
+  ): void;
+  groupRectangles(rects: Mat, weights: Mat, groupThreshold: number, eps?: number): number;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

@@ -47,6 +47,8 @@ mod features2d_threshold_detectors_wasm;
 mod imgproc_analysis;
 mod imgproc_apply;
 mod imgproc_apply_wasm;
+mod imgproc_cluster;
+mod imgproc_cluster_wasm;
 mod imgproc_colormap;
 mod imgproc_analysis_wasm;
 mod imgproc_approx;

@@ -94,6 +94,11 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.demosaicing": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.calc-hist": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.compare-hist": { overloadCount: 1, runtimeArity: 3 },
+  "core.function.kmeans": { overloadCount: 1, runtimeArity: 0 },
+  "core.function.dft": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.calc-back-project": { overloadCount: 1, runtimeArity: 6 },
+  "imgproc.function.warp-polar": { overloadCount: 1, runtimeArity: 6 },
+  "objdetect.function.group-rectangles": { overloadCount: 1, runtimeArity: 0 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },

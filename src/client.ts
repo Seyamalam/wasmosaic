@@ -153,6 +153,7 @@ import type {
   Scalar,
   Size,
   StructuringElementKind,
+  TermCriteria,
   ThresholdType,
 } from "./types.js";
 
@@ -2011,6 +2012,93 @@ class WasmOpenCv implements OpenCv {
       ranges[0] ?? 0,
       ranges[1] ?? 0,
       accumulate,
+    );
+  }
+
+  kmeans(
+    ...arguments_: [
+      data: Mat,
+      k: number,
+      bestLabels: Mat,
+      criteria: TermCriteria,
+      attempts: number,
+      flags: number,
+      centers?: Mat,
+    ]
+  ): number {
+    requireArityRange(arguments_.length, 6, 7, "kmeans");
+    const [data, k, bestLabels, criteria, _attempts, _flags, centers] = arguments_;
+    return this.#backend.matKmeansInto(
+      matHandleForBinding(data),
+      toWasmI32(k),
+      matHandleForBinding(bestLabels),
+      centers === undefined ? this.#backend.matEmpty() : matHandleForBinding(centers),
+      toWasmI32(criteria.maxCount),
+      criteria.epsilon,
+      1,
+    );
+  }
+
+  dft(...arguments_: [source: Mat, destination: Mat, flags?: number, nonzeroRows?: number]): void {
+    requireArityRange(arguments_.length, 2, 4, "dft");
+    const [source, destination, flags = 0] = arguments_;
+    this.#backend.matDftInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(flags),
+    );
+  }
+
+  calcBackProject(
+    image: Mat | MatVector,
+    channels: number[],
+    hist: Mat,
+    destination: Mat,
+    ranges: number[],
+    scale: number,
+  ): void {
+    const source = image instanceof MatVector ? image.get(0) : image;
+    this.#backend.matCalcBackProjectInto(
+      matHandleForBinding(source),
+      channels[0] ?? 0,
+      matHandleForBinding(hist),
+      matHandleForBinding(destination),
+      ranges[0] ?? 0,
+      ranges[1] ?? 0,
+      scale,
+    );
+  }
+
+  warpPolar(
+    source: Mat,
+    destination: Mat,
+    dsize: Size,
+    center: Point,
+    maxRadius: number,
+    flags: number,
+  ): void {
+    this.#backend.matWarpPolarInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(dsize.width),
+      toWasmI32(dsize.height),
+      center.x,
+      center.y,
+      maxRadius,
+      toWasmI32(flags),
+    );
+  }
+
+  groupRectangles(
+    ...arguments_: [rects: Mat, weights: Mat, groupThreshold: number, eps?: number]
+  ): number {
+    requireArityRange(arguments_.length, 3, 4, "groupRectangles");
+    const [rects, _weights, groupThreshold, eps = 0.2] = arguments_;
+    return this.#backend.matGroupRectanglesInto(
+      matHandleForBinding(rects),
+      this.#backend.matEmpty(),
+      toWasmI32(groupThreshold),
+      eps,
     );
   }
 

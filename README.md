@@ -256,6 +256,11 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `minEnclosingCircle`                        | `cv.minEnclosingCircle`                        | Partial | Approximate circle radius differs                    |
 | imgproc    | `fitEllipse`                                | `cv.fitEllipse`                                | Partial | Least-squares conic; degenerate cases differ         |
 | imgproc    | `fitLine`                                   | `cv.fitLine`                                   | Full    | DIST_L2 principal-axis fit                           |
+| core       | `dft`                                       | `cv.dft`                                       | Full    | 2-D F32 DFT with complex/scale flags                 |
+| core       | `kmeans`                                    | `cv.kmeans`                                    | Partial | Compactness ulp differs                              |
+| imgproc    | `calcBackProject`                           | `cv.calcBackProject`                           | Partial | Upstream binding rejects JS arg forms                |
+| imgproc    | `warpPolar`                                 | `cv.warpPolar`                                 | Partial | Upstream output is nondeterministic                  |
+| imgproc    | `groupRectangles`                           | `cv.groupRectangles`                           | Partial | Upstream requires RectVector                         |
 | imgproc    | `remap`                                     | `cv.remap`                                     | Full    | F32 map nearest/bilinear resampling                  |
 | imgproc    | `convertMaps`                               | `cv.convertMaps`                               | Full    | CV_16SC2 + CV_16UC1 fixed-point packing              |
 | imgproc    | `getRectSubPix`                             | `cv.getRectSubPix`                             | Full    | Bilinear sub-pixel patch extraction                  |
