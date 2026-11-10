@@ -1194,6 +1194,11 @@ pub(crate) fn pre_corner_detect_into(
     let dxx = sobel(2, 0)?;
     let dxy = sobel(1, 1)?;
     let dyy = sobel(0, 2)?;
+    let mut scale = 1.0 / f64::from(1u32 << (ksize - 1));
+    if source.depth() == MatDepth::U8 {
+        scale /= 255.0;
+    }
+    let scale3 = scale * scale * scale;
     let channels = usize::from(source.channels());
     let rows = source.rows();
     let columns = source.columns();
@@ -1202,8 +1207,9 @@ pub(crate) fn pre_corner_detect_into(
         for column in 0..columns {
             for channel in 0..channels {
                 let index = offset(row, column, columns, channels, channel);
-                let value = dx[index] * dx[index] * dyy[index] + dy[index] * dy[index] * dxx[index]
-                    - 2.0 * dx[index] * dy[index] * dxy[index];
+                let value = (dx[index] * dx[index] * dyy[index] + dy[index] * dy[index] * dxx[index]
+                    - 2.0 * dx[index] * dy[index] * dxy[index])
+                    * scale3;
                 write_scalar(&mut output, index, ScalarDepth::F32, value);
             }
         }
@@ -1260,7 +1266,11 @@ fn corner_response_into(
         });
     }
     let border = check_border(border_type)?;
-    let radius = block_size / 2;
+    let mut cov_scale = 1.0 / f64::from(1u32 << (ksize - 1));
+    if source.depth() == MatDepth::U8 {
+        cov_scale /= 255.0;
+    }
+    let cov_scale = cov_scale * cov_scale / (block_size * block_size) as f64;
     let mut output = vec![0u8; dx.len() * 4];
     for row in 0..rows {
         for column in 0..columns {
@@ -1268,10 +1278,10 @@ fn corner_response_into(
                 let mut sxx = 0.0f64;
                 let mut sxy = 0.0f64;
                 let mut syy = 0.0f64;
-                for by in -radius..=radius {
+                for by in (-block_size / 2)..(block_size - block_size / 2) {
                     let sample_y = i64::from(row) + i64::from(by);
                     let mapped_y = border_index(sample_y, rows, border);
-                    for bx in -radius..=radius {
+                    for bx in (-block_size / 2)..(block_size - block_size / 2) {
                         let sample_x = i64::from(column) + i64::from(bx);
                         let mapped_x = border_index(sample_x, columns, border);
                         if let (Some(x), Some(y)) = (mapped_x, mapped_y) {
@@ -1282,13 +1292,11 @@ fn corner_response_into(
                         }
                     }
                 }
+                let det = (sxx * syy - sxy * sxy) * cov_scale * cov_scale;
+                let trace = (sxx + syy) * cov_scale;
                 let response = if min_eigen {
-                    let det = sxx * syy - sxy * sxy;
-                    let trace = sxx + syy;
                     (trace - (trace * trace - 4.0 * det).sqrt().max(0.0)) / 2.0
                 } else {
-                    let det = sxx * syy - sxy * sxy;
-                    let trace = sxx + syy;
                     det - k * trace * trace
                 };
                 let index = offset(row, column, columns, channels, channel);

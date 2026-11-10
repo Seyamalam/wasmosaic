@@ -56,6 +56,26 @@ export type NormalizeType = 1 | 2 | 4 | 32;
 /** OpenCV reduce mode: sum, average, maximum, or minimum. */
 export type ReduceKind = 0 | 1 | 2 | 3;
 
+export type AdaptiveThresholdType = 0 | 1;
+
+export type ThresholdType = number;
+
+export type ColormapType =
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21;
+
+export type DistType = number;
+
+export interface RotatedRect {
+  center: Point;
+  size: Size;
+  angle: number;
+}
+
+export interface Circle {
+  center: Point;
+  radius: number;
+}
+
 /** Implemented dense decomposition methods: LU, Cholesky, or QR. */
 export type DecompositionMethod = 0 | 3 | 4;
 
@@ -410,6 +430,33 @@ export interface OpenCvBackend {
     blockSize: number,
     kernelSize: number,
     borderType: number,
+  ): void;
+  matAdaptiveThresholdInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    maxValue: number,
+    adaptiveMethod: number,
+    thresholdType: number,
+    blockSize: number,
+    delta: number,
+  ): void;
+  matApplyColorMapInto(source: WasmMatHandle, destination: WasmMatHandle, colormap: number): void;
+  matConvexHullInto(
+    points: WasmMatHandle,
+    destination: WasmMatHandle,
+    clockwise: boolean,
+    returnPoints: boolean,
+  ): void;
+  matMinAreaRect(points: WasmMatHandle): Float64Array;
+  matMinEnclosingCircle(points: WasmMatHandle): Float64Array;
+  matFitEllipse(points: WasmMatHandle): Float64Array;
+  matFitLineInto(
+    points: WasmMatHandle,
+    destination: WasmMatHandle,
+    distType: number,
+    param: number,
+    reps: number,
+    aeps: number,
   ): void;
   matIntegralInto(
     source: WasmMatHandle,
@@ -1181,6 +1228,29 @@ export interface OpenCv {
     kernelSize?: number,
     borderType?: BorderType,
   ): void;
+  adaptiveThreshold(
+    source: Mat,
+    destination: Mat,
+    maxValue: number,
+    adaptiveMethod: AdaptiveThresholdType,
+    thresholdType: ThresholdType,
+    blockSize: number,
+    delta: number,
+  ): void;
+  applyColorMap(source: Mat, destination: Mat, colormap: ColormapType): void;
+  convexHull(points: Mat, hull: Mat, clockwise?: boolean, returnPoints?: boolean): void;
+  minAreaRect(points: Mat): RotatedRect;
+  minEnclosingCircle(points: Mat): Circle;
+  fitEllipse(points: Mat): RotatedRect;
+  fitLine(
+    points: Mat,
+    line: Mat,
+    distType: DistType,
+    param: number,
+    reps: number,
+    aeps: number,
+  ): void;
+
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

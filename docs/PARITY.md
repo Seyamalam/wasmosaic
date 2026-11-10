@@ -128,6 +128,9 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `integral`, `integral2`, `HuMoments`, `getFontScaleFromHeight`                 | Matching `cv` analysis and text helpers                   | Integral sums, Hu invariants, Hershey scale               |
 | `filter2D`, `sepFilter2D`, `stackBlur`, `pyrDown`, `spatialGradient`, `Scharr` | Matching `cv` correlation/derivative filters              | Depth-gated kernels, dst-depth tables, borders            |
 | `sqrBoxFilter`, `bilateralFilter`, `pyrUp`, `Laplacian`                        | Matching `cv` filters                                     | Residual accumulation/algorithm diffs remain              |
+| `adaptiveThreshold`, `applyColorMap`                                           | Matching `cv` misc filters                                | U8-gated; 22 pinned colormap tables                       |
+| `convexHull`, `minAreaRect`, `fitLine`                                         | Matching `cv` point geometry                              | Monotone-chain hull, rotating calipers, PCA line          |
+| `minEnclosingCircle`, `fitEllipse`                                             | Matching `cv` point geometry                              | Approximate solver conventions differ                     |
 | `preCornerDetect`, `cornerHarris`, `cornerMinEigenVal`                         | Matching `cv` corner metrics                              | Derivative scaling not yet pinned                         |
 | `moments`, `matchShapes`                                                       | `cv.moments`, `cv.matchShapes`                            | Raster/contour moments; residual ulp diffs remain         |
 | `matchTemplate`                                                                | `cv.matchTemplate`                                        | Six U8/F32 methods, binary/weighted masks, F32 score maps |

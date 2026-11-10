@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Windowed-threshold and geometry batch: `adaptiveThreshold` (U8 mean/Gaussian with replicate borders), `applyColorMap` (all 22 pinned colormaps), `convexHull` (monotone chain over CV_32SC2/CV_32FC2 point sets, points or indices output), `minAreaRect` (rotating-calipers RotatedRect), `fitLine` (DIST_L2 principal axis). `cornerHarris` and `cornerMinEigenVal` are now fully implemented with the pinned normalized-covariance scaling; `minEnclosingCircle` and `fitEllipse` ship as partials pending upstream's approximate-solver conventions. **Full parity is now 172 of 488 families.**
+
+### Added
+
 - Correlation and derivative filter batch: `filter2D` and `sepFilter2D` correlate arbitrary and separable kernels with the pinned source-depth gates and destination-depth tables; `stackBlur` applies the triangular-weight separable blur with truncation; `pyrDown` and `pyrUp` run the 5x5 1-4-6-4-1 Gaussian pyramid with size and border validation; `spatialGradient` emits the 3x3 Sobel I16 pair; `Scharr` matches the normalized 3x3 derivative. `sqrBoxFilter`, `bilateralFilter`, `Laplacian`, `preCornerDetect`, `cornerHarris`, and `cornerMinEigenVal` ship as partials pending residual accumulation and derivative-scaling diffs. **Full parity is now 165 of 488 families.**
 
 ### Added

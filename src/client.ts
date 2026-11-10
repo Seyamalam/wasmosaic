@@ -130,8 +130,12 @@ import {
   THRESH_TRUNC,
 } from "./threshold.js";
 import type {
+  AdaptiveThresholdType,
   BorderType,
+  Circle,
+  ColormapType,
   DecompositionMethod,
+  DistType,
   HanningWindowDepth,
   HanningWindowType,
   LogLevel,
@@ -144,10 +148,12 @@ import type {
   Point,
   Rect,
   RgbaImage,
+  RotatedRect,
   ReduceKind,
   Scalar,
   Size,
   StructuringElementKind,
+  ThresholdType,
 } from "./types.js";
 
 class WasmOpenCv implements OpenCv {
@@ -1814,6 +1820,99 @@ class WasmOpenCv implements OpenCv {
       toWasmI32(blockSize),
       toWasmI32(kernelSize),
       toWasmI32(borderType),
+    );
+  }
+
+  adaptiveThreshold(
+    source: Mat,
+    destination: Mat,
+    maxValue: number,
+    adaptiveMethod: AdaptiveThresholdType,
+    thresholdType: ThresholdType,
+    blockSize: number,
+    delta: number,
+  ): void {
+    this.#backend.matAdaptiveThresholdInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      maxValue,
+      toWasmI32(adaptiveMethod),
+      toWasmI32(thresholdType),
+      toWasmI32(blockSize),
+      delta,
+    );
+  }
+
+  applyColorMap(source: Mat, destination: Mat, colormap: ColormapType): void {
+    this.#backend.matApplyColorMapInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(colormap),
+    );
+  }
+
+  convexHull(
+    ...arguments_: [points: Mat, hull: Mat, clockwise?: boolean, returnPoints?: boolean]
+  ): void {
+    requireArityRange(arguments_.length, 2, 4, "convexHull");
+    const [points, hull, clockwise = false, returnPoints = true] = arguments_;
+    this.#backend.matConvexHullInto(
+      matHandleForBinding(points),
+      matHandleForBinding(hull),
+      clockwise,
+      returnPoints,
+    );
+  }
+
+  minAreaRect(points: Mat): RotatedRect {
+    const rect = this.#backend.matMinAreaRect(matHandleForBinding(points));
+    const [x, y, width, height, angle] = [
+      requiredFloat(rect, 0),
+      requiredFloat(rect, 1),
+      requiredFloat(rect, 2),
+      requiredFloat(rect, 3),
+      requiredFloat(rect, 4),
+    ];
+    return { center: { x, y }, size: { width, height }, angle };
+  }
+
+  minEnclosingCircle(points: Mat): Circle {
+    const circle = this.#backend.matMinEnclosingCircle(matHandleForBinding(points));
+    const [x, y, radius] = [
+      requiredFloat(circle, 0),
+      requiredFloat(circle, 1),
+      requiredFloat(circle, 2),
+    ];
+    return { center: { x, y }, radius };
+  }
+
+  fitEllipse(points: Mat): RotatedRect {
+    const ellipse = this.#backend.matFitEllipse(matHandleForBinding(points));
+    const [x, y, width, height, angle] = [
+      requiredFloat(ellipse, 0),
+      requiredFloat(ellipse, 1),
+      requiredFloat(ellipse, 2),
+      requiredFloat(ellipse, 3),
+      requiredFloat(ellipse, 4),
+    ];
+    return { center: { x, y }, size: { width, height }, angle };
+  }
+
+  fitLine(
+    points: Mat,
+    line: Mat,
+    distType: DistType,
+    param: number,
+    reps: number,
+    aeps: number,
+  ): void {
+    this.#backend.matFitLineInto(
+      matHandleForBinding(points),
+      matHandleForBinding(line),
+      toWasmI32(distType),
+      param,
+      reps,
+      aeps,
     );
   }
 

@@ -2047,6 +2047,34 @@ class CopyingBackend implements OpenCvBackend {
     throw new OpenCvInputError("mock cornerMinEigenVal is not implemented");
   }
 
+  matAdaptiveThresholdInto(): void {
+    throw new OpenCvInputError("mock adaptiveThreshold is not implemented");
+  }
+
+  matApplyColorMapInto(): void {
+    throw new OpenCvInputError("mock applyColorMap is not implemented");
+  }
+
+  matConvexHullInto(): void {
+    throw new OpenCvInputError("mock convexHull is not implemented");
+  }
+
+  matMinAreaRect(): Float64Array {
+    throw new OpenCvInputError("mock minAreaRect is not implemented");
+  }
+
+  matMinEnclosingCircle(): Float64Array {
+    throw new OpenCvInputError("mock minEnclosingCircle is not implemented");
+  }
+
+  matFitEllipse(): Float64Array {
+    throw new OpenCvInputError("mock fitEllipse is not implemented");
+  }
+
+  matFitLineInto(): void {
+    throw new OpenCvInputError("mock fitLine is not implemented");
+  }
+
   matIntegralInto(
     _source: WasmMatHandle,
     _sum: WasmMatHandle,

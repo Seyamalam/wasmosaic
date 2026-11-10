@@ -1241,6 +1241,131 @@ export function runCoreOpsCases(cv, reference) {
       scale: cv.getFontScaleFromHeight(0, 20, thickness),
     }));
 
+  // ---- adaptiveThreshold: methods, block sizes, deltas, errors
+  for (const [method, block, delta] of /** @type {[number, number, number][]} */ ([
+    [0, 3, 10],
+    [1, 3, 10],
+    [0, 5, 5],
+    [1, 5, 15],
+    [0, 7, 0],
+  ])) {
+    for (const type of [0, 1]) {
+      run(`adaptiveThreshold/m${method}/b${block}/t${type}/c${delta}`, (handles) => {
+        const source = track(handles, api.mat(5, 5, 1, 0, arrays[0](25)));
+        const destination = track(handles, api.empty());
+        cv.adaptiveThreshold(source, destination, 255, method, type, block, delta);
+        return { destination: api.summary(destination) };
+      });
+    }
+  }
+  run("adaptiveThreshold/error/f32", (handles) => {
+    const source = track(handles, api.mat(3, 3, 1, 5, arrays[5](9)));
+    const destination = track(handles, api.empty());
+    cv.adaptiveThreshold(source, destination, 255, 0, 0, 3, 10);
+    return { destination: api.summary(destination) };
+  });
+  run("adaptiveThreshold/error/even", (handles) => {
+    const source = track(handles, api.mat(3, 3, 1, 0, arrays[0](9)));
+    const destination = track(handles, api.empty());
+    cv.adaptiveThreshold(source, destination, 255, 0, 0, 4, 10);
+    return { destination: api.summary(destination) };
+  });
+
+  // ---- applyColorMap: multiple colormaps, full-range input
+  for (const cmap of [0, 1, 2, 4, 8, 9, 11, 12, 16, 20]) {
+    run(`applyColorMap/${cmap}`, (handles) => {
+      const source = track(handles, api.mat(4, 4, 1, 0, arrays[0](16)));
+      const destination = track(handles, api.empty());
+      cv.applyColorMap(source, destination, cmap);
+      return { destination: api.summary(destination) };
+    });
+  }
+  run("applyColorMap/full", (handles) => {
+    const source = track(
+      handles,
+      api.mat(
+        16,
+        16,
+        1,
+        0,
+        Array.from({ length: 256 }, (_, i) => i),
+      ),
+    );
+    const destination = track(handles, api.empty());
+    cv.applyColorMap(source, destination, 2);
+    return { destination: api.summary(destination) };
+  });
+  run("applyColorMap/error/f32", (handles) => {
+    const source = track(handles, api.mat(2, 2, 1, 5, arrays[5](4)));
+    const destination = track(handles, api.empty());
+    cv.applyColorMap(source, destination, 2);
+    return { destination: api.summary(destination) };
+  });
+  run("applyColorMap/error/invalid", (handles) => {
+    const source = track(handles, api.mat(2, 2, 1, 0, arrays[0](4)));
+    const destination = track(handles, api.empty());
+    cv.applyColorMap(source, destination, 99);
+    return { destination: api.summary(destination) };
+  });
+
+  // ---- convexHull: point sets, indices mode, clockwise
+  for (const depth of [4, 5]) {
+    for (const [ret, cw] of /** @type {[boolean, boolean][]} */ ([
+      [true, false],
+      [true, true],
+      [false, false],
+    ])) {
+      run(`convexHull/d${depth}/r${ret ? 1 : 0}/c${cw ? 1 : 0}`, (handles) => {
+        const source = track(
+          handles,
+          api.mat(6, 1, 2, depth, [0, 0, 10, 0, 10, 10, 0, 10, 5, 5, 3, 7]),
+        );
+        const destination = track(handles, api.empty());
+        cv.convexHull(source, destination, cw, ret);
+        return { destination: api.summary(destination) };
+      });
+    }
+  }
+  run("convexHull/single", (handles) => {
+    const source = track(handles, api.mat(1, 1, 2, 4, [3, 7]));
+    const destination = track(handles, api.empty());
+    cv.convexHull(source, destination, false, true);
+    return { destination: api.summary(destination) };
+  });
+
+  // ---- minAreaRect, minEnclosingCircle, fitEllipse, fitLine
+  run("minAreaRect/square", (handles) => {
+    const points = track(handles, api.mat(6, 1, 2, 4, [0, 0, 10, 0, 10, 10, 0, 10, 5, 5, 3, 7]));
+    return { value: cv.minAreaRect(points) };
+  });
+  run("minAreaRect/rotated", (handles) => {
+    const points = track(handles, api.mat(5, 1, 2, 5, [0, 0, 4, 2, 8, 0, 12, 2, 8, 6]));
+    return { value: cv.minAreaRect(points) };
+  });
+  run("minEnclosingCircle/square", (handles) => {
+    const points = track(handles, api.mat(6, 1, 2, 4, [0, 0, 10, 0, 10, 10, 0, 10, 5, 5, 3, 7]));
+    return { value: cv.minEnclosingCircle(points) };
+  });
+  run("fitEllipse/conic", (handles) => {
+    const points = track(handles, api.mat(6, 1, 2, 5, [0, 0, 10, 0, 10, 10, 0, 10, 5, 5, 3, 7]));
+    return { value: cv.fitEllipse(points) };
+  });
+  run("fitEllipse/ring", (handles) => {
+    const ring = [];
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      ring.push(50 + 40 * Math.cos(a), 30 + 20 * Math.sin(a));
+    }
+    const points = track(handles, api.mat(12, 1, 2, 5, ring));
+    return { value: cv.fitEllipse(points) };
+  });
+  run("fitLine/diag", (handles) => {
+    const points = track(handles, api.mat(4, 1, 2, 5, [0, 0, 1, 2, 3, 4, 5, 6]));
+    const destination = track(handles, api.empty());
+    cv.fitLine(points, destination, 2, 0, 0.01, 0.01);
+    return { destination: api.summary(destination) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1297,6 +1422,13 @@ export function runCoreOpsCases(cv, reference) {
       preCornerDetect: cv.preCornerDetect.length,
       cornerHarris: cv.cornerHarris.length,
       cornerMinEigenVal: cv.cornerMinEigenVal.length,
+      adaptiveThreshold: cv.adaptiveThreshold.length,
+      applyColorMap: cv.applyColorMap.length,
+      convexHull: cv.convexHull.length,
+      minAreaRect: cv.minAreaRect.length,
+      minEnclosingCircle: cv.minEnclosingCircle.length,
+      fitEllipse: cv.fitEllipse.length,
+      fitLine: cv.fitLine.length,
     },
   }));
 
