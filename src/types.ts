@@ -343,6 +343,7 @@ export interface OpenCvBackend {
     alpha: number,
     beta: number,
     normType: number,
+    dtype: number,
   ): void;
   matNormalizeMaskedInto(
     source: WasmMatHandle,
@@ -350,6 +351,7 @@ export interface OpenCvBackend {
     alpha: number,
     beta: number,
     normType: number,
+    dtype: number,
     mask: WasmMatHandle,
   ): void;
   matMeanStdDevInto(
@@ -368,6 +370,7 @@ export interface OpenCvBackend {
     destination: WasmMatHandle,
     axis: number,
     kind: number,
+    dtype: number,
   ): void;
   matRandn(destination: WasmMatHandle, mean: Float64Array, standardDeviation: Float64Array): void;
   matRandu(destination: WasmMatHandle, lower: Float64Array, upper: Float64Array): void;
@@ -745,6 +748,7 @@ export interface OpenCv {
   invert(source: Mat, destination: Mat, method?: DecompositionMethod): number;
   log(source: Mat, destination: Mat): void;
   logAlloc(source: Mat): Mat;
+  LUT(source: Mat, table: Mat, destination: Mat): void;
   lut(source: Mat, table: Mat): Mat;
   lut(source: Mat, table: Mat, destination: Mat): void;
   magnitude(x: Mat, y: Mat, destination: Mat): void;
@@ -773,19 +777,19 @@ export interface OpenCv {
     borderValue?: Scalar,
   ): void;
   norm(source: Mat, normType?: NormType, mask?: Mat): number;
-  norm(first: Mat, second: Mat, normType?: NormType, mask?: Mat): number;
+  normDiff(first: Mat, second: Mat, normType?: NormType, mask?: Mat): number;
   normalize(
     source: Mat,
     destination: Mat,
     alpha: number,
     beta: number,
     normType: NormalizeType,
+    dtype?: number,
     mask?: Mat,
   ): void;
   polarToCart(magnitude: Mat, angle: Mat, x: Mat, y: Mat, degrees?: boolean): void;
   pointPolygonTest(contour: Mat, point: Point, measureDistance: boolean): number;
-  perspectiveTransform(source: Mat, coefficients: Mat): Mat;
-  perspectiveTransform(source: Mat, coefficients: Mat, destination: Mat): void;
+  perspectiveTransform(source: Mat, destination: Mat, coefficients: Mat): void;
   pow(source: Mat, exponent: number, destination: Mat): void;
   powAlloc(source: Mat, exponent: number): Mat;
   randn(destination: Mat, mean: Scalar, standardDeviation: Scalar): void;
@@ -823,7 +827,7 @@ export interface OpenCv {
     delta?: number,
     borderType?: BorderType,
   ): void;
-  reduce(source: Mat, destination: Mat, axis: 0 | 1, kind: ReduceKind): void;
+  reduce(source: Mat, destination: Mat, axis: 0 | 1, kind: ReduceKind, dtype?: number): void;
   threshold(image: RgbaImage, threshold: number): RgbaImage;
   threshold(
     source: Mat,
@@ -840,8 +844,7 @@ export interface OpenCv {
   transpose(source: Mat, destination: Mat): void;
   transposeAlloc(source: Mat): Mat;
   trace(source: Mat): Scalar;
-  transform(source: Mat, coefficients: Mat): Mat;
-  transform(source: Mat, coefficients: Mat, destination: Mat): void;
+  transform(source: Mat, destination: Mat, coefficients: Mat): void;
   vconcat(
     sources: readonly [Mat, Mat] | readonly [Mat, Mat, Mat] | readonly [Mat, Mat, Mat, Mat],
   ): Mat;

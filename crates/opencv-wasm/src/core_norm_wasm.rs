@@ -73,7 +73,7 @@ pub fn mat_norm_diff_masked(
     norm_adapter(first, Some(second), Some(mask), norm_type).map_err(JsError::from)
 }
 
-/// Normalizes a matrix into an existing equally shaped destination, converting scalar depth.
+/// Normalizes a matrix into an equally shaped destination, optionally converting scalar depth.
 #[wasm_bindgen(js_name = matNormalizeInto)]
 pub fn mat_normalize_into(
     source: &Mat,
@@ -81,11 +81,13 @@ pub fn mat_normalize_into(
     alpha: f64,
     beta: f64,
     norm_type: u32,
+    dtype: i32,
 ) -> Result<(), JsError> {
-    normalize_adapter(source, destination, None, alpha, beta, norm_type).map_err(JsError::from)
+    normalize_adapter(source, destination, None, alpha, beta, norm_type, dtype)
+        .map_err(JsError::from)
 }
 
-/// Normalizes selected pixels into an existing destination while preserving unselected pixels.
+/// Normalizes selected pixels into a destination while preserving unselected pixels.
 #[wasm_bindgen(js_name = matNormalizeMaskedInto)]
 pub fn mat_normalize_masked_into(
     source: &Mat,
@@ -93,10 +95,19 @@ pub fn mat_normalize_masked_into(
     alpha: f64,
     beta: f64,
     norm_type: u32,
+    dtype: i32,
     mask: &Mat,
 ) -> Result<(), JsError> {
-    normalize_adapter(source, destination, Some(mask), alpha, beta, norm_type)
-        .map_err(JsError::from)
+    normalize_adapter(
+        source,
+        destination,
+        Some(mask),
+        alpha,
+        beta,
+        norm_type,
+        dtype,
+    )
+    .map_err(JsError::from)
 }
 
 fn norm_adapter(
@@ -110,6 +121,11 @@ fn norm_adapter(
     }
     let mask_bytes = checked_mask(first, mask)?;
     let second_bytes = second.map(Mat::compact_bytes);
+    let resolved_type = if second.is_none() {
+        norm_type & !(crate::core_norm::NORM_RELATIVE | crate::core_norm::NORM_MINMAX)
+    } else {
+        norm_type
+    };
     norm(
         &first.compact_bytes(),
         second_bytes.as_deref(),
@@ -118,7 +134,7 @@ fn norm_adapter(
         first.columns(),
         first.channels(),
         scalar_depth(first.depth()),
-        norm_type,
+        resolved_type,
     )
     .map_err(NormWasmError::from)
 }
@@ -130,12 +146,28 @@ fn normalize_adapter(
     alpha: f64,
     beta: f64,
     norm_type: u32,
+    dtype: i32,
 ) -> Result<(), NormWasmError> {
-    if !same_layout(source, destination) {
-        return Err(NormWasmError::ShapeMismatch);
-    }
+    let output_depth = match dtype {
+        -1 => source.depth(),
+        0 => MatDepth::U8,
+        1 => MatDepth::I8,
+        2 => MatDepth::U16,
+        3 => MatDepth::I16,
+        4 => MatDepth::I32,
+        5 => MatDepth::F32,
+        6 => MatDepth::F64,
+        _ => return Err(NormWasmError::ShapeMismatch),
+    };
     let mask_bytes = checked_mask(source, mask)?;
-    let mut destination_bytes = destination.compact_bytes();
+    let byte_width = output_depth.byte_width();
+    let bytes_length = source.compact_bytes().len() * byte_width / source.depth().byte_width();
+    let mut destination_bytes =
+        if same_layout(source, destination) && destination.depth() == output_depth {
+            destination.compact_bytes()
+        } else {
+            vec![0u8; bytes_length]
+        };
     normalize_into(
         &source.compact_bytes(),
         &mut destination_bytes,
@@ -144,12 +176,18 @@ fn normalize_adapter(
         source.columns(),
         source.channels(),
         scalar_depth(source.depth()),
-        scalar_depth(destination.depth()),
+        scalar_depth(output_depth),
         alpha,
         beta,
         norm_type,
     )?;
-    destination.write_compact_bytes(&destination_bytes)?;
+    destination.write_output(
+        destination_bytes,
+        source.rows(),
+        source.columns(),
+        source.channels(),
+        output_depth,
+    )?;
     Ok(())
 }
 
@@ -209,7 +247,16 @@ mod tests {
 
         let target_parent = matrix(vec![99; 9], 3, 3, 1, MatDepth::U8);
         let target = target_parent.roi(1, 1, 2, 2).expect("target ROI");
-        normalize_adapter(&source, &target, None, 10.0, 0.0, crate::core_norm::NORM_L1).unwrap();
+        normalize_adapter(
+            &source,
+            &target,
+            None,
+            10.0,
+            0.0,
+            crate::core_norm::NORM_L1,
+            -1,
+        )
+        .unwrap();
         assert_eq!(
             target_parent.compact_bytes(),
             [99, 99, 99, 99, 1, 2, 99, 3, 4]
@@ -228,6 +275,7 @@ mod tests {
             9.0,
             0.0,
             crate::core_norm::NORM_L2,
+            -1,
         )
         .unwrap();
         assert_eq!(target.compact_bytes(), [9, 88]);

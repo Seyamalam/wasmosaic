@@ -9,6 +9,7 @@ pub(crate) enum ReduceKind {
     Average,
     Maximum,
     Minimum,
+    SumSquares,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -69,7 +70,13 @@ pub(crate) fn mean_std_dev(
             });
         }
     }
-    let mut means = vec![0.0; channel_count];
+    let integral = matches!(
+        depth,
+        ScalarDepth::U8 | ScalarDepth::I8 | ScalarDepth::U16 | ScalarDepth::I16 | ScalarDepth::I32
+    );
+    let mut integer_sums = vec![0_i128; channel_count];
+    let mut integer_squares = vec![0_i128; channel_count];
+    let mut sums = vec![0.0; channel_count];
     let mut squares = vec![0.0; channel_count];
     let mut selected = 0_u64;
     for pixel in 0..pixels {
@@ -79,17 +86,46 @@ pub(crate) fn mean_std_dev(
         selected += 1;
         for channel in 0..channel_count {
             let value = decode(data, pixel * channel_count + channel, depth);
-            let delta = value - means[channel];
-            means[channel] += delta / selected as f64;
-            squares[channel] += delta * (value - means[channel]);
+            if integral {
+                let integer = value as i64 as i128;
+                integer_sums[channel] += integer;
+                integer_squares[channel] += integer * integer;
+            } else {
+                sums[channel] += value;
+                squares[channel] += value * value;
+            }
         }
     }
+    let count = selected.max(1) as f64;
+    let (resolved_sums, resolved_squares): (Vec<f64>, Vec<f64>) = if integral {
+        (
+            integer_sums.iter().map(|sum| *sum as f64).collect(),
+            integer_squares.iter().map(|sum| *sum as f64).collect(),
+        )
+    } else {
+        (sums, squares)
+    };
+    let means = resolved_sums
+        .iter()
+        .map(|sum| sum / count)
+        .collect::<Vec<_>>();
     let standard_deviations = if selected == 0 {
         vec![0.0; channel_count]
+    } else if integral {
+        integer_squares
+            .iter()
+            .zip(&means)
+            .map(|(square, mean)| {
+                let high = *square as f64;
+                let low = (*square - high as i128) as f64;
+                (high / count + low / count - mean * mean).sqrt()
+            })
+            .collect()
     } else {
-        squares
-            .into_iter()
-            .map(|sum| (sum / selected as f64).sqrt())
+        resolved_squares
+            .iter()
+            .zip(&means)
+            .map(|(square, mean)| (square / count - mean * mean).sqrt())
             .collect()
     };
     Ok(MeanStdDev {
@@ -127,7 +163,7 @@ pub(crate) fn reduce(
     for major in 0..major_count {
         for channel in 0..channels {
             let mut accumulator = match kind {
-                ReduceKind::Sum | ReduceKind::Average => 0.0,
+                ReduceKind::Sum | ReduceKind::Average | ReduceKind::SumSquares => 0.0,
                 ReduceKind::Maximum | ReduceKind::Minimum => f64::NAN,
             };
             for position in 0..reduction_count {
@@ -143,6 +179,7 @@ pub(crate) fn reduce(
                 );
                 accumulator = match kind {
                     ReduceKind::Sum | ReduceKind::Average => accumulator + value,
+                    ReduceKind::SumSquares => accumulator + value * value,
                     ReduceKind::Maximum if accumulator.is_nan() || value > accumulator => value,
                     ReduceKind::Minimum if accumulator.is_nan() || value < accumulator => value,
                     ReduceKind::Maximum | ReduceKind::Minimum => accumulator,

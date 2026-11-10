@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Core operations differential</title>
+    <script type="importmap">
+      { "imports": { "#wasm": "/wasm/wasmosaic_wasm.js" } }
+    </script>
+  </head>
+  <body>
+    <h1>Core operations differential</h1>
+    <output id="result">Running...</output>
+    <script type="module">
+      import { initOpenCv } from "/dist/index.js";
+      import { runCoreOpsCases } from "./core-ops-cases.js";
+      import { compareResize } from "./resize-cases.js";
+      const output = document.getElementById("result");
+      const worker = new Worker("./core-ops-worker.js");
+      const timer = setTimeout(() => {
+        worker.terminate();
+        output.textContent = "FAIL timeout";
+      }, 180000);
+      worker.addEventListener("message", async ({ data }) => {
+        clearTimeout(timer);
+        try {
+          if (data.error) throw new Error(data.error);
+          const cv = await initOpenCv();
+          globalThis.coreOpsActual = runCoreOpsCases(cv, false);
+          globalThis.coreOpsReference = data.result;
+          globalThis.coreOpsReport = compareResize(coreOpsActual, data.result);
+          output.textContent = `DONE ${coreOpsReport.cases} cases, ${coreOpsReport.differences.length} differences`;
+        } catch (error) {
+          output.textContent = `FAIL ${error.stack ?? error}`;
+        } finally {
+          worker.terminate();
+        }
+      });
+      worker.addEventListener("error", (event) => {
+        clearTimeout(timer);
+        worker.terminate();
+        output.textContent = `FAIL ${event.message}`;
+      });
+      worker.postMessage({});
+    </script>
+  </body>
+</html>

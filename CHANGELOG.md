@@ -6,6 +6,8 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Core array-operations compatibility batch: `transform` and `perspectiveTransform` now match the pinned `(source, destination, coefficients)` binding; `reduce` gained the optional `dtype` parameter, destination reallocation, the probed depth/kind support matrix and the undocumented kind-4 square-sum; `norm` matches the pinned single-matrix surface including flag-bit stripping (the two-matrix form moved to `normDiff`); `LUT` is exported under its upstream name with raw-byte signed-source indexing and destination reallocation; `meanStdDev` and `normalize` gained dtype/reallocation semantics with exact integer accumulation. New core-ops browser differential fixture covers 1,770 cases. Full parity is now 131 of 488 families, with 53 partial families; `meanStdDev`, `normalize`, `invert` and `solve` remain partial on residual numeric and method-matrix differences.
+
 - Complete `threshold` contract: all five fixed modes across U8/U16/I16/F32/F64 depths and multi-channel matrices, single-channel Otsu and Triangle selection, `THRESH_DRYRUN`, out-of-range and non-finite thresholds, destination reallocation, overlapping regions and invalid-argument ordering. New browser differential fixture covers 2,263 cases with zero differences. Full parity is now 126 of 488 families, with 54 partial families.
 
 - Complete seven-mode `resize` implementation with all pinned depth/channel combinations, cubic/Lanczos and exact sampling, corrected fractional scale geometry, ROI/alias handling and 3,880 passing browser cases. Full parity is now 125 of 488 families, with 55 partial families.

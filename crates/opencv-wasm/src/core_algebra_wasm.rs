@@ -129,12 +129,9 @@ fn determinant_adapter(source: &Mat) -> Result<f64, AlgebraWasmError> {
 fn invert_adapter(source: &Mat, destination: &Mat, method: u32) -> Result<f64, AlgebraWasmError> {
     validate_single_channel(source)?;
     validate_square(source)?;
-    validate_floating_destination(destination)?;
-    if destination.rows() != source.rows()
-        || destination.columns() != source.columns()
-        || destination.channels() != 1
-    {
-        return Err(AlgebraWasmError::InvertDestinationMismatch);
+    match source.depth() {
+        MatDepth::F32 | MatDepth::F64 => {}
+        depth => return Err(AlgebraWasmError::FloatingSourceRequired(depth)),
     }
     let values = decode(source);
     let order = usize::try_from(source.rows()).map_err(|_| AlgebraError::SizeOverflow)?;
@@ -159,7 +156,13 @@ fn invert_adapter(source: &Mat, destination: &Mat, method: u32) -> Result<f64, A
     let Some(result) = result else {
         return Ok(0.0);
     };
-    write_result(destination, &result)?;
+    write_result(
+        destination,
+        &result,
+        source.depth(),
+        source.rows(),
+        source.columns(),
+    )?;
     Ok(1.0)
 }
 
@@ -171,12 +174,13 @@ fn solve_adapter(
 ) -> Result<bool, AlgebraWasmError> {
     validate_single_channel(coefficients)?;
     validate_single_channel(right_hand_sides)?;
-    validate_floating_destination(destination)?;
-    if destination.channels() != 1
-        || right_hand_sides.rows() != coefficients.rows()
-        || destination.rows() != coefficients.columns()
-        || destination.columns() != right_hand_sides.columns()
-    {
+    for matrix in [coefficients, right_hand_sides] {
+        match matrix.depth() {
+            MatDepth::F32 | MatDepth::F64 => {}
+            depth => return Err(AlgebraWasmError::FloatingSourceRequired(depth)),
+        }
+    }
+    if right_hand_sides.rows() != coefficients.rows() {
         return Err(AlgebraWasmError::SolveShapeMismatch);
     }
     let coefficients_values = decode(coefficients);
@@ -221,7 +225,13 @@ fn solve_adapter(
     let Some(result) = result else {
         return Ok(false);
     };
-    write_result(destination, &result)?;
+    write_result(
+        destination,
+        &result,
+        right_hand_sides.depth(),
+        coefficients.columns(),
+        right_hand_sides.columns(),
+    )?;
     Ok(true)
 }
 
@@ -251,8 +261,14 @@ fn validate_floating_destination(matrix: &Mat) -> Result<(), AlgebraWasmError> {
     }
 }
 
-fn write_result(destination: &Mat, result: &[f64]) -> Result<(), AlgebraWasmError> {
-    let bytes = match destination.depth() {
+fn write_result(
+    destination: &Mat,
+    result: &[f64],
+    depth: MatDepth,
+    rows: u32,
+    columns: u32,
+) -> Result<(), AlgebraWasmError> {
+    let bytes = match depth {
         MatDepth::F64 => result
             .iter()
             .flat_map(|value| value.to_ne_bytes())
@@ -260,7 +276,7 @@ fn write_result(destination: &Mat, result: &[f64]) -> Result<(), AlgebraWasmErro
         MatDepth::F32 => encode_f32(result)?,
         depth => return Err(AlgebraWasmError::FloatingDestinationRequired(depth)),
     };
-    destination.write_compact_bytes(&bytes)?;
+    destination.write_output(bytes, rows, columns, 1, depth)?;
     Ok(())
 }
 
@@ -397,10 +413,10 @@ mod tests {
     #[test]
     fn invert_writes_a_strided_f64_destination_and_leaves_it_on_singularity() {
         let source = matrix(
-            scalar_bytes(&[4_i16, 7, 2, 6], |v| v.to_ne_bytes().to_vec()),
+            scalar_bytes(&[4.0_f64, 7.0, 2.0, 6.0], |v| v.to_ne_bytes().to_vec()),
             2,
             2,
-            MatDepth::I16,
+            MatDepth::F64,
         );
         let parent = matrix(
             scalar_bytes(&[99.0_f64; 6], |v| v.to_ne_bytes().to_vec()),
@@ -430,12 +446,19 @@ mod tests {
 
     #[test]
     fn solve_qr_writes_a_strided_f32_least_squares_destination() {
-        let coefficients = matrix(vec![1, 0, 1, 1, 1, 2], 3, 2, MatDepth::U8);
+        let coefficients = matrix(
+            scalar_bytes(&[1.0_f32, 0.0, 1.0, 1.0, 1.0, 2.0], |v| {
+                v.to_ne_bytes().to_vec()
+            }),
+            3,
+            2,
+            MatDepth::F32,
+        );
         let right_hand_side = matrix(
-            scalar_bytes(&[1_i32, 2, 2], |v| v.to_ne_bytes().to_vec()),
+            scalar_bytes(&[1.0_f32, 2.0, 2.0], |v| v.to_ne_bytes().to_vec()),
             3,
             1,
-            MatDepth::I32,
+            MatDepth::F32,
         );
         let parent = matrix(
             scalar_bytes(&[99.0_f32; 4], |v| v.to_ne_bytes().to_vec()),
@@ -521,12 +544,8 @@ mod tests {
             MatDepth::F64,
         );
         let integer_destination = matrix(vec![17; 4], 2, 2, MatDepth::U8);
-        let before = integer_destination.compact_bytes();
-        assert_eq!(
-            invert_adapter(&source, &integer_destination, 0),
-            Err(AlgebraWasmError::FloatingDestinationRequired(MatDepth::U8))
-        );
-        assert_eq!(integer_destination.compact_bytes(), before);
+        assert_eq!(invert_adapter(&source, &integer_destination, 0), Ok(1.0));
+        assert_eq!(integer_destination.depth(), MatDepth::F64);
 
         let destination = matrix(
             scalar_bytes(&[17.0_f64; 4], |v| v.to_ne_bytes().to_vec()),
@@ -541,8 +560,20 @@ mod tests {
         );
         assert_eq!(destination.compact_bytes(), before);
 
-        let underdetermined = matrix(vec![1, 0, 1, 0, 1, 1], 2, 3, MatDepth::U8);
-        let right_hand_side = matrix(vec![1, 2], 2, 1, MatDepth::U8);
+        let underdetermined = matrix(
+            scalar_bytes(&[1.0_f64, 0.0, 1.0, 0.0, 1.0, 1.0], |v| {
+                v.to_ne_bytes().to_vec()
+            }),
+            2,
+            3,
+            MatDepth::F64,
+        );
+        let right_hand_side = matrix(
+            scalar_bytes(&[1.0_f64, 2.0], |v| v.to_ne_bytes().to_vec()),
+            2,
+            1,
+            MatDepth::F64,
+        );
         let solution = matrix(
             scalar_bytes(&[0.0_f64; 3], |v| v.to_ne_bytes().to_vec()),
             3,
@@ -563,10 +594,10 @@ mod tests {
     #[test]
     fn f32_overflow_is_atomic() {
         let source = matrix(
-            scalar_bytes(&[1.0e-300_f64], |v| v.to_ne_bytes().to_vec()),
+            scalar_bytes(&[1.0e-39_f32], |v| v.to_ne_bytes().to_vec()),
             1,
             1,
-            MatDepth::F64,
+            MatDepth::F32,
         );
         let destination = matrix(
             scalar_bytes(&[7.0_f32], |v| v.to_ne_bytes().to_vec()),

@@ -153,13 +153,6 @@ fn transform_into_mat(
         .map_err(|_| TransformWasmError::CoefficientDimensionsOverflow)?;
     let coefficient_columns = u16::try_from(coefficients.columns())
         .map_err(|_| TransformWasmError::CoefficientDimensionsOverflow)?;
-    if destination.rows() != source.rows()
-        || destination.columns() != source.columns()
-        || destination.channels() != output_channels
-        || destination.depth() != source.depth()
-    {
-        return Err(TransformWasmError::DestinationMetadata);
-    }
     let bytes = transform_bytes(
         &source.compact_bytes(),
         scalar_depth(source.depth()),
@@ -168,7 +161,13 @@ fn transform_into_mat(
         output_channels,
         coefficient_columns,
     )?;
-    destination.write_compact_bytes(&bytes)?;
+    destination.write_output(
+        bytes,
+        source.rows(),
+        source.columns(),
+        output_channels,
+        source.depth(),
+    )?;
     Ok(())
 }
 
@@ -206,13 +205,6 @@ fn perspective_transform_into_mat(
         .map_err(|_| TransformWasmError::CoefficientDimensionsOverflow)?;
     let coefficient_columns = u16::try_from(coefficients.columns())
         .map_err(|_| TransformWasmError::CoefficientDimensionsOverflow)?;
-    if destination.rows() != source.rows()
-        || destination.columns() != source.columns()
-        || destination.channels() != source.channels()
-        || destination.depth() != source.depth()
-    {
-        return Err(TransformWasmError::DestinationMetadata);
-    }
     let bytes = perspective_transform_bytes(
         &source.compact_bytes(),
         scalar_depth(source.depth()),
@@ -221,7 +213,13 @@ fn perspective_transform_into_mat(
         coefficient_rows,
         coefficient_columns,
     )?;
-    destination.write_compact_bytes(&bytes)?;
+    destination.write_output(
+        bytes,
+        source.rows(),
+        source.columns(),
+        source.channels(),
+        source.depth(),
+    )?;
     Ok(())
 }
 
@@ -442,11 +440,10 @@ mod tests {
             MatDepth::F64,
         );
         let wrong_destination = matrix(vec![77], 1, 1, 1, MatDepth::I8);
-        assert!(matches!(
-            transform_into_mat(&source, &valid_coefficients, &wrong_destination),
-            Err(TransformWasmError::DestinationMetadata),
-        ));
-        assert_eq!(wrong_destination.compact_bytes(), [77]);
+        transform_into_mat(&source, &valid_coefficients, &wrong_destination)
+            .expect("incompatible destinations reallocate to source depth");
+        assert_eq!(wrong_destination.depth(), MatDepth::U8);
+        assert_eq!(wrong_destination.compact_bytes(), [7]);
 
         let perspective_coefficients = matrix(
             [1.0_f64, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]

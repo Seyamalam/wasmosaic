@@ -1,0 +1,330 @@
+import { resizeMatrixApi } from "./resize-cases.js";
+
+function trackMat(handles, mat) {
+  handles.push(mat);
+  return mat;
+}
+
+const depths = [0, 1, 2, 3, 4, 5, 6];
+const arrays = {
+  0: (n) => Array.from({ length: n }, (_, i) => (i * 37 + 11) % 256),
+  1: (n) => Array.from({ length: n }, (_, i) => ((i * 31 + 7) % 255) - 128),
+  2: (n) => Array.from({ length: n }, (_, i) => (i * 911 + 17) % 65536),
+  3: (n) => Array.from({ length: n }, (_, i) => ((i * 577 + 13) % 65535) - 32768),
+  4: (n) => Array.from({ length: n }, (_, i) => ((i * 2147 + 23) % 2 ** 31) - 2 ** 30),
+  5: (n) => Array.from({ length: n }, (_, i) => i * 0.5 - 3.25 + (i % 7) * 1e-4),
+  6: (n) => Array.from({ length: n }, (_, i) => i * 0.5 - 3.25 + (i % 13) * 1e-9),
+};
+
+export function runCoreOpsCases(cv, reference) {
+  const api = resizeMatrixApi(cv, reference);
+  const entries = [];
+  const LUT = (...args) => cv.LUT(...args);
+  const run = (name, thunk) => {
+    const handles = [];
+    try {
+      entries.push({ name, ...thunk(handles) });
+    } catch {
+      entries.push({ name, error: true });
+    } finally {
+      for (const handle of handles.toReversed()) {
+        try {
+          api.dispose(handle);
+        } catch {
+          /* already released */
+        }
+      }
+    }
+  };
+  const track = trackMat;
+
+  // ---- meanStdDev: depths, channels, masks, ROI sources
+  for (const depth of depths)
+    for (const channels of [1, 3])
+      for (const maskMode of ["none", "full", "partial", "badDepth"]) {
+        run(`msd/${depth}/${channels}/${maskMode}`, (handles) => {
+          const rows = 3,
+            columns = 4;
+          const count = rows * columns * channels;
+          const source = track(
+            handles,
+            api.mat(rows, columns, channels, depth, arrays[depth](count)),
+          );
+          const means = track(handles, api.empty());
+          const deviations = track(handles, api.empty());
+          let mask;
+          if (maskMode !== "none") {
+            const values =
+              maskMode === "badDepth"
+                ? arrays[5](rows * columns)
+                : maskMode === "full"
+                  ? rows * columns === 1
+                    ? [255]
+                    : Array.from({ length: rows * columns }, () => 255)
+                  : Array.from({ length: rows * columns }, (_, i) => (i % 2 ? 255 : 0));
+            mask = track(
+              handles,
+              api.mat(rows, columns, 1, maskMode === "badDepth" ? 5 : 0, values),
+            );
+            cv.meanStdDev(source, means, deviations, mask);
+          } else {
+            cv.meanStdDev(source, means, deviations);
+          }
+          return { means: api.summary(means), deviations: api.summary(deviations) };
+        });
+      }
+  // ROI source case
+  run("msd/roi", (handles) => {
+    const parent = track(handles, api.mat(4, 6, 1, 0, arrays[0](24)));
+    const source = api.roi(parent, 1, 2, 2, 3);
+    handles.push(source);
+    const means = track(handles, api.empty());
+    const deviations = track(handles, api.empty());
+    cv.meanStdDev(source, means, deviations);
+    return { means: api.summary(means), deviations: api.summary(deviations) };
+  });
+
+  // ---- reduce: axes, kinds, dtype, depths
+  for (const depth of depths)
+    for (const axis of [0, 1])
+      for (const kind of [0, 1, 2, 3, 4, 99])
+        for (const dtype of [-1, 0, 5, 6]) {
+          run(`reduce/${depth}/${axis}/${kind}/${dtype}`, (handles) => {
+            const source = track(handles, api.mat(3, 4, 1, depth, arrays[depth](12)));
+            const destination = track(handles, api.empty());
+            const call =
+              dtype === -1
+                ? () => cv.reduce(source, destination, axis, kind)
+                : () => cv.reduce(source, destination, axis, kind, dtype);
+            call();
+            return { destination: api.summary(destination) };
+          });
+        }
+  for (const channels of [2, 3, 4])
+    run(`reduce/chan/${channels}`, (handles) => {
+      const source = track(handles, api.mat(2, 3, channels, 0, arrays[0](2 * 3 * channels)));
+      const destination = track(handles, api.empty());
+      cv.reduce(source, destination, 0, 0);
+      return { destination: api.summary(destination) };
+    });
+
+  // ---- norm: types, single/masked/invalid-arg-count forms
+  for (const depth of depths)
+    for (const normType of [1, 2, 4, 5, 6, 7, 8, 9, 12, 32, 33, 34, 36])
+      for (const form of ["single", "masked", "extra", "matAsType"]) {
+        run(`norm/${depth}/${normType}/${form}`, (handles) => {
+          const first = track(handles, api.mat(2, 3, 1, depth, arrays[depth](6)));
+          const second = track(
+            handles,
+            api.mat(
+              2,
+              3,
+              1,
+              depth,
+              arrays[depth](6).map((v) => v / 2),
+            ),
+          );
+          const mask = track(handles, api.mat(2, 3, 1, 0, [255, 0, 255, 0, 255, 0]));
+          let value;
+          if (form === "single") {
+            value = cv.norm(first, normType);
+          } else if (form === "masked") {
+            value = cv.norm(first, normType, mask);
+          } else if (form === "extra") {
+            value = cv.norm(first, second, normType, mask);
+          } else {
+            value = cv.norm(first, second, normType);
+          }
+          return { value, depth: 6 };
+        });
+      }
+  run("norm/one-arg", (handles) => {
+    const first = track(handles, api.mat(2, 2, 1, 0, [3, 4, 0, 0]));
+    return { value: cv.norm(first), depth: 6 };
+  });
+
+  // ---- normalize: norm types, alpha/beta, dtype, masks
+  for (const depth of depths)
+    for (const normType of [1, 2, 4, 32])
+      for (const [alpha, beta] of [
+        [10, 0],
+        [0, 200],
+        [-5, 3],
+        [0.5, -2],
+        [Infinity, 0],
+        [0, NaN],
+      ])
+        for (const dtype of [-1, 0, 5, 6]) {
+          run(`normalize/${depth}/${normType}/${alpha}/${beta}/${dtype}`, (handles) => {
+            const source = track(handles, api.mat(2, 3, 1, depth, arrays[depth](6)));
+            const destination = track(handles, api.empty());
+            const call =
+              dtype === -1
+                ? () => cv.normalize(source, destination, alpha, beta, normType)
+                : () => cv.normalize(source, destination, alpha, beta, normType, dtype);
+            call();
+            return { destination: api.summary(destination) };
+          });
+        }
+  for (const maskMode of ["full", "partial", "empty"]) {
+    run(`normalize/mask/${maskMode}`, (handles) => {
+      const source = track(handles, api.mat(2, 3, 1, 0, [10, 20, 30, 40, 50, 60]));
+      const destination = track(handles, api.mat(2, 3, 1, 0, [99, 99, 99, 99, 99, 99]));
+      const maskValues =
+        maskMode === "full"
+          ? [255, 255, 255, 255, 255, 255]
+          : maskMode === "partial"
+            ? [255, 0, 255, 0, 255, 0]
+            : [0, 0, 0, 0, 0, 0];
+      const mask = track(handles, api.mat(2, 3, 1, 0, maskValues));
+      cv.normalize(source, destination, 10, 0, 2, -1, mask);
+      return { destination: api.summary(destination) };
+    });
+  }
+
+  // ---- LUT: source depths, channel tables, output depths
+  for (const sourceDepth of [0, 1])
+    for (const tableChannels of [1, 3])
+      for (const sourceChannels of [1, tableChannels])
+        for (const tableDepth of depths) {
+          run(`lut/${sourceDepth}/${sourceChannels}/${tableChannels}/${tableDepth}`, (handles) => {
+            const count = 6 * sourceChannels;
+            const source = track(
+              handles,
+              api.mat(2, 3, sourceChannels, sourceDepth, arrays[sourceDepth](count)),
+            );
+            const table = track(
+              handles,
+              api.mat(1, 256, tableChannels, tableDepth, arrays[tableDepth](256 * tableChannels)),
+            );
+            const destination = track(handles, api.empty());
+            LUT(source, table, destination);
+            return { destination: api.summary(destination) };
+          });
+        }
+
+  // ---- transform: channels, coefficient shapes/depths
+  for (const sourceDepth of depths)
+    for (const channels of [1, 2, 3, 4])
+      for (const coeffDepth of [5, 6])
+        for (const coeffRows of [channels, channels + 1]) {
+          run(`transform/${sourceDepth}/${channels}/${coeffDepth}/${coeffRows}`, (handles) => {
+            const source = track(
+              handles,
+              api.mat(2, 2, channels, sourceDepth, arrays[sourceDepth](4 * channels)),
+            );
+            const coefficient = track(
+              handles,
+              api.mat(
+                coeffRows,
+                channels,
+                1,
+                coeffDepth,
+                Array.from({ length: coeffRows * channels }, (_, i) => ((i % 3) + 1) * 0.5),
+              ),
+            );
+            const destination = track(handles, api.empty());
+            cv.transform(source, destination, coefficient);
+            return { destination: api.summary(destination) };
+          });
+        }
+
+  // ---- perspectiveTransform: F32/F64, 2/3 channels
+  for (const depth of [5, 6])
+    for (const channels of [2, 3])
+      for (const coeffSize of [channels + 1]) {
+        run(`persp/${depth}/${channels}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(
+              2,
+              1,
+              channels,
+              depth,
+              Array.from({ length: 2 * channels }, (_, i) => i + 0.5),
+            ),
+          );
+          const coefficient = track(
+            handles,
+            api.mat(
+              coeffSize,
+              coeffSize,
+              1,
+              depth,
+              Array.from({ length: coeffSize * coeffSize }, (_, i) =>
+                i % (coeffSize + 1) === 0 ? 1 : 0.25 * ((i / coeffSize) | 0) + 0.01 * i,
+              ),
+            ),
+          );
+          const destination = track(handles, api.empty());
+          cv.perspectiveTransform(source, destination, coefficient);
+          return { destination: api.summary(destination) };
+        });
+      }
+
+  // ---- invert: sizes, depths, methods
+  for (const depth of depths)
+    for (const size of [1, 2, 3])
+      for (const method of [0, 1, 3, 4, 99]) {
+        run(`invert/${depth}/${size}/${method}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(
+              size,
+              size,
+              1,
+              depth,
+              Array.from({ length: size * size }, (_, i) =>
+                i % (size + 1) === 0 ? 2 : 0.5 * ((i % size) + 1),
+              ),
+            ),
+          );
+          const destination = track(handles, api.empty());
+          const determinant = cv.invert(source, destination, method);
+          return { determinant, destination: api.summary(destination) };
+        });
+      }
+
+  // ---- solve: square systems, right-hand sides, methods
+  for (const depth of depths)
+    for (const rhsColumns of [1, 2])
+      for (const method of [0, 1, 3, 4]) {
+        run(`solve/${depth}/${rhsColumns}/${method}`, (handles) => {
+          const n = 2;
+          const coefficients = track(
+            handles,
+            api.mat(n, n, 1, depth, depth === 5 || depth === 6 ? [2, 0.5, 0.25, 3] : [2, 1, 0, 3]),
+          );
+          const rhs = track(
+            handles,
+            api.mat(
+              n,
+              rhsColumns,
+              1,
+              depth,
+              Array.from({ length: n * rhsColumns }, (_, i) => i + 2),
+            ),
+          );
+          const destination = track(handles, api.empty());
+          const solved = cv.solve(coefficients, rhs, destination, method);
+          return { solved, destination: api.summary(destination) };
+        });
+      }
+
+  // ---- contract arity audit
+  run("contract", () => ({
+    lengths: {
+      meanStdDev: cv.meanStdDev.length,
+      reduce: cv.reduce.length,
+      norm: cv.norm.length,
+      normalize: cv.normalize.length,
+      LUT: cv.LUT.length,
+      transform: cv.transform.length,
+      perspectiveTransform: cv.perspectiveTransform.length,
+      invert: cv.invert.length,
+      solve: cv.solve.length,
+    },
+  }));
+
+  return entries;
+}

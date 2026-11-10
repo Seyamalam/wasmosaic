@@ -97,14 +97,13 @@ fn lut_mat(source: &Mat, table: &Mat) -> Result<Mat, LutError> {
 
 fn lut_into_mat(source: &Mat, table: &Mat, destination: &Mat) -> Result<(), LutError> {
     let bytes = lookup_bytes(source, table)?;
-    if destination.rows() != source.rows()
-        || destination.columns() != source.columns()
-        || destination.channels() != source.channels()
-        || destination.depth() != table.depth()
-    {
-        return Err(LutError::IncompatibleDestination);
-    }
-    destination.write_compact_bytes(&bytes)?;
+    destination.write_output(
+        bytes,
+        source.rows(),
+        source.columns(),
+        source.channels(),
+        table.depth(),
+    )?;
     Ok(())
 }
 
@@ -141,12 +140,7 @@ fn lookup_bytes(source: &Mat, table: &Mat) -> Result<Vec<u8>, LutError> {
         .zip(output.chunks_exact_mut(scalar_width))
         .enumerate()
     {
-        let index = match source.depth() {
-            MatDepth::U8 => usize::from(source_value),
-            MatDepth::I8 => usize::try_from(i16::from(i8::from_ne_bytes([source_value])) + 128)
-                .expect("signed byte LUT index is always between 0 and 255"),
-            _ => unreachable!("source depth was validated"),
-        };
+        let index = usize::from(source_value);
         let channel = scalar_offset % source_channels;
         let table_channel = if table_channels == 1 { 0 } else { channel };
         let table_scalar = index
@@ -184,7 +178,7 @@ mod tests {
     }
 
     #[test]
-    fn signed_source_offsets_indices_by_128_and_preserves_table_depth() {
+    fn signed_source_indexes_the_table_by_its_raw_byte_and_preserves_table_depth() {
         let source = matrix(vec![128, 255, 0, 127], 1, 4, 1, MatDepth::I8);
         let values = (0_i16..256).collect::<Vec<_>>();
         let table_bytes = values
@@ -197,7 +191,7 @@ mod tests {
 
         assert_eq!(
             output.to_i16_array().expect("I16 output"),
-            [0, 127, 128, 255]
+            [128, 255, 0, 127]
         );
         assert_eq!(output.depth(), MatDepth::I16);
     }

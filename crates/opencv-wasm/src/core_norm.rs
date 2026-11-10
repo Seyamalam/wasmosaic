@@ -164,7 +164,7 @@ pub(crate) fn normalize_into(
     let elements = validate(source, rows, columns, channels, source_depth)?;
     validate(destination, rows, columns, channels, destination_depth)?;
     validate_mask(mask, rows, columns)?;
-    let (scale, shift) = if norm_type == NORM_MINMAX {
+    let (scale, shift, minmax) = if norm_type == NORM_MINMAX {
         let mut minimum = f64::INFINITY;
         let mut maximum = f64::NEG_INFINITY;
         for index in 0..elements {
@@ -178,12 +178,12 @@ pub(crate) fn normalize_into(
             return Ok(());
         }
         if maximum.total_cmp(&minimum).is_eq() {
-            (0.0, alpha)
+            (0.0, alpha, None)
         } else {
             let low = alpha.min(beta);
             let high = alpha.max(beta);
             let scale = (high - low) / (maximum - minimum);
-            (scale, low - minimum * scale)
+            (scale, low, Some((minimum, low)))
         }
     } else {
         if !matches!(norm_type, NORM_INF | NORM_L1 | NORM_L2) {
@@ -206,16 +206,16 @@ pub(crate) fn normalize_into(
                 alpha / magnitude
             },
             0.0,
+            None,
         )
     };
     for index in 0..elements {
         if selected(mask, index / usize::from(channels), columns) {
-            write(
-                destination,
-                index,
-                destination_depth,
-                read(source, index, source_depth).mul_add(scale, shift),
-            );
+            let value = match minmax {
+                Some((base, low)) => (read(source, index, source_depth) - base) * scale + low,
+                None => read(source, index, source_depth).mul_add(scale, shift),
+            };
+            write(destination, index, destination_depth, value);
         }
     }
     Ok(())
@@ -345,22 +345,23 @@ fn read(data: &[u8], index: usize, depth: ScalarDepth) -> f64 {
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn write(data: &mut [u8], index: usize, depth: ScalarDepth, value: f64) {
     let offset = index * depth.width();
+    let rounded = if value.is_finite() && value.abs() < 2_147_483_648.0 {
+        value.round_ties_even()
+    } else {
+        f64::from(i32::MIN)
+    };
     let bytes: Vec<u8> = match depth {
-        ScalarDepth::U8 => vec![(value.round().clamp(0.0, f64::from(u8::MAX))) as u8],
-        ScalarDepth::I8 => (value.round().clamp(f64::from(i8::MIN), f64::from(i8::MAX)) as i8)
+        ScalarDepth::U8 => vec![(rounded.clamp(0.0, f64::from(u8::MAX))) as u8],
+        ScalarDepth::I8 => (rounded.clamp(f64::from(i8::MIN), f64::from(i8::MAX)) as i8)
             .to_ne_bytes()
             .to_vec(),
-        ScalarDepth::U16 => (value.round().clamp(0.0, f64::from(u16::MAX)) as u16)
+        ScalarDepth::U16 => (rounded.clamp(0.0, f64::from(u16::MAX)) as u16)
             .to_ne_bytes()
             .to_vec(),
-        ScalarDepth::I16 => (value
-            .round()
-            .clamp(f64::from(i16::MIN), f64::from(i16::MAX)) as i16)
+        ScalarDepth::I16 => (rounded.clamp(f64::from(i16::MIN), f64::from(i16::MAX)) as i16)
             .to_ne_bytes()
             .to_vec(),
-        ScalarDepth::I32 => (value
-            .round()
-            .clamp(f64::from(i32::MIN), f64::from(i32::MAX)) as i32)
+        ScalarDepth::I32 => (rounded.clamp(f64::from(i32::MIN), f64::from(i32::MAX)) as i32)
             .to_ne_bytes()
             .to_vec(),
         ScalarDepth::F32 => (value as f32).to_ne_bytes().to_vec(),

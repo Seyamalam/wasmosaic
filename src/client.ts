@@ -898,10 +898,9 @@ class WasmOpenCv implements OpenCv {
   invert(image: RgbaImage): RgbaImage;
   invert(source: Mat, destination: Mat, method?: DecompositionMethod): number;
   invert(
-    imageOrSource: RgbaImage | Mat,
-    destination?: Mat,
-    method: DecompositionMethod = 0,
+    ...arguments_: [imageOrSource: RgbaImage | Mat, destination?: Mat, method?: DecompositionMethod]
   ): RgbaImage | number {
+    const [imageOrSource, destination, method = 0] = arguments_;
     if (imageOrSource instanceof Mat) {
       if (destination === undefined) {
         throw new OpenCvInputError("matrix inverse requires a destination");
@@ -1001,6 +1000,14 @@ class WasmOpenCv implements OpenCv {
     return new Mat(this.#backend.matLog(source.handleForBackend()));
   }
 
+  LUT(source: Mat, table: Mat, destination: Mat): void {
+    this.#backend.matLutInto(
+      source.handleForBackend(),
+      table.handleForBackend(),
+      destination.handleForBackend(),
+    );
+  }
+
   lut(source: Mat, table: Mat): Mat;
   lut(source: Mat, table: Mat, destination: Mat): void;
   lut(source: Mat, table: Mat, destination?: Mat): Mat | void {
@@ -1042,20 +1049,26 @@ class WasmOpenCv implements OpenCv {
     return scalarFromArray(values);
   }
 
-  meanStdDev(source: Mat, means: Mat, standardDeviations: Mat, mask?: Mat): void {
+  meanStdDev(
+    ...arguments_:
+      | [source: Mat, means: Mat, standardDeviations: Mat]
+      | [source: Mat, means: Mat, standardDeviations: Mat, mask: Mat]
+  ): void {
+    requireOverloadArity(arguments_.length, 3, 4, "meanStdDev");
+    const [source, means, standardDeviations, mask] = arguments_;
     if (mask === undefined) {
       this.#backend.matMeanStdDevInto(
-        source.handleForBackend(),
-        means.handleForBackend(),
-        standardDeviations.handleForBackend(),
+        matHandleForBinding(source),
+        matHandleForBinding(means),
+        matHandleForBinding(standardDeviations),
       );
       return;
     }
     this.#backend.matMeanStdDevMaskedInto(
-      source.handleForBackend(),
-      means.handleForBackend(),
-      standardDeviations.handleForBackend(),
-      mask.handleForBackend(),
+      matHandleForBinding(source),
+      matHandleForBinding(means),
+      matHandleForBinding(standardDeviations),
+      matHandleForBinding(mask),
     );
   }
 
@@ -1144,66 +1157,64 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  norm(source: Mat, normType?: NormType, mask?: Mat): number;
-  norm(first: Mat, second: Mat, normType?: NormType, mask?: Mat): number;
   norm(
-    first: Mat,
-    secondOrType: Mat | NormType = 4,
-    typeOrMask?: NormType | Mat,
-    mask?: Mat,
+    ...arguments_:
+      [source: Mat, normType?: NormType] | [source: Mat, normType?: NormType, mask?: Mat]
   ): number {
-    if (secondOrType instanceof Mat) {
-      const resolvedMask = typeOrMask instanceof Mat ? typeOrMask : mask;
-      const normType = typeOrMask instanceof Mat ? 4 : (typeOrMask ?? 4);
-      return resolvedMask === undefined
-        ? this.#backend.matNormDiff(
-            first.handleForBackend(),
-            secondOrType.handleForBackend(),
-            normType,
-          )
-        : this.#backend.matNormDiffMasked(
-            first.handleForBackend(),
-            secondOrType.handleForBackend(),
-            normType,
-            resolvedMask.handleForBackend(),
-          );
-    }
-    const resolvedMask = typeOrMask instanceof Mat ? typeOrMask : undefined;
-    return resolvedMask === undefined
-      ? this.#backend.matNorm(first.handleForBackend(), secondOrType)
+    requireArityRange(arguments_.length, 1, 3, "norm");
+    const [source, normType = 4, mask] = arguments_;
+    return mask === undefined
+      ? this.#backend.matNorm(matHandleForBinding(source), normType)
       : this.#backend.matNormMasked(
+          matHandleForBinding(source),
+          normType,
+          matHandleForBinding(mask),
+        );
+  }
+
+  normDiff(first: Mat, second: Mat, normType: NormType = 4, mask?: Mat): number {
+    return mask === undefined
+      ? this.#backend.matNormDiff(first.handleForBackend(), second.handleForBackend(), normType)
+      : this.#backend.matNormDiffMasked(
           first.handleForBackend(),
-          secondOrType,
-          resolvedMask.handleForBackend(),
+          second.handleForBackend(),
+          normType,
+          mask.handleForBackend(),
         );
   }
 
   normalize(
-    source: Mat,
-    destination: Mat,
-    alpha: number,
-    beta: number,
-    normType: NormalizeType,
-    mask?: Mat,
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      alpha?: number,
+      beta?: number,
+      normType?: NormalizeType,
+      dtype?: number,
+      mask?: Mat,
+    ]
   ): void {
-    validateFiniteNumbers({ alpha, beta });
+    requireArityRange(arguments_.length, 2, 7, "normalize");
+    const [source, destination, alpha = 1, beta = 0, normType = 4, dtype = -1, mask] = arguments_;
     if (mask === undefined) {
       this.#backend.matNormalizeInto(
-        source.handleForBackend(),
-        destination.handleForBackend(),
+        matHandleForBinding(source),
+        matHandleForBinding(destination),
         alpha,
         beta,
         normType,
+        dtype,
       );
       return;
     }
     this.#backend.matNormalizeMaskedInto(
-      source.handleForBackend(),
-      destination.handleForBackend(),
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
       alpha,
       beta,
       normType,
-      mask.handleForBackend(),
+      dtype,
+      matHandleForBinding(mask),
     );
   }
 
@@ -1233,22 +1244,11 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  perspectiveTransform(source: Mat, coefficients: Mat): Mat;
-  perspectiveTransform(source: Mat, coefficients: Mat, destination: Mat): void;
-  perspectiveTransform(source: Mat, coefficients: Mat, destination?: Mat): Mat | void {
-    if (destination !== undefined) {
-      this.#backend.matPerspectiveTransformInto(
-        source.handleForBackend(),
-        coefficients.handleForBackend(),
-        destination.handleForBackend(),
-      );
-      return;
-    }
-    return new Mat(
-      this.#backend.matPerspectiveTransform(
-        source.handleForBackend(),
-        coefficients.handleForBackend(),
-      ),
+  perspectiveTransform(source: Mat, destination: Mat, coefficients: Mat): void {
+    this.#backend.matPerspectiveTransformInto(
+      source.handleForBackend(),
+      coefficients.handleForBackend(),
+      destination.handleForBackend(),
     );
   }
 
@@ -1352,12 +1352,17 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  reduce(source: Mat, destination: Mat, axis: 0 | 1, kind: ReduceKind): void {
+  reduce(
+    ...arguments_: [source: Mat, destination: Mat, axis: 0 | 1, kind: ReduceKind, dtype?: number]
+  ): void {
+    requireOverloadArity(arguments_.length, 4, 5, "reduce");
+    const [source, destination, axis, kind, dtype = -1] = arguments_;
     this.#backend.matReduceInto(
-      source.handleForBackend(),
-      destination.handleForBackend(),
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
       axis,
       kind,
+      dtype,
     );
   }
 
@@ -1380,15 +1385,19 @@ class WasmOpenCv implements OpenCv {
   }
 
   solve(
-    coefficients: Mat,
-    rightHandSides: Mat,
-    destination: Mat,
-    method: DecompositionMethod = 0,
+    ...arguments_: [
+      coefficients: Mat,
+      rightHandSides: Mat,
+      destination: Mat,
+      method?: DecompositionMethod,
+    ]
   ): boolean {
+    requireOverloadArity(arguments_.length, 3, 4, "solve");
+    const [coefficients, rightHandSides, destination, method = 0] = arguments_;
     return this.#backend.matSolveInto(
-      coefficients.handleForBackend(),
-      rightHandSides.handleForBackend(),
-      destination.handleForBackend(),
+      matHandleForBinding(coefficients),
+      matHandleForBinding(rightHandSides),
+      matHandleForBinding(destination),
       method,
     );
   }
@@ -1493,19 +1502,11 @@ class WasmOpenCv implements OpenCv {
     return scalarFromArray(this.#backend.matTrace(matHandleForBinding(source)));
   }
 
-  transform(source: Mat, coefficients: Mat): Mat;
-  transform(source: Mat, coefficients: Mat, destination: Mat): void;
-  transform(source: Mat, coefficients: Mat, destination?: Mat): Mat | void {
-    if (destination !== undefined) {
-      this.#backend.matTransformInto(
-        source.handleForBackend(),
-        coefficients.handleForBackend(),
-        destination.handleForBackend(),
-      );
-      return;
-    }
-    return new Mat(
-      this.#backend.matTransform(source.handleForBackend(), coefficients.handleForBackend()),
+  transform(source: Mat, destination: Mat, coefficients: Mat): void {
+    this.#backend.matTransformInto(
+      source.handleForBackend(),
+      coefficients.handleForBackend(),
+      destination.handleForBackend(),
     );
   }
 

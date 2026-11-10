@@ -2050,6 +2050,7 @@ class CopyingBackend implements OpenCvBackend {
     alpha: number,
     beta: number,
     normType: number,
+    _dtype: number,
   ): void {
     const input = source.toUint8Array();
     const denominator = normBytes(input, normType);
@@ -2066,6 +2067,7 @@ class CopyingBackend implements OpenCvBackend {
     alpha: number,
     beta: number,
     normType: number,
+    dtype: number,
     mask: WasmMatHandle,
   ): void {
     const before = destination.toUint8Array();
@@ -2075,7 +2077,7 @@ class CopyingBackend implements OpenCvBackend {
       source.channels,
       new Uint8Array(source.byteLength),
     );
-    this.matNormalizeInto(source, temporary, alpha, beta, normType);
+    this.matNormalizeInto(source, temporary, alpha, beta, normType, dtype);
     const normalized = temporary.toUint8Array();
     const maskBytes = mask.toUint8Array();
     for (let pixel = 0; pixel < source.rows * source.columns; pixel += 1) {
@@ -2108,6 +2110,7 @@ class CopyingBackend implements OpenCvBackend {
     destination: WasmMatHandle,
     axis: number,
     kind: number,
+    _dtype: number,
   ): void {
     const input = source.toUint8Array();
     const output: number[] = [];
@@ -3738,27 +3741,22 @@ describe("OpenCv client", () => {
   test("applies linear and perspective transforms", () => {
     const source = client.matFromU8(1, 2, 1, new Uint8Array([1, 2]));
     const coefficients = client.matFromF64(1, 2, 1, new Float64Array([2, 1]));
-    const transformed = client.transform(source, coefficients);
     const transformedDestination = client.zerosU8(1, 2, 1);
-    client.transform(source, coefficients, transformedDestination);
-    expect(transformed.toUint8Array()).toEqual(new Uint8Array([3, 5]));
+    client.transform(source, transformedDestination, coefficients);
     expect(transformedDestination.toUint8Array()).toEqual(new Uint8Array([3, 5]));
 
     const points = client.matFromF64(1, 2, 2, new Float64Array([1, 2, 3, 4]));
     const identity = client.matFromF64(3, 3, 1, new Float64Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-    const projected = client.perspectiveTransform(points, identity);
     const projectedDestination = client.zerosF64(1, 2, 2);
-    client.perspectiveTransform(points, identity, projectedDestination);
-    expect(projected.toFloat64Array()).toEqual(new Float64Array([1, 2, 3, 4]));
+    client.perspectiveTransform(points, projectedDestination, identity);
+    expect(projectedDestination.toFloat64Array()).toEqual(new Float64Array([1, 2, 3, 4]));
     expect(projectedDestination.toFloat64Array()).toEqual(new Float64Array([1, 2, 3, 4]));
 
     for (const matrix of [
       projectedDestination,
-      projected,
       identity,
       points,
       transformedDestination,
-      transformed,
       coefficients,
       source,
     ]) {
@@ -5002,7 +5000,7 @@ describe("OpenCv client", () => {
     const source = client.matFromU8(1, 2, 1, new Uint8Array([3, 4]));
     expect(client.norm(source, 4)).toBe(5);
     const other = client.matFromU8(1, 2, 1, new Uint8Array([0, 0]));
-    expect(client.norm(source, other, 2)).toBe(7);
+    expect(client.normDiff(source, other, 2)).toBe(7);
     const destination = client.zerosU8(1, 2, 1);
     client.normalize(source, destination, 10, 0, 4);
     expect(destination.toUint8Array()).toEqual(new Uint8Array([6, 8]));
@@ -5019,7 +5017,7 @@ describe("OpenCv client", () => {
     expect(means.toFloat64Array()[0]).toBe(4);
     expect(deviations.toFloat64Array()[0]).toBeCloseTo(Math.sqrt(5), 12);
     const reduced = client.zerosU8(1, 2, 1);
-    client.reduce(source, reduced, 0, 0);
+    client.reduce(source, reduced, 0, 0, -1);
     expect(reduced.toUint8Array()).toEqual(new Uint8Array([6, 10]));
     reduced.dispose();
     deviations.dispose();
