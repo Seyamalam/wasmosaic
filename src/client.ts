@@ -2323,6 +2323,85 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  convexityDefects(contour: Mat, convexhull: Mat, convexityDefects: Mat): void {
+    this.#backend.matConvexityDefectsInto(
+      matHandleForBinding(contour),
+      matHandleForBinding(convexhull),
+      matHandleForBinding(convexityDefects),
+    );
+  }
+
+  blendLinear(src1: Mat, src2: Mat, weights1: Mat, weights2: Mat, dst: Mat): void {
+    this.#backend.matBlendLinearInto(
+      matHandleForBinding(src1),
+      matHandleForBinding(src2),
+      matHandleForBinding(weights1),
+      matHandleForBinding(weights2),
+      matHandleForBinding(dst),
+    );
+  }
+
+  intersectConvexConvex(
+    ...arguments_: [p1: Mat, p2: Mat, p12: Mat, handleNested?: boolean]
+  ): number {
+    requireArityRange(arguments_.length, 3, 4, "intersectConvexConvex");
+    const [p1, p2, p12] = arguments_;
+    return this.#backend.matIntersectConvexConvexInto(
+      matHandleForBinding(p1),
+      matHandleForBinding(p2),
+      matHandleForBinding(p12),
+    );
+  }
+
+  rotatedRectangleIntersection(
+    rect1: RotatedRect,
+    rect2: RotatedRect,
+    intersectingRegion: Mat,
+  ): number {
+    return this.#backend.matRotatedRectangleIntersectionInto(
+      rect1.center.x,
+      rect1.center.y,
+      rect1.size.width,
+      rect1.size.height,
+      rect1.angle,
+      rect2.center.x,
+      rect2.center.y,
+      rect2.size.width,
+      rect2.size.height,
+      rect2.angle,
+      matHandleForBinding(intersectingRegion),
+    );
+  }
+
+  distanceTransformWithLabels(
+    ...arguments_: [
+      src: Mat,
+      dst: Mat,
+      labels: Mat,
+      maskSize?: number,
+      distType?: DistType,
+      labelType?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 6, "distanceTransformWithLabels");
+    const [src, dst, labels, maskSize = 3, distType = 2, labelType = 0] = arguments_;
+    this.#backend.matDistanceTransformWithLabelsInto(
+      matHandleForBinding(src),
+      matHandleForBinding(dst),
+      matHandleForBinding(labels),
+      toWasmI32(maskSize),
+      toWasmI32(distType),
+      toWasmI32(labelType),
+    );
+  }
+
+  minEnclosingTriangle(points: Mat, triangle: Mat): number {
+    return this.#backend.matMinEnclosingTriangleInto(
+      matHandleForBinding(points),
+      matHandleForBinding(triangle),
+    );
+  }
+
   compareHist(h1: Mat, h2: Mat, method: number): number {
     return this.#backend.matCompareHist(
       matHandleForBinding(h1),

@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Convex geometry and analysis batch: `convexityDefects` (hull-vertex defect measurement), `blendLinear` (element-wise weighted blend), `rotatedRectangleIntersection` (rotated-rect clip to an F32 polygon), and `distanceTransformWithLabels` (Euclidean distance plus owning-component labels). `intersectConvexConvex` and `minEnclosingTriangle` ship as partials: the pinned upstream binding errors on the exercised call forms. **Full parity is now 194 of 488 families.**
+
+### Added
+
 - `fillConvexPoly` (scanline fill for convex vertex sets). `arrowedLine` ships as a partial: the shaft rasterizes exactly but the arrowhead fan differs by one pixel. **Full parity is now 190 of 488 families.**
 
 ### Added

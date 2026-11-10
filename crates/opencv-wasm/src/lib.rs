@@ -62,6 +62,8 @@ mod imgproc_contours;
 mod imgproc_contours_wasm;
 mod imgproc_correlate;
 mod imgproc_draw;
+mod imgproc_geom2;
+mod imgproc_geom2_wasm;
 mod imgproc_draw_wasm;
 mod imgproc_correlate_wasm;
 mod imgproc_filter;

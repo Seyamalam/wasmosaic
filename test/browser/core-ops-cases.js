@@ -1732,6 +1732,58 @@ export function runCoreOpsCases(cv, reference) {
     return { image: api.summary(image) };
   });
 
+  // ---- geometry2 batch
+  run("convexityDefects", (handles) => {
+    const contour = track(handles, api.mat(1, 4, 2, 3, [1, 1, 5, 1, 3, 4, 1, 5]));
+    const hull = track(handles, api.mat(4, 1, 1, 3, [0, 1, 2, 3]));
+    const defects = track(handles, api.empty());
+    cv.convexityDefects(contour, hull, defects);
+    return { defects: api.summary(defects) };
+  });
+  run("blendLinear", (handles) => {
+    const a = track(handles, api.mat(2, 2, 1, 0, [0, 50, 100, 150]));
+    const b = track(handles, api.mat(2, 2, 1, 0, [100, 150, 200, 250]));
+    const w1 = track(handles, api.mat(2, 2, 1, 5, [0, 0.25, 0.5, 0.75]));
+    const w2 = track(handles, api.mat(2, 2, 1, 5, [1, 0.75, 0.5, 0.25]));
+    const destination = track(handles, api.empty());
+    cv.blendLinear(a, b, w1, w2, destination);
+    return { destination: api.summary(destination) };
+  });
+  run("intersectConvexConvex", (handles) => {
+    const sq = track(handles, api.mat(1, 4, 2, 3, [1, 1, 5, 1, 5, 5, 1, 5]));
+    const tri = track(handles, api.mat(1, 3, 2, 3, [2, 2, 7, 3, 3, 6]));
+    const out = track(handles, api.empty());
+    const area = cv.intersectConvexConvex(sq, tri, out, false);
+    return { area, out: api.summary(out) };
+  });
+  run("rotatedRectangleIntersection", (handles) => {
+    const r1 = reference
+      ? new cv.RotatedRect({ x: 5, y: 5 }, { width: 6, height: 4 }, 0)
+      : { center: { x: 5, y: 5 }, size: { width: 6, height: 4 }, angle: 0 };
+    const r2 = reference
+      ? new cv.RotatedRect({ x: 6, y: 5 }, { width: 4, height: 6 }, 30)
+      : { center: { x: 6, y: 5 }, size: { width: 4, height: 6 }, angle: 30 };
+    const pts = track(handles, api.empty());
+    const n = cv.rotatedRectangleIntersection(r1, r2, pts);
+    return { n, pts: api.summary(pts) };
+  });
+  run("distanceTransformWithLabels", (handles) => {
+    const source = track(
+      handles,
+      api.mat(4, 4, 1, 0, [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0]),
+    );
+    const distances = track(handles, api.empty());
+    const labels = track(handles, api.empty());
+    cv.distanceTransformWithLabels(source, distances, labels, 3, 2, 0);
+    return { distances: api.summary(distances), labels: api.summary(labels) };
+  });
+  run("minEnclosingTriangle", (handles) => {
+    const points = track(handles, api.mat(1, 4, 2, 3, [1, 1, 5, 1, 3, 4, 1, 5]));
+    const triangle = track(handles, api.empty());
+    const area = cv.minEnclosingTriangle(points, triangle);
+    return { area, triangle: api.summary(triangle) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1822,6 +1874,12 @@ export function runCoreOpsCases(cv, reference) {
       polylines: cv.polylines.length,
       arrowedLine: cv.arrowedLine.length,
       fillConvexPoly: cv.fillConvexPoly.length,
+      convexityDefects: cv.convexityDefects.length,
+      blendLinear: cv.blendLinear.length,
+      intersectConvexConvex: cv.intersectConvexConvex.length,
+      rotatedRectangleIntersection: cv.rotatedRectangleIntersection.length,
+      distanceTransformWithLabels: cv.distanceTransformWithLabels.length,
+      minEnclosingTriangle: cv.minEnclosingTriangle.length,
     },
   }));
 

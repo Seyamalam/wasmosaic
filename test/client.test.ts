@@ -2176,6 +2176,29 @@ class CopyingBackend implements OpenCvBackend {
   matFillConvexPolyInto(): void {
     throw new OpenCvInputError("mock fillConvexPoly is not implemented");
   }
+  matConvexityDefectsInto(): void {
+    throw new OpenCvInputError("mock convexityDefects is not implemented");
+  }
+
+  matBlendLinearInto(): void {
+    throw new OpenCvInputError("mock blendLinear is not implemented");
+  }
+
+  matIntersectConvexConvexInto(): number {
+    throw new OpenCvInputError("mock intersectConvexConvex is not implemented");
+  }
+
+  matRotatedRectangleIntersectionInto(): number {
+    throw new OpenCvInputError("mock rotatedRectangleIntersection is not implemented");
+  }
+
+  matDistanceTransformWithLabelsInto(): void {
+    throw new OpenCvInputError("mock distanceTransformWithLabels is not implemented");
+  }
+
+  matMinEnclosingTriangleInto(): number {
+    throw new OpenCvInputError("mock minEnclosingTriangle is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,

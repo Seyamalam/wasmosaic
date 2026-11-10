@@ -656,6 +656,45 @@ export interface OpenCvBackend {
     points: Int32Array | number[],
     color: Float64Array | number[],
   ): void;
+  matConvexityDefectsInto(
+    contour: WasmMatHandle,
+    hull: WasmMatHandle,
+    defects: WasmMatHandle,
+  ): void;
+  matBlendLinearInto(
+    src1: WasmMatHandle,
+    src2: WasmMatHandle,
+    w1: WasmMatHandle,
+    w2: WasmMatHandle,
+    destination: WasmMatHandle,
+  ): void;
+  matIntersectConvexConvexInto(
+    p1: WasmMatHandle,
+    p2: WasmMatHandle,
+    destination: WasmMatHandle,
+  ): number;
+  matRotatedRectangleIntersectionInto(
+    c1: number,
+    c2: number,
+    w1: number,
+    h1: number,
+    a1: number,
+    d1: number,
+    d2: number,
+    w2: number,
+    h2: number,
+    a2: number,
+    destination: WasmMatHandle,
+  ): number;
+  matDistanceTransformWithLabelsInto(
+    source: WasmMatHandle,
+    distances: WasmMatHandle,
+    labels: WasmMatHandle,
+    maskSize: number,
+    distType: number,
+    labelType: number,
+  ): void;
+  matMinEnclosingTriangleInto(points: WasmMatHandle, triangle: WasmMatHandle): number;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1627,6 +1666,23 @@ export interface OpenCv {
     lineType?: number,
     shift?: number,
   ): void;
+  convexityDefects(contour: Mat, convexhull: Mat, convexityDefects: Mat): void;
+  blendLinear(src1: Mat, src2: Mat, weights1: Mat, weights2: Mat, dst: Mat): void;
+  intersectConvexConvex(p1: Mat, p2: Mat, p12: Mat, handleNested?: boolean): number;
+  rotatedRectangleIntersection(
+    rect1: RotatedRect,
+    rect2: RotatedRect,
+    intersectingRegion: Mat,
+  ): number;
+  distanceTransformWithLabels(
+    src: Mat,
+    dst: Mat,
+    labels: Mat,
+    maskSize?: number,
+    distType?: DistType,
+    labelType?: number,
+  ): void;
+  minEnclosingTriangle(points: Mat, triangle: Mat): number;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

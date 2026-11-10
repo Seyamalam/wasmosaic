@@ -261,6 +261,12 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `drawMarker`                                | `cv.drawMarker`                                | Full    | Cross and tilted-cross marker glyphs                 |
 | imgproc    | `polylines`                                 | `cv.polylines`                                 | Full    | Connected vertex chains                              |
 | imgproc    | `fillPoly`                                  | `cv.fillPoly`                                  | Full    | Scanline polygon fill                                |
+| imgproc    | `convexityDefects`                          | `cv.convexityDefects`                          | Full    | Hull-vertex defect measurement                       |
+| core       | `blendLinear`                               | `cv.blendLinear`                               | Full    | Element-wise src1·w1+src2·w2 blend                   |
+| imgproc    | `rotatedRectangleIntersection`              | `cv.rotatedRectangleIntersection`              | Full    | Rotated-rect clip to F32 polygon                     |
+| imgproc    | `distanceTransformWithLabels`               | `cv.distanceTransformWithLabels`               | Full    | Euclidean distance + owning-component labels         |
+| imgproc    | `intersectConvexConvex`                     | `cv.intersectConvexConvex`                     | Partial | Upstream binding rejects the call form               |
+| imgproc    | `minEnclosingTriangle`                      | `cv.minEnclosingTriangle`                      | Partial | Upstream errors on Mat input                         |
 | imgproc    | `fillConvexPoly`                            | `cv.fillConvexPoly`                            | Full    | Scanline fill for convex vertex sets                 |
 | imgproc    | `arrowedLine`                               | `cv.arrowedLine`                               | Partial | Arrowhead fan raster differs by a pixel              |
 | imgproc    | `circle`                                    | `cv.circle`                                    | Partial | Upstream ellipse-arc raster differs                  |
