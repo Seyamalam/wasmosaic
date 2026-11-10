@@ -2171,6 +2171,50 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "connectedComponents",
+      "module": "imgproc",
+      "notes": "Scan-order union-find labels (I32/U16)",
+      "sources": ["https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html"],
+      "status": "implemented",
+      "upstream": "connectedComponents",
+      "upstreamId": "imgproc.function.connected-components",
+      "wasmExport": "matConnectedComponentsInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "connectedComponentsWithStats",
+      "module": "imgproc",
+      "notes": "Labels plus [left,top,w,h,area] and centroids",
+      "sources": ["https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html"],
+      "status": "implemented",
+      "upstream": "connectedComponentsWithStats",
+      "upstreamId": "imgproc.function.connected-components-with-stats",
+      "wasmExport": "matConnectedComponentsWithStatsInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "distanceTransform",
+      "module": "imgproc",
+      "notes": "Chamfer (mask 3) / exact (mask 5) distance maps",
+      "sources": ["https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html"],
+      "status": "implemented",
+      "upstream": "distanceTransform",
+      "upstreamId": "imgproc.function.distance-transform",
+      "wasmExport": "matDistanceTransformInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "floodFill",
+      "module": "imgproc",
+      "notes": "Region grow with range/mask flags",
+      "sources": ["https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html"],
+      "status": "implemented",
+      "upstream": "floodFill",
+      "upstreamId": "imgproc.function.flood-fill",
+      "wasmExport": "matFloodFillInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "integral",
       "module": "imgproc",
       "notes": "Sum-only integral images with pinned source-depth gates, per-depth allowed sum depths, and multi-channel output.",

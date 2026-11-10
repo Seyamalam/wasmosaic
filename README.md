@@ -256,9 +256,13 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `minEnclosingCircle`                        | `cv.minEnclosingCircle`                        | Partial | Approximate circle radius differs            |
 | imgproc    | `fitEllipse`                                | `cv.fitEllipse`                                | Partial | Least-squares conic; degenerate cases differ |
 | imgproc    | `fitLine`                                   | `cv.fitLine`                                   | Full    | DIST_L2 principal-axis fit                   |
+| imgproc    | `connectedComponents`                       | `cv.connectedComponents`                       | Full    | Scan-order labels, I32/U16                   |
+| imgproc    | `connectedComponentsWithStats`              | `cv.connectedComponentsWithStats`              | Full    | Labels, stats, centroids                     |
+| imgproc    | `distanceTransform`                         | `cv.distanceTransform`                         | Full    | L1/L2/C chamfer and exact masks              |
+| imgproc    | `floodFill`                                 | `cv.floodFill`                                 | Full    | Region grow, mask contract                   |
 | imgproc    | `preCornerDetect`                           | `cv.preCornerDetect`                           | Partial | Corner metric; derivative scaling pending    |
-| imgproc    | `cornerHarris`                              | `cv.cornerHarris`                              | Partial | Harris response; derivative scaling pending  |
-| imgproc    | `cornerMinEigenVal`                         | `cv.cornerMinEigenVal`                         | Partial | Min eigenvalue; derivative scaling pending   |
+| imgproc    | `cornerHarris`                              | `cv.cornerHarris`                              | Full    | Normalized-covariance Harris response        |
+| imgproc    | `cornerMinEigenVal`                         | `cv.cornerMinEigenVal`                         | Full    | Normalized min-eigenvalue corner map         |
 | imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks   |
 | imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Partial | Nearest/linear projective sampling           |
 | photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process      |

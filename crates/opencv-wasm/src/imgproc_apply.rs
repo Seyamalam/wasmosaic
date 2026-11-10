@@ -306,37 +306,58 @@ fn min_area_rect(hull: &[Point]) -> (f64, f64, f64, f64, f64) {
         if dx == 0.0 && dy == 0.0 {
             continue;
         }
-        let angle = dy.atan2(dx);
-        let (sin, cos) = angle.sin_cos();
-        let mut min_u = f64::MAX;
-        let mut max_u = f64::MIN;
-        let mut min_v = f64::MAX;
-        let mut max_v = f64::MIN;
+        let length = (dx * dx + dy * dy).sqrt();
+        let cos = (dx / length) as f32;
+        let sin = (dy / length) as f32;
+        let len2 = length * length;
+        let (dx32, dy32) = (dx as f32, dy as f32);
+        let mut min_u = f32::MAX;
+        let mut max_u = f32::MIN;
+        let mut min_v = f32::MAX;
+        let mut max_v = f32::MIN;
+        let mut min_uu = f32::MAX;
+        let mut max_uu = f32::MIN;
+        let mut min_vu = f32::MAX;
+        let mut max_vu = f32::MIN;
         for point in hull {
-            let u = point.x * cos + point.y * sin;
-            let v = -point.x * sin + point.y * cos;
+            let (px, py) = (point.x as f32, point.y as f32);
+            let u = px * cos + py * sin;
+            let v = -px * sin + py * cos;
             min_u = min_u.min(u);
             max_u = max_u.max(u);
             min_v = min_v.min(v);
             max_v = max_v.max(v);
+            let uu = px * dx32 + py * dy32;
+            let vu = -px * dy32 + py * dx32;
+            min_uu = min_uu.min(uu);
+            max_uu = max_uu.max(uu);
+            min_vu = min_vu.min(vu);
+            max_vu = max_vu.max(vu);
         }
-        let width = max_u - min_u;
-        let height = max_v - min_v;
-        if width * height < best.2 * best.3 {
-            let center_u = (min_u + max_u) / 2.0;
-            let center_v = (min_v + max_v) / 2.0;
-            let cx = center_u * cos - center_v * sin;
-            let cy = center_u * sin + center_v * cos;
+        let width = max_v - min_v;
+        let height = max_u - min_u;
+        if f64::from(width) * f64::from(height) < best.2 * best.3 {
+            let center_u = f64::from((min_uu + max_uu) * 0.5);
+            let center_v = f64::from((min_vu + max_vu) * 0.5);
+            let cx = (center_u * dx - center_v * dy) / len2;
+            let cy = (center_u * dy + center_v * dx) / len2;
             // Pinned convention: `angle` is the width axis direction,
             // normalized into [-90, 0); width/height follow it.
-            let mut angle_deg = (angle.to_degrees() + 90.0) % 180.0;
-            if angle_deg >= 0.0 {
+            let mut angle_deg =
+                f64::from(cos).atan2(-f64::from(sin)).to_degrees();
+            while angle_deg >= 0.0 {
                 angle_deg -= 180.0;
             }
             if angle_deg < -90.0 {
                 angle_deg += 180.0;
             }
-            best = (cx, cy, height, width, angle_deg);
+            best = (
+                cx,
+                cy,
+                f64::from(width),
+                f64::from(height),
+                f64::from(angle_deg as f32),
+            );
         }
     }
     best
@@ -353,7 +374,13 @@ pub(crate) fn min_area_rect_points(source: &Mat) -> Result<[f64; 5], ApplyError>
         .map(|&index| points[index])
         .collect();
     let (cx, cy, w, h, angle) = min_area_rect(&hull);
-    Ok([cx, cy, w, h, angle])
+    Ok([
+        f64::from(cx as f32),
+        f64::from(cy as f32),
+        f64::from(w as f32),
+        f64::from(h as f32),
+        f64::from(angle as f32),
+    ])
 }
 
 /// minEnclosingCircle: deterministic minimal enclosing circle.
@@ -363,7 +390,11 @@ pub(crate) fn min_enclosing_circle_points(source: &Mat) -> Result<[f64; 3], Appl
         return Err(ApplyError::InvalidPoints("empty point set"));
     }
     let (cx, cy, radius) = minimal_enclosing_circle(&points);
-    Ok([cx, cy, radius])
+    Ok([
+        f64::from(cx as f32),
+        f64::from(cy as f32),
+        f64::from(radius as f32),
+    ])
 }
 
 fn circle_from_2(a: Point, b: Point) -> (f64, f64, f64) {
@@ -490,7 +521,7 @@ pub(crate) fn fit_ellipse_points(source: &Mat) -> Result<[f64; 5], ApplyError> {
     let term = ((a - c) * (a - c) + b * b).sqrt();
     let major = (2.0 * common / ((a + c) - term)).sqrt().abs();
     let minor = (2.0 * common / ((a + c) + term)).sqrt().abs();
-    let angle = if b.abs() < 1e-12 {
+    let mut angle = if b.abs() < 1e-12 {
         if a < c {
             0.0
         } else {
@@ -499,7 +530,24 @@ pub(crate) fn fit_ellipse_points(source: &Mat) -> Result<[f64; 5], ApplyError> {
     } else {
         (0.5 * (b / (a - c)).atan()).to_degrees()
     };
-    Ok([cx, cy, 2.0 * major, 2.0 * minor, angle])
+    let mut width = 2.0 * major;
+    let mut height = 2.0 * minor;
+    // Pinned convention: angle of the width axis in [0, 180).
+    if width > height {
+        std::mem::swap(&mut width, &mut height);
+        angle += 90.0;
+    }
+    let mut angle = ((angle % 180.0) + 180.0) % 180.0;
+    if angle < 0.0 {
+        angle += 180.0;
+    }
+    Ok([
+        f64::from(cx as f32),
+        f64::from(cy as f32),
+        f64::from(width as f32),
+        f64::from(height as f32),
+        f64::from(angle as f32),
+    ])
 }
 
 /// fitLine DIST_L2: direction = principal eigenvector; `[vx, vy, x0, y0]`.

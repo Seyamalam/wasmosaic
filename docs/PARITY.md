@@ -129,6 +129,9 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `filter2D`, `sepFilter2D`, `stackBlur`, `pyrDown`, `spatialGradient`, `Scharr` | Matching `cv` correlation/derivative filters              | Depth-gated kernels, dst-depth tables, borders            |
 | `sqrBoxFilter`, `bilateralFilter`, `pyrUp`, `Laplacian`                        | Matching `cv` filters                                     | Residual accumulation/algorithm diffs remain              |
 | `adaptiveThreshold`, `applyColorMap`                                           | Matching `cv` misc filters                                | U8-gated; 22 pinned colormap tables                       |
+| `connectedComponents`, `connectedComponentsWithStats`                          | Matching `cv` labeling                                    | Scan-order union-find; stats + centroids                  |
+| `distanceTransform`                                                            | Matching `cv` distance map                                | Chamfer mask 3 and exact mask 5                           |
+| `floodFill`                                                                    | Matching `cv` region grow                                 | Range flags and mask border contract                      |
 | `convexHull`, `minAreaRect`, `fitLine`                                         | Matching `cv` point geometry                              | Monotone-chain hull, rotating calipers, PCA line          |
 | `minEnclosingCircle`, `fitEllipse`                                             | Matching `cv` point geometry                              | Approximate solver conventions differ                     |
 | `preCornerDetect`, `cornerHarris`, `cornerMinEigenVal`                         | Matching `cv` corner metrics                              | Derivative scaling not yet pinned                         |

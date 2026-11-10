@@ -70,6 +70,8 @@ mod imgproc_perspective;
 mod imgproc_resize;
 mod imgproc_resize_wasm;
 mod imgproc_sample;
+mod imgproc_segment;
+mod imgproc_segment_wasm;
 mod imgproc_template;
 mod imgproc_template_wasm;
 mod imgproc_threshold;

@@ -81,6 +81,10 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.min-enclosing-circle": { overloadCount: 1, runtimeArity: 1 },
   "imgproc.function.fit-ellipse": { overloadCount: 1, runtimeArity: 1 },
   "imgproc.function.fit-line": { overloadCount: 1, runtimeArity: 6 },
+  "imgproc.function.connected-components": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.connected-components-with-stats": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.distance-transform": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.flood-fill": { overloadCount: 1, runtimeArity: 0 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },

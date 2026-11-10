@@ -1366,6 +1366,122 @@ export function runCoreOpsCases(cv, reference) {
     return { destination: api.summary(destination) };
   });
 
+  // ---- connectedComponents / WithStats / distanceTransform / floodFill
+  for (const conn of [4, 8]) {
+    run(`connectedComponents/c${conn}`, (handles) => {
+      const source = track(
+        handles,
+        api.mat(
+          6,
+          6,
+          1,
+          0,
+          [
+            0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 255, 0, 0, 255, 255, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0,
+            255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0,
+          ],
+        ),
+      );
+      const labels = track(handles, api.empty());
+      const count = cv.connectedComponents(source, labels, conn, 4);
+      return { count, labels: api.summary(labels) };
+    });
+    run(`connectedComponentsWithStats/c${conn}`, (handles) => {
+      const source = track(
+        handles,
+        api.mat(
+          6,
+          6,
+          1,
+          0,
+          [
+            0, 0, 0, 0, 0, 0, 0, 255, 0, 0, 255, 0, 0, 255, 255, 0, 255, 0, 0, 0, 0, 0, 0, 0, 0,
+            255, 0, 0, 0, 0, 0, 0, 0, 0, 255, 0,
+          ],
+        ),
+      );
+      const labels = track(handles, api.empty());
+      const stats = track(handles, api.empty());
+      const centroids = track(handles, api.empty());
+      const count = cv.connectedComponentsWithStats(source, labels, stats, centroids, conn, 4);
+      return {
+        count,
+        labels: api.summary(labels),
+        stats: api.summary(stats),
+        centroids: api.summary(centroids),
+      };
+    });
+  }
+  run("connectedComponents/diag8", (handles) => {
+    const source = track(
+      handles,
+      api.mat(4, 4, 1, 0, [255, 0, 0, 0, 0, 255, 0, 0, 0, 0, 255, 0, 0, 0, 0, 255]),
+    );
+    const labels = track(handles, api.empty());
+    const c4 = cv.connectedComponents(source, labels, 4, 4);
+    const l4 = api.summary(labels);
+    const labels8 = track(handles, api.empty());
+    const c8 = cv.connectedComponents(source, labels8, 8, 4);
+    return { c4, l4, c8, l8: api.summary(labels8) };
+  });
+  for (const [dt, mask] of /** @type {[number, number][]} */ ([
+    [2, 3],
+    [2, 5],
+    [1, 3],
+    [3, 3],
+  ])) {
+    run(`distanceTransform/d${dt}/m${mask}`, (handles) => {
+      const source = track(
+        handles,
+        api.mat(
+          5,
+          5,
+          1,
+          0,
+          [
+            0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 0, 255, 255, 255, 0, 0, 255, 255, 255, 0, 0, 0, 0,
+            0, 0,
+          ],
+        ),
+      );
+      const destination = track(handles, api.empty());
+      cv.distanceTransform(source, destination, dt, mask);
+      return { destination: api.summary(destination) };
+    });
+  }
+  for (const conn of [4, 8]) {
+    run(`floodFill/c${conn}`, (handles) => {
+      const source = track(
+        handles,
+        api.mat(
+          5,
+          5,
+          1,
+          0,
+          [1, 1, 2, 2, 2, 1, 1, 2, 2, 2, 1, 1, 2, 3, 2, 1, 1, 2, 2, 2, 1, 1, 2, 2, 2],
+        ),
+      );
+      const mask = track(handles, api.mat(7, 7, 1, 0, Array.from({ length: 49 }).fill(0)));
+      const count = cv.floodFill(source, mask, { x: 3, y: 2 }, [9, 0, 0, 0]);
+      return { count, image: api.summary(source), mask: api.summary(mask) };
+    });
+  }
+  run("floodFill/seed2", (handles) => {
+    const source = track(
+      handles,
+      api.mat(
+        5,
+        5,
+        1,
+        0,
+        [1, 1, 2, 2, 2, 1, 1, 2, 2, 2, 1, 1, 2, 3, 2, 1, 1, 2, 2, 2, 1, 1, 2, 2, 2],
+      ),
+    );
+    const mask = track(handles, api.mat(7, 7, 1, 0, Array.from({ length: 49 }).fill(0)));
+    const count = cv.floodFill(source, mask, { x: 0, y: 0 }, [7, 0, 0, 0]);
+    return { count, image: api.summary(source), mask: api.summary(mask) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1429,6 +1545,10 @@ export function runCoreOpsCases(cv, reference) {
       minEnclosingCircle: cv.minEnclosingCircle.length,
       fitEllipse: cv.fitEllipse.length,
       fitLine: cv.fitLine.length,
+      connectedComponents: cv.connectedComponents.length,
+      connectedComponentsWithStats: cv.connectedComponentsWithStats.length,
+      distanceTransform: cv.distanceTransform.length,
+      floodFill: cv.floodFill.length,
     },
   }));
 

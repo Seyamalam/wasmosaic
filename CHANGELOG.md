@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Segmentation batch: `connectedComponents` and `connectedComponentsWithStats` (scan-order union-find labels, stats, and centroids), `distanceTransform` (chamfer mask-3 and exact mask-5 for L1/L2/C), and `floodFill` (range flags, mask-border contract). `minAreaRect` now matches the pinned rotating-calipers formulation including F32 projection rounding and the width-axis angle convention. **Full parity is now 176 of 488 families.**
+
+### Added
+
 - Windowed-threshold and geometry batch: `adaptiveThreshold` (U8 mean/Gaussian with replicate borders), `applyColorMap` (all 22 pinned colormaps), `convexHull` (monotone chain over CV_32SC2/CV_32FC2 point sets, points or indices output), `minAreaRect` (rotating-calipers RotatedRect), `fitLine` (DIST_L2 principal axis). `cornerHarris` and `cornerMinEigenVal` are now fully implemented with the pinned normalized-covariance scaling; `minEnclosingCircle` and `fitEllipse` ship as partials pending upstream's approximate-solver conventions. **Full parity is now 172 of 488 families.**
 
 ### Added

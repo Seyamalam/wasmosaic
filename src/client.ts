@@ -1916,6 +1916,89 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  connectedComponents(
+    ...arguments_: [image: Mat, labels: Mat, connectivity?: number, labelType?: number]
+  ): number {
+    requireArityRange(arguments_.length, 2, 4, "connectedComponents");
+    const [image, labels, connectivity = 8, labelType = 4] = arguments_;
+    return this.#backend.matConnectedComponentsInto(
+      matHandleForBinding(image),
+      matHandleForBinding(labels),
+      toWasmI32(connectivity),
+      toWasmI32(labelType),
+    );
+  }
+
+  connectedComponentsWithStats(
+    ...arguments_: [
+      image: Mat,
+      labels: Mat,
+      stats: Mat,
+      centroids: Mat,
+      connectivity?: number,
+      labelType?: number,
+    ]
+  ): number {
+    requireArityRange(arguments_.length, 4, 6, "connectedComponentsWithStats");
+    const [image, labels, stats, centroids, connectivity = 8, labelType = 4] = arguments_;
+    return this.#backend.matConnectedComponentsWithStatsInto(
+      matHandleForBinding(image),
+      matHandleForBinding(labels),
+      matHandleForBinding(stats),
+      matHandleForBinding(centroids),
+      toWasmI32(connectivity),
+      toWasmI32(labelType),
+    );
+  }
+
+  distanceTransform(
+    ...arguments_: [source: Mat, destination: Mat, distanceType?: number, maskSize?: number]
+  ): void {
+    requireArityRange(arguments_.length, 2, 4, "distanceTransform");
+    const [source, destination, distanceType = 2, maskSize = 3] = arguments_;
+    this.#backend.matDistanceTransformInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(distanceType),
+      toWasmI32(maskSize),
+    );
+  }
+
+  floodFill(
+    ...arguments_: [
+      image: Mat,
+      mask: Mat,
+      seedPoint: Point,
+      newValue: Scalar,
+      rect?: Rect,
+      loDiff?: Scalar,
+      upDiff?: Scalar,
+      flags?: number,
+    ]
+  ): number {
+    requireArityRange(arguments_.length, 4, 8, "floodFill");
+    const [
+      image,
+      mask,
+      seedPoint,
+      newValue,
+      _rect,
+      loDiff = [0, 0, 0, 0],
+      upDiff = [0, 0, 0, 0],
+      flags = 4,
+    ] = arguments_;
+    return this.#backend.matFloodFillInto(
+      matHandleForBinding(image),
+      matHandleForBinding(mask),
+      toWasmI32(seedPoint.x),
+      toWasmI32(seedPoint.y),
+      requiredFloat(scalarForBinding(newValue), 0),
+      requiredFloat(scalarForBinding(loDiff), 0),
+      requiredFloat(scalarForBinding(upDiff), 0),
+      toWasmI32(flags),
+    );
+  }
+
   integral(
     ...arguments_: [source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number]
   ): void {

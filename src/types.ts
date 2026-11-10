@@ -458,6 +458,36 @@ export interface OpenCvBackend {
     reps: number,
     aeps: number,
   ): void;
+  matConnectedComponentsInto(
+    source: WasmMatHandle,
+    labels: WasmMatHandle,
+    connectivity: number,
+    labelType: number,
+  ): number;
+  matConnectedComponentsWithStatsInto(
+    source: WasmMatHandle,
+    labels: WasmMatHandle,
+    stats: WasmMatHandle,
+    centroids: WasmMatHandle,
+    connectivity: number,
+    labelType: number,
+  ): number;
+  matDistanceTransformInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    distanceType: number,
+    maskSize: number,
+  ): void;
+  matFloodFillInto(
+    image: WasmMatHandle,
+    mask: WasmMatHandle,
+    seedX: number,
+    seedY: number,
+    newValue: number,
+    loDiff: number,
+    upDiff: number,
+    flags: number,
+  ): number;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1250,6 +1280,26 @@ export interface OpenCv {
     reps: number,
     aeps: number,
   ): void;
+  connectedComponents(image: Mat, labels: Mat, connectivity?: number, labelType?: number): number;
+  connectedComponentsWithStats(
+    image: Mat,
+    labels: Mat,
+    stats: Mat,
+    centroids: Mat,
+    connectivity?: number,
+    labelType?: number,
+  ): number;
+  distanceTransform(source: Mat, destination: Mat, distanceType: number, maskSize: number): void;
+  floodFill(
+    image: Mat,
+    mask: Mat,
+    seedPoint: Point,
+    newValue: Scalar,
+    rect?: Rect,
+    loDiff?: Scalar,
+    upDiff?: Scalar,
+    flags?: number,
+  ): number;
 
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(

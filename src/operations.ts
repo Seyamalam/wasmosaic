@@ -179,6 +179,13 @@ export const OPENCV_OPERATIONS = [
   { method: "minEnclosingCircle", wasmExport: "matMinEnclosingCircle" },
   { method: "fitEllipse", wasmExport: "matFitEllipse" },
   { method: "fitLine", wasmExport: "matFitLineInto" },
+  { method: "connectedComponents", wasmExport: "matConnectedComponentsInto" },
+  {
+    method: "connectedComponentsWithStats",
+    wasmExport: "matConnectedComponentsWithStatsInto",
+  },
+  { method: "distanceTransform", wasmExport: "matDistanceTransformInto" },
+  { method: "floodFill", wasmExport: "matFloodFillInto" },
   { method: "integral", wasmExport: "matIntegralInto" },
   { method: "integral2", wasmExport: "matIntegral2Into" },
   { method: "moments", wasmExport: "matMoments" },

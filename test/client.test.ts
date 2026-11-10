@@ -2074,6 +2074,21 @@ class CopyingBackend implements OpenCvBackend {
   matFitLineInto(): void {
     throw new OpenCvInputError("mock fitLine is not implemented");
   }
+  matConnectedComponentsInto(): number {
+    throw new OpenCvInputError("mock connectedComponents is not implemented");
+  }
+
+  matConnectedComponentsWithStatsInto(): number {
+    throw new OpenCvInputError("mock connectedComponentsWithStats is not implemented");
+  }
+
+  matDistanceTransformInto(): void {
+    throw new OpenCvInputError("mock distanceTransform is not implemented");
+  }
+
+  matFloodFillInto(): number {
+    throw new OpenCvInputError("mock floodFill is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,
