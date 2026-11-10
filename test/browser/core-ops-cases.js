@@ -919,6 +919,223 @@ export function runCoreOpsCases(cv, reference) {
       return { destination: api.summary(destination) };
     });
 
+  // ---- filter2D/sepFilter2D: depths, kernels, anchors, delta, borders
+  for (const depth of depths)
+    for (const ddepth of [-1, 3, 5])
+      for (const [kernelDepth, kernelData] of /** @type {[number, number[]][]} */ ([
+        [5, [1, 1, 1, 1, -1, 1, 1, 1, 1]],
+        [6, [0.25, 0.5, 0.25, 0.5, 1, 0.5, 0.25, 0.5, 0.25]],
+      ]))
+        run(`filter2D/${depth}/d${ddepth}/k${kernelDepth}`, (handles) => {
+          const source = track(handles, api.mat(4, 5, 1, depth, arrays[depth](20)));
+          const kernel = track(handles, api.mat(3, 3, 1, kernelDepth, kernelData));
+          const destination = track(handles, api.empty());
+          cv.filter2D(source, destination, ddepth, kernel);
+          return { destination: api.summary(destination) };
+        });
+  for (const [variant, args] of /** @type {[string, unknown[]][]} */ ([
+    ["anchor", [pt(0, 0)]],
+    ["delta", [pt(-1, -1), 12.5]],
+    ["border3", [pt(-1, -1), 0, 3]],
+    ["border1", [pt(-1, -1), 0, 1]],
+  ]))
+    run(`filter2D/variant/${variant}`, (handles) => {
+      const source = track(handles, api.mat(4, 5, 1, 5, arrays[5](20)));
+      const kernel = track(handles, api.mat(3, 3, 1, 5, [1, 1, 1, 1, 1, 1, 1, 1, 1]));
+      const destination = track(handles, api.empty());
+      cv.filter2D(source, destination, -1, kernel, ...args);
+      return { destination: api.summary(destination) };
+    });
+  for (const depth of depths)
+    for (const [kx, ky] of /** @type {[number[], number[]][]} */ ([
+      [
+        [1, 2, 1],
+        [1, 2, 1],
+      ],
+      [
+        [-1, 0, 1],
+        [1, 2, 1],
+      ],
+    ]))
+      run(`sepFilter2D/${depth}/${kx[0]}`, (handles) => {
+        const source = track(handles, api.mat(4, 5, 1, depth, arrays[depth](20)));
+        const kxMat = track(handles, api.mat(1, 3, 1, 6, kx));
+        const kyMat = track(handles, api.mat(3, 1, 1, 6, ky));
+        const destination = track(handles, api.empty());
+        cv.sepFilter2D(source, destination, -1, kxMat, kyMat);
+        return { destination: api.summary(destination) };
+      });
+  for (const depth of depths)
+    for (const normalize of [true, false])
+      for (const ddepth of [-1, 5])
+        run(`sqrBoxFilter/${depth}/n${normalize ? 1 : 0}/d${ddepth}`, (handles) => {
+          const source = track(handles, api.mat(4, 5, 1, depth, arrays[depth](20)));
+          const destination = track(handles, api.empty());
+          cv.sqrBoxFilter(
+            source,
+            destination,
+            ddepth,
+            { width: 3, height: 3 },
+            pt(-1, -1),
+            normalize,
+          );
+          return { destination: api.summary(destination) };
+        });
+  for (const depth of depths)
+    for (const [kw, kh] of /** @type {[number, number][]} */ ([
+      [3, 3],
+      [5, 3],
+    ]))
+      run(`stackBlur/${depth}/${kw}x${kh}`, (handles) => {
+        const source = track(handles, api.mat(6, 7, 1, depth, arrays[depth](42)));
+        const destination = track(handles, api.empty());
+        cv.stackBlur(source, destination, { width: kw, height: kh });
+        return { destination: api.summary(destination) };
+      });
+  for (const depth of [0, 5])
+    for (const [d, sc, ss] of /** @type {[number, number, number][]} */ ([
+      [3, 50, 50],
+      [5, 80, 30],
+      [-1, 50, 50],
+    ]))
+      run(`bilateralFilter/${depth}/${d}/${sc}/${ss}`, (handles) => {
+        const source = track(handles, api.mat(5, 6, 1, depth, arrays[depth](30)));
+        const destination = track(handles, api.empty());
+        cv.bilateralFilter(source, destination, d, sc, ss);
+        return { destination: api.summary(destination) };
+      });
+  for (const depth of [1, 2])
+    run(`bilateralFilter/badDepth/${depth}`, (handles) => {
+      const source = track(handles, api.mat(4, 5, 1, depth, arrays[depth](20)));
+      const destination = track(handles, api.empty());
+      cv.bilateralFilter(source, destination, 3, 50, 50);
+      return { destination: api.summary(destination) };
+    });
+
+  // ---- pyrDown/pyrUp: depths, sizes, borders
+  for (const depth of depths)
+    for (const op of ["pyrDown", "pyrUp"])
+      run(`${op}/${depth}`, (handles) => {
+        const source = track(handles, api.mat(6, 7, 1, depth, arrays[depth](42)));
+        const destination = track(handles, api.empty());
+        cv[op](source, destination);
+        return { destination: api.summary(destination) };
+      });
+  for (const [name, size] of /** @type {[string, { width: number, height: number }][]} */ ([
+    ["exact", { width: 4, height: 3 }],
+    ["loose", { width: 3, height: 3 }],
+    ["bad", { width: 8, height: 4 }],
+  ]))
+    run(`pyrDown/size/${name}`, (handles) => {
+      const source = track(handles, api.mat(6, 7, 1, 0, arrays[0](42)));
+      const destination = track(handles, api.empty());
+      cv.pyrDown(source, destination, size);
+      return { destination: api.summary(destination) };
+    });
+  for (const [name, size] of /** @type {[string, { width: number, height: number }][]} */ ([
+    ["exact", { width: 14, height: 12 }],
+    ["loose", { width: 13, height: 11 }],
+    ["bad", { width: 20, height: 12 }],
+  ]))
+    run(`pyrUp/size/${name}`, (handles) => {
+      const source = track(handles, api.mat(6, 7, 1, 0, arrays[0](42)));
+      const destination = track(handles, api.empty());
+      cv.pyrUp(source, destination, size);
+      return { destination: api.summary(destination) };
+    });
+  for (const borderType of [0, 1, 2, 4])
+    run(`pyrDown/border/${borderType}`, (handles) => {
+      const source = track(handles, api.mat(6, 7, 1, 0, arrays[0](42)));
+      const destination = track(handles, api.empty());
+      cv.pyrDown(source, destination, { width: -1, height: -1 }, borderType);
+      return { destination: api.summary(destination) };
+    });
+
+  // ---- Laplacian/Scharr: depths, ksizes, ddepth, scale/delta, borders
+  for (const depth of depths)
+    for (const ddepth of [-1, 3, 6])
+      for (const ksize of [1, 3, 5])
+        run(`Laplacian/${depth}/d${ddepth}/k${ksize}`, (handles) => {
+          const source = track(handles, api.mat(5, 6, 1, depth, arrays[depth](30)));
+          const destination = track(handles, api.empty());
+          cv.Laplacian(source, destination, ddepth, ksize);
+          return { destination: api.summary(destination) };
+        });
+  for (const [name, ksize, scale, delta] of [
+    ["scaled", 3, 0.5, 0],
+    ["delta", 1, 1, 7.5],
+    ["bad", 4, 1, 0],
+  ])
+    run(`Laplacian/variant/${name}`, (handles) => {
+      const source = track(handles, api.mat(5, 6, 1, 5, arrays[5](30)));
+      const destination = track(handles, api.empty());
+      cv.Laplacian(source, destination, -1, ksize, scale, delta);
+      return { destination: api.summary(destination) };
+    });
+  for (const depth of depths)
+    for (const [dx, dy] of /** @type {[number, number][]} */ ([
+      [1, 0],
+      [0, 1],
+    ]))
+      for (const ddepth of [-1, 3])
+        run(`Scharr/${depth}/${dx}${dy}/d${ddepth}`, (handles) => {
+          const source = track(handles, api.mat(5, 6, 1, depth, arrays[depth](30)));
+          const destination = track(handles, api.empty());
+          cv.Scharr(source, destination, ddepth, dx, dy);
+          return { destination: api.summary(destination) };
+        });
+  for (const [dx, dy] of /** @type {[number, number][]} */ ([
+    [1, 1],
+    [2, 0],
+    [-1, 0],
+  ]))
+    run(`Scharr/bad/${dx}${dy}`, (handles) => {
+      const source = track(handles, api.mat(5, 6, 1, 0, arrays[0](30)));
+      const destination = track(handles, api.empty());
+      cv.Scharr(source, destination, -1, dx, dy);
+      return { destination: api.summary(destination) };
+    });
+  for (const depth of depths)
+    run(`spatialGradient/${depth}`, (handles) => {
+      const source = track(handles, api.mat(5, 6, 1, depth, arrays[depth](30)));
+      const dxMat = track(handles, api.empty());
+      const dyMat = track(handles, api.empty());
+      cv.spatialGradient(source, dxMat, dyMat);
+      return { dx: api.summary(dxMat), dy: api.summary(dyMat) };
+    });
+
+  // ---- corner detectors: depths, ksizes
+  for (const depth of depths)
+    for (const ksize of [3, 5])
+      run(`preCornerDetect/${depth}/k${ksize}`, (handles) => {
+        const source = track(handles, api.mat(5, 6, 1, depth, arrays[depth](30)));
+        const destination = track(handles, api.empty());
+        cv.preCornerDetect(source, destination, ksize);
+        return { destination: api.summary(destination) };
+      });
+  for (const depth of depths)
+    for (const [block, ksize, k] of /** @type {[number, number, number][]} */ ([
+      [2, 3, 0.04],
+      [3, 3, 0.05],
+    ]))
+      run(`cornerHarris/${depth}/b${block}/k${ksize}`, (handles) => {
+        const source = track(handles, api.mat(6, 7, 1, depth, arrays[depth](42)));
+        const destination = track(handles, api.empty());
+        cv.cornerHarris(source, destination, block, ksize, k);
+        return { destination: api.summary(destination) };
+      });
+  for (const depth of depths)
+    for (const [block, ksize] of /** @type {[number, number][]} */ ([
+      [3, 3],
+      [5, 3],
+    ]))
+      run(`cornerMinEigenVal/${depth}/b${block}/k${ksize}`, (handles) => {
+        const source = track(handles, api.mat(6, 7, 1, depth, arrays[depth](42)));
+        const destination = track(handles, api.empty());
+        cv.cornerMinEigenVal(source, destination, block, ksize);
+        return { destination: api.summary(destination) };
+      });
+
   // ---- integral/integral2: depths, channels, requested depths
   for (const depth of depths)
     for (const channels of [1, 3])
@@ -1067,6 +1284,19 @@ export function runCoreOpsCases(cv, reference) {
       // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
       matchShapes: cv.matchShapes.length,
       getFontScaleFromHeight: cv.getFontScaleFromHeight.length,
+      filter2D: cv.filter2D.length,
+      sepFilter2D: cv.sepFilter2D.length,
+      sqrBoxFilter: cv.sqrBoxFilter.length,
+      stackBlur: cv.stackBlur.length,
+      bilateralFilter: cv.bilateralFilter.length,
+      pyrDown: cv.pyrDown.length,
+      pyrUp: cv.pyrUp.length,
+      Laplacian: cv.Laplacian.length,
+      Scharr: cv.Scharr.length,
+      spatialGradient: cv.spatialGradient.length,
+      preCornerDetect: cv.preCornerDetect.length,
+      cornerHarris: cv.cornerHarris.length,
+      cornerMinEigenVal: cv.cornerMinEigenVal.length,
     },
   }));
 

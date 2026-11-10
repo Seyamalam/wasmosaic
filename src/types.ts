@@ -305,6 +305,112 @@ export interface OpenCvBackend {
     borderType: number,
   ): void;
   matMedianBlurInto(source: WasmMatHandle, destination: WasmMatHandle, kernelSize: number): void;
+  matFilter2DInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    destinationDepth: number,
+    kernel: WasmMatHandle,
+    anchorX: number,
+    anchorY: number,
+    delta: number,
+    borderType: number,
+  ): void;
+  matSepFilter2DInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    destinationDepth: number,
+    kernelX: WasmMatHandle,
+    kernelY: WasmMatHandle,
+    anchorX: number,
+    anchorY: number,
+    delta: number,
+    borderType: number,
+  ): void;
+  matSqrBoxFilterInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    destinationDepth: number,
+    kernelWidth: number,
+    kernelHeight: number,
+    anchorX: number,
+    anchorY: number,
+    normalize: boolean,
+    borderType: number,
+  ): void;
+  matStackBlurInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    kernelWidth: number,
+    kernelHeight: number,
+  ): void;
+  matBilateralFilterInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    diameter: number,
+    sigmaColor: number,
+    sigmaSpace: number,
+    borderType: number,
+  ): void;
+  matPyrDownInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    dstRows: number,
+    dstCols: number,
+    borderType: number,
+  ): void;
+  matPyrUpInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    dstRows: number,
+    dstCols: number,
+    borderType: number,
+  ): void;
+  matLaplacianInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    destinationDepth: number,
+    kernelSize: number,
+    scale: number,
+    delta: number,
+    borderType: number,
+  ): void;
+  matScharrInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    destinationDepth: number,
+    dx: number,
+    dy: number,
+    scale: number,
+    delta: number,
+    borderType: number,
+  ): void;
+  matSpatialGradientInto(
+    source: WasmMatHandle,
+    destinationX: WasmMatHandle,
+    destinationY: WasmMatHandle,
+    borderType: number,
+  ): void;
+  matPreCornerDetectInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    kernelSize: number,
+    borderType: number,
+  ): void;
+  matCornerHarrisInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    blockSize: number,
+    kernelSize: number,
+    k: number,
+    borderType: number,
+  ): void;
+  matCornerMinEigenValInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    blockSize: number,
+    kernelSize: number,
+    borderType: number,
+  ): void;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -994,6 +1100,87 @@ export interface OpenCv {
     borderType?: BorderType,
   ): void;
   medianBlur(source: Mat, destination: Mat, kernelSize: number): void;
+  filter2D(
+    source: Mat,
+    destination: Mat,
+    destinationDepth: number,
+    kernel: Mat,
+    anchor?: Point,
+    delta?: number,
+    borderType?: BorderType,
+  ): void;
+  sepFilter2D(
+    source: Mat,
+    destination: Mat,
+    destinationDepth: number,
+    kernelX: Mat,
+    kernelY: Mat,
+    anchor?: Point,
+    delta?: number,
+    borderType?: BorderType,
+  ): void;
+  sqrBoxFilter(
+    source: Mat,
+    destination: Mat,
+    destinationDepth: number,
+    kernelSize: Size,
+    anchor?: Point,
+    normalize?: boolean,
+    borderType?: BorderType,
+  ): void;
+  stackBlur(source: Mat, destination: Mat, kernelSize: Size): void;
+  bilateralFilter(
+    source: Mat,
+    destination: Mat,
+    diameter: number,
+    sigmaColor: number,
+    sigmaSpace: number,
+    borderType?: BorderType,
+  ): void;
+  pyrDown(source: Mat, destination: Mat, destinationSize?: Size, borderType?: BorderType): void;
+  pyrUp(source: Mat, destination: Mat, destinationSize?: Size, borderType?: BorderType): void;
+  Laplacian(
+    source: Mat,
+    destination: Mat,
+    destinationDepth: number,
+    kernelSize?: number,
+    scale?: number,
+    delta?: number,
+    borderType?: BorderType,
+  ): void;
+  Scharr(
+    source: Mat,
+    destination: Mat,
+    destinationDepth: number,
+    dx: number,
+    dy: number,
+    scale?: number,
+    delta?: number,
+    borderType?: BorderType,
+  ): void;
+  spatialGradient(
+    source: Mat,
+    destinationX: Mat,
+    destinationY: Mat,
+    kernelSize?: number,
+    borderType?: BorderType,
+  ): void;
+  preCornerDetect(source: Mat, destination: Mat, kernelSize: number, borderType?: BorderType): void;
+  cornerHarris(
+    source: Mat,
+    destination: Mat,
+    blockSize: number,
+    kernelSize: number,
+    k: number,
+    borderType?: BorderType,
+  ): void;
+  cornerMinEigenVal(
+    source: Mat,
+    destination: Mat,
+    blockSize: number,
+    kernelSize?: number,
+    borderType?: BorderType,
+  ): void;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

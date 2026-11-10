@@ -1995,6 +1995,58 @@ class CopyingBackend implements OpenCvBackend {
     throw new OpenCvInputError("mock medianBlur is not implemented");
   }
 
+  matFilter2DInto(): void {
+    throw new OpenCvInputError("mock filter2D is not implemented");
+  }
+
+  matSepFilter2DInto(): void {
+    throw new OpenCvInputError("mock sepFilter2D is not implemented");
+  }
+
+  matSqrBoxFilterInto(): void {
+    throw new OpenCvInputError("mock sqrBoxFilter is not implemented");
+  }
+
+  matStackBlurInto(): void {
+    throw new OpenCvInputError("mock stackBlur is not implemented");
+  }
+
+  matBilateralFilterInto(): void {
+    throw new OpenCvInputError("mock bilateralFilter is not implemented");
+  }
+
+  matPyrDownInto(): void {
+    throw new OpenCvInputError("mock pyrDown is not implemented");
+  }
+
+  matPyrUpInto(): void {
+    throw new OpenCvInputError("mock pyrUp is not implemented");
+  }
+
+  matLaplacianInto(): void {
+    throw new OpenCvInputError("mock Laplacian is not implemented");
+  }
+
+  matScharrInto(): void {
+    throw new OpenCvInputError("mock Scharr is not implemented");
+  }
+
+  matSpatialGradientInto(): void {
+    throw new OpenCvInputError("mock spatialGradient is not implemented");
+  }
+
+  matPreCornerDetectInto(): void {
+    throw new OpenCvInputError("mock preCornerDetect is not implemented");
+  }
+
+  matCornerHarrisInto(): void {
+    throw new OpenCvInputError("mock cornerHarris is not implemented");
+  }
+
+  matCornerMinEigenValInto(): void {
+    throw new OpenCvInputError("mock cornerMinEigenVal is not implemented");
+  }
+
   matIntegralInto(
     _source: WasmMatHandle,
     _sum: WasmMatHandle,

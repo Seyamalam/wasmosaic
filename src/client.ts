@@ -1498,6 +1498,325 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  filter2D(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      destinationDepth: number,
+      kernel: Mat,
+      anchor?: Point,
+      delta?: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "filter2D");
+    const [
+      source,
+      destination,
+      destinationDepth,
+      kernel,
+      anchor = { x: -1, y: -1 },
+      delta = 0,
+      borderType = BORDER_DEFAULT,
+    ] = arguments_;
+    const convertedAnchor = point2iForBinding(anchor);
+    this.#backend.matFilter2DInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(destinationDepth),
+      matHandleForBinding(kernel),
+      convertedAnchor.x,
+      convertedAnchor.y,
+      toWasmF64(delta),
+      toWasmI32(borderType),
+    );
+  }
+
+  sepFilter2D(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      destinationDepth: number,
+      kernelX: Mat,
+      kernelY: Mat,
+      anchor?: Point,
+      delta?: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 8, "sepFilter2D");
+    const [
+      source,
+      destination,
+      destinationDepth,
+      kernelX,
+      kernelY,
+      anchor = { x: -1, y: -1 },
+      delta = 0,
+      borderType = BORDER_DEFAULT,
+    ] = arguments_;
+    const convertedAnchor = point2iForBinding(anchor);
+    this.#backend.matSepFilter2DInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(destinationDepth),
+      matHandleForBinding(kernelX),
+      matHandleForBinding(kernelY),
+      convertedAnchor.x,
+      convertedAnchor.y,
+      toWasmF64(delta),
+      toWasmI32(borderType),
+    );
+  }
+
+  sqrBoxFilter(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      destinationDepth: number,
+      kernelSize: Size,
+      anchor?: Point,
+      normalize?: boolean,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "sqrBoxFilter");
+    const [
+      source,
+      destination,
+      destinationDepth,
+      kernelSize,
+      anchor = { x: -1, y: -1 },
+      normalize = true,
+      borderType = BORDER_DEFAULT,
+    ] = arguments_;
+    const convertedSize = size2iForBinding(kernelSize);
+    const convertedAnchor = point2iForBinding(anchor);
+    this.#backend.matSqrBoxFilterInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(destinationDepth),
+      convertedSize.width,
+      convertedSize.height,
+      convertedAnchor.x,
+      convertedAnchor.y,
+      normalize,
+      toWasmI32(borderType),
+    );
+  }
+
+  stackBlur(source: Mat, destination: Mat, kernelSize: Size): void {
+    requireExactArity(arguments.length, 3, "stackBlur");
+    const convertedSize = size2iForBinding(kernelSize);
+    this.#backend.matStackBlurInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      convertedSize.width,
+      convertedSize.height,
+    );
+  }
+
+  bilateralFilter(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      diameter: number,
+      sigmaColor: number,
+      sigmaSpace: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 6, "bilateralFilter");
+    const [source, destination, diameter, sigmaColor, sigmaSpace, borderType = BORDER_DEFAULT] =
+      arguments_;
+    this.#backend.matBilateralFilterInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(diameter),
+      toWasmF64(sigmaColor),
+      toWasmF64(sigmaSpace),
+      toWasmI32(borderType),
+    );
+  }
+
+  pyrDown(
+    ...arguments_: [source: Mat, destination: Mat, destinationSize?: Size, borderType?: BorderType]
+  ): void {
+    requireArityRange(arguments_.length, 2, 4, "pyrDown");
+    const [source, destination, destinationSize, borderType = BORDER_DEFAULT] = arguments_;
+    const convertedSize =
+      destinationSize === undefined ? { width: -1, height: -1 } : size2iForBinding(destinationSize);
+    this.#backend.matPyrDownInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      convertedSize.height,
+      convertedSize.width,
+      toWasmI32(borderType),
+    );
+  }
+
+  pyrUp(
+    ...arguments_: [source: Mat, destination: Mat, destinationSize?: Size, borderType?: BorderType]
+  ): void {
+    requireArityRange(arguments_.length, 2, 4, "pyrUp");
+    const [source, destination, destinationSize, borderType = BORDER_DEFAULT] = arguments_;
+    const convertedSize =
+      destinationSize === undefined ? { width: -1, height: -1 } : size2iForBinding(destinationSize);
+    this.#backend.matPyrUpInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      convertedSize.height,
+      convertedSize.width,
+      toWasmI32(borderType),
+    );
+  }
+
+  Laplacian(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      destinationDepth: number,
+      kernelSize?: number,
+      scale?: number,
+      delta?: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 7, "Laplacian");
+    const [
+      source,
+      destination,
+      destinationDepth,
+      kernelSize = 1,
+      scale = 1,
+      delta = 0,
+      borderType = BORDER_DEFAULT,
+    ] = arguments_;
+    this.#backend.matLaplacianInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(destinationDepth),
+      toWasmI32(kernelSize),
+      toWasmF64(scale),
+      toWasmF64(delta),
+      toWasmI32(borderType),
+    );
+  }
+
+  Scharr(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      destinationDepth: number,
+      dx: number,
+      dy: number,
+      scale?: number,
+      delta?: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 8, "Scharr");
+    const [
+      source,
+      destination,
+      destinationDepth,
+      dx,
+      dy,
+      scale = 1,
+      delta = 0,
+      borderType = BORDER_DEFAULT,
+    ] = arguments_;
+    this.#backend.matScharrInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(destinationDepth),
+      toWasmI32(dx),
+      toWasmI32(dy),
+      toWasmF64(scale),
+      toWasmF64(delta),
+      toWasmI32(borderType),
+    );
+  }
+
+  spatialGradient(
+    ...arguments_: [
+      source: Mat,
+      destinationX: Mat,
+      destinationY: Mat,
+      kernelSize?: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 5, "spatialGradient");
+    const [source, destinationX, destinationY, kernelSize = 3, borderType = BORDER_DEFAULT] =
+      arguments_;
+    if (kernelSize !== 3) {
+      throw new Error("spatialGradient only supports a 3x3 kernel");
+    }
+    this.#backend.matSpatialGradientInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destinationX),
+      matHandleForBinding(destinationY),
+      toWasmI32(borderType),
+    );
+  }
+
+  preCornerDetect(
+    ...arguments_: [source: Mat, destination: Mat, kernelSize: number, borderType?: BorderType]
+  ): void {
+    requireArityRange(arguments_.length, 3, 4, "preCornerDetect");
+    const [source, destination, kernelSize, borderType = BORDER_DEFAULT] = arguments_;
+    this.#backend.matPreCornerDetectInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(kernelSize),
+      toWasmI32(borderType),
+    );
+  }
+
+  cornerHarris(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      blockSize: number,
+      kernelSize: number,
+      k: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 6, "cornerHarris");
+    const [source, destination, blockSize, kernelSize, k, borderType = BORDER_DEFAULT] = arguments_;
+    this.#backend.matCornerHarrisInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(blockSize),
+      toWasmI32(kernelSize),
+      toWasmF64(k),
+      toWasmI32(borderType),
+    );
+  }
+
+  cornerMinEigenVal(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      blockSize: number,
+      kernelSize?: number,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 5, "cornerMinEigenVal");
+    const [source, destination, blockSize, kernelSize = 3, borderType = BORDER_DEFAULT] =
+      arguments_;
+    this.#backend.matCornerMinEigenValInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(blockSize),
+      toWasmI32(kernelSize),
+      toWasmI32(borderType),
+    );
+  }
+
   integral(
     ...arguments_: [source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number]
   ): void {

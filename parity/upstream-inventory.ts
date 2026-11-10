@@ -65,6 +65,12 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.integral2": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.hu-moments": { overloadCount: 1, runtimeArity: 2 },
   "imgproc.function.get-font-scale-from-height": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.filter2-d": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.sep-filter2-d": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.stack-blur": { overloadCount: 1, runtimeArity: 3 },
+  "imgproc.function.pyr-down": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.spatial-gradient": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.scharr": { overloadCount: 1, runtimeArity: 0 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },
