@@ -2089,6 +2089,17 @@ class CopyingBackend implements OpenCvBackend {
   matFloodFillInto(): number {
     throw new OpenCvInputError("mock floodFill is not implemented");
   }
+  matGemmInto(): void {
+    throw new OpenCvInputError("mock gemm is not implemented");
+  }
+
+  matEigenInto(): boolean {
+    throw new OpenCvInputError("mock eigen is not implemented");
+  }
+
+  matSolvePolyInto(): number {
+    throw new OpenCvInputError("mock solvePoly is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,

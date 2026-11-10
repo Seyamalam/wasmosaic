@@ -256,6 +256,9 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `minEnclosingCircle`                        | `cv.minEnclosingCircle`                        | Partial | Approximate circle radius differs            |
 | imgproc    | `fitEllipse`                                | `cv.fitEllipse`                                | Partial | Least-squares conic; degenerate cases differ |
 | imgproc    | `fitLine`                                   | `cv.fitLine`                                   | Full    | DIST_L2 principal-axis fit                   |
+| core       | `gemm`                                      | `cv.gemm`                                      | Full    | F64 matmul with transpose flags              |
+| core       | `eigen`                                     | `cv.eigen`                                     | Full    | Cyclic-Jacobi symmetric eigensolver          |
+| core       | `solvePoly`                                 | `cv.solvePoly`                                 | Partial | Root order/convergence differs               |
 | imgproc    | `connectedComponents`                       | `cv.connectedComponents`                       | Full    | Scan-order labels, I32/U16                   |
 | imgproc    | `connectedComponentsWithStats`              | `cv.connectedComponentsWithStats`              | Full    | Labels, stats, centroids                     |
 | imgproc    | `distanceTransform`                         | `cv.distanceTransform`                         | Full    | L1/L2/C chamfer and exact masks              |

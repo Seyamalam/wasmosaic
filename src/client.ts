@@ -1916,6 +1916,50 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  gemm(
+    ...arguments_: [
+      src1: Mat,
+      src2: Mat,
+      alpha: number,
+      src3: Mat,
+      beta: number,
+      destination: Mat,
+      flags?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 6, 7, "gemm");
+    const [src1, src2, alpha, src3, beta, destination, flags = 0] = arguments_;
+    this.#backend.matGemmInto(
+      matHandleForBinding(src1),
+      matHandleForBinding(src2),
+      alpha,
+      matHandleForBinding(src3),
+      beta,
+      matHandleForBinding(destination),
+      toWasmI32(flags),
+    );
+  }
+
+  eigen(...arguments_: [source: Mat, eigenvalues: Mat, eigenvectors?: Mat]): boolean {
+    requireArityRange(arguments_.length, 2, 3, "eigen");
+    const [source, eigenvalues, eigenvectors] = arguments_;
+    return this.#backend.matEigenInto(
+      matHandleForBinding(source),
+      matHandleForBinding(eigenvalues),
+      eigenvectors === undefined ? this.#backend.matEmpty() : matHandleForBinding(eigenvectors),
+    );
+  }
+
+  solvePoly(...arguments_: [coeffs: Mat, roots: Mat, maxIters?: number]): number {
+    requireArityRange(arguments_.length, 2, 3, "solvePoly");
+    const [coeffs, roots, maxIters = 300] = arguments_;
+    return this.#backend.matSolvePolyInto(
+      matHandleForBinding(coeffs),
+      matHandleForBinding(roots),
+      toWasmI32(maxIters),
+    );
+  }
+
   connectedComponents(
     ...arguments_: [image: Mat, labels: Mat, connectivity?: number, labelType?: number]
   ): number {

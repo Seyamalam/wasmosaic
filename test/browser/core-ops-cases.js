@@ -1482,6 +1482,52 @@ export function runCoreOpsCases(cv, reference) {
     return { count, image: api.summary(source), mask: api.summary(mask) };
   });
 
+  // ---- gemm / eigen / solvePoly
+  for (const flags of [0, 1, 2, 4]) {
+    run(`gemm/f${flags}`, (handles) => {
+      const a = track(handles, api.mat(2, 2, 1, 6, [1, 2, 3, 4]));
+      const b = track(handles, api.mat(2, 2, 1, 6, [5, 6, 7, 8]));
+      const cc = track(handles, api.mat(2, 2, 1, 6, [1, 0, 0, 1]));
+      const destination = track(handles, api.empty());
+      cv.gemm(a, b, 1.0, cc, 2.0, destination, flags);
+      return { destination: api.summary(destination) };
+    });
+  }
+  run("gemm/beta0", (handles) => {
+    const a = track(handles, api.mat(3, 2, 1, 6, [1, 2, 3, 4, 5, 6]));
+    const b = track(handles, api.mat(2, 3, 1, 6, [1, 0, 1, 0, 1, 0]));
+    const cc = track(handles, api.mat(3, 3, 1, 6, [0, 0, 0, 0, 0, 0, 0, 0, 0]));
+    const destination = track(handles, api.empty());
+    cv.gemm(a, b, 2.5, cc, 0.0, destination, 0);
+    return { destination: api.summary(destination) };
+  });
+  for (const n of [2, 3]) {
+    run(`eigen/n${n}`, (handles) => {
+      const vals = n === 2 ? [2, 1, 1, 2] : [4, 1, 0, 1, 3, 0, 0, 0, 2];
+      const source = track(handles, api.mat(n, n, 1, 6, vals));
+      const eigenvalues = track(handles, api.empty());
+      const eigenvectors = track(handles, api.empty());
+      const result = cv.eigen(source, eigenvalues, eigenvectors);
+      return {
+        result,
+        eigenvalues: api.summary(eigenvalues),
+        eigenvectors: api.summary(eigenvectors),
+      };
+    });
+  }
+  for (const coeffs of /** @type {number[][]} */ ([
+    [1, -3, 2],
+    [2, -3, 1],
+    [1, 0, 0, 0, -16],
+  ])) {
+    run(`solvePoly/d${coeffs.length - 1}`, (handles) => {
+      const c = track(handles, api.mat(coeffs.length, 1, 1, 6, coeffs));
+      const roots = track(handles, api.empty());
+      const count = cv.solvePoly(c, roots, 300);
+      return { count, roots: api.summary(roots) };
+    });
+  }
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1549,6 +1595,9 @@ export function runCoreOpsCases(cv, reference) {
       connectedComponentsWithStats: cv.connectedComponentsWithStats.length,
       distanceTransform: cv.distanceTransform.length,
       floodFill: cv.floodFill.length,
+      gemm: cv.gemm.length,
+      eigen: cv.eigen.length,
+      solvePoly: cv.solvePoly.length,
     },
   }));
 

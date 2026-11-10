@@ -85,6 +85,9 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.connected-components-with-stats": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.distance-transform": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.flood-fill": { overloadCount: 1, runtimeArity: 0 },
+  "core.function.gemm": { overloadCount: 1, runtimeArity: 0 },
+  "core.function.eigen": { overloadCount: 1, runtimeArity: 0 },
+  "core.function.solve-poly": { overloadCount: 1, runtimeArity: 0 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },

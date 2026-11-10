@@ -2215,6 +2215,39 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "gemm",
+      "module": "core",
+      "notes": "alpha·op(A)·op(B)+beta·C with transpose flags",
+      "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
+      "status": "implemented",
+      "upstream": "gemm",
+      "upstreamId": "core.function.gemm",
+      "wasmExport": "matGemmInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "eigen",
+      "module": "core",
+      "notes": "Cyclic-Jacobi symmetric eigensolver",
+      "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
+      "status": "implemented",
+      "upstream": "eigen",
+      "upstreamId": "core.function.eigen",
+      "wasmExport": "matEigenInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "solvePoly",
+      "module": "core",
+      "notes": "Companion-matrix root finder; ordering and convergence differ",
+      "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
+      "status": "partial",
+      "upstream": "solvePoly",
+      "upstreamId": "core.function.solve-poly",
+      "wasmExport": "matSolvePolyInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "integral",
       "module": "imgproc",
       "notes": "Sum-only integral images with pinned source-depth gates, per-depth allowed sum depths, and multi-channel output.",

@@ -129,6 +129,8 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `filter2D`, `sepFilter2D`, `stackBlur`, `pyrDown`, `spatialGradient`, `Scharr` | Matching `cv` correlation/derivative filters              | Depth-gated kernels, dst-depth tables, borders            |
 | `sqrBoxFilter`, `bilateralFilter`, `pyrUp`, `Laplacian`                        | Matching `cv` filters                                     | Residual accumulation/algorithm diffs remain              |
 | `adaptiveThreshold`, `applyColorMap`                                           | Matching `cv` misc filters                                | U8-gated; 22 pinned colormap tables                       |
+| `gemm`, `eigen`                                                                | Matching `cv` dense algebra                               | F64 matmul flags, Jacobi symmetric eigensolver            |
+| `solvePoly`                                                                    | Matching `cv` polynomial roots                            | Root ordering and convergence differ                      |
 | `connectedComponents`, `connectedComponentsWithStats`                          | Matching `cv` labeling                                    | Scan-order union-find; stats + centroids                  |
 | `distanceTransform`                                                            | Matching `cv` distance map                                | Chamfer mask 3 and exact mask 5                           |
 | `floodFill`                                                                    | Matching `cv` region grow                                 | Range flags and mask border contract                      |

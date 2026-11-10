@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Dense algebra batch: `gemm` (F64 matrix multiply with GEMM_1_T/GEMM_2_T/GEMM_3_T transpose flags) and `eigen` (cyclic-Jacobi symmetric eigensolver with descending eigenvalues and eigenvectors). `solvePoly` ships as a partial: the companion-matrix root finder produces the correct root set but ordering and far-edge convergence differ. **Full parity is now 178 of 488 families.**
+
+### Added
+
 - Segmentation batch: `connectedComponents` and `connectedComponentsWithStats` (scan-order union-find labels, stats, and centroids), `distanceTransform` (chamfer mask-3 and exact mask-5 for L1/L2/C), and `floodFill` (range flags, mask-border contract). `minAreaRect` now matches the pinned rotating-calipers formulation including F32 projection rounding and the width-axis angle convention. **Full parity is now 176 of 488 families.**
 
 ### Added

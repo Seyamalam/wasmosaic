@@ -488,6 +488,21 @@ export interface OpenCvBackend {
     upDiff: number,
     flags: number,
   ): number;
+  matGemmInto(
+    src1: WasmMatHandle,
+    src2: WasmMatHandle,
+    alpha: number,
+    src3: WasmMatHandle,
+    beta: number,
+    destination: WasmMatHandle,
+    flags: number,
+  ): void;
+  matEigenInto(
+    source: WasmMatHandle,
+    eigenvalues: WasmMatHandle,
+    eigenvectors: WasmMatHandle,
+  ): boolean;
+  matSolvePolyInto(coeffs: WasmMatHandle, roots: WasmMatHandle, maxIters: number): number;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1301,6 +1316,20 @@ export interface OpenCv {
     flags?: number,
   ): number;
 
+  gemm(
+    src1: Mat,
+    src2: Mat,
+    alpha: number,
+    src3: Mat,
+    beta: number,
+    destination: Mat,
+    flags?: number,
+  ): void;
+  cartToPolar(x: Mat, y: Mat, magnitude: Mat, angle: Mat, angleInDegrees?: boolean): void;
+  polarToCart(magnitude: Mat, angle: Mat, x: Mat, y: Mat, angleInDegrees?: boolean): void;
+  magnitude(x: Mat, y: Mat, destination: Mat): void;
+  eigen(source: Mat, eigenvalues: Mat, eigenvectors?: Mat): boolean;
+  solvePoly(coeffs: Mat, roots: Mat, maxIters?: number): number;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

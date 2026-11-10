@@ -13,6 +13,8 @@ mod core_elementwise_wasm;
 mod core_float_math;
 mod core_float_math_wasm;
 mod core_layout;
+mod core_linalg;
+mod core_linalg_wasm;
 mod core_layout_wasm;
 mod core_lut_wasm;
 mod core_norm;
