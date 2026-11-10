@@ -396,3 +396,59 @@ pub(crate) fn polylines_into(
         .map_err(|e| DrawError::OutputError(e.to_string()))?;
     Ok(())
 }
+
+/// arrowedLine: a line plus a triangular arrowhead at the end point.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn arrowed_line_into(
+    image: &Mat,
+    x0: i64,
+    y0: i64,
+    x1: i64,
+    y1: i64,
+    color: &[f64],
+    thickness: i32,
+    _line_type: i32,
+    _shift: i32,
+    tip_length: f64,
+) -> Result<(), DrawError> {
+    let depth = scalar_depth(image.depth());
+    let mut buf = image.compact_bytes();
+    let (ch, cols) = (image.channels() as usize, image.columns());
+    draw_line_pixels(&mut buf, cols, ch, depth, x0, y0, x1, y1, color);
+    // Arrowhead: two short lines fanning back from the tip.
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let len = ((dx * dx + dy * dy) as f64).sqrt().max(1e-9);
+    let head = if tip_length > 0.0 { tip_length * len } else { len * 0.1 };
+    let (ux, uy) = (dx as f64 / len, dy as f64 / len);
+    // Fan angle ~30 degrees each side.
+    let fan = 0.577350269; // tan(30)
+    let (nx, ny) = (-uy, ux);
+    let (bx, by) = (x1 as f64 - ux * head, y1 as f64 - uy * head);
+    draw_line_pixels(
+        &mut buf, cols, ch, depth,
+        (bx + nx * head * fan).round() as i64,
+        (by + ny * head * fan).round() as i64,
+        x1, y1, color,
+    );
+    draw_line_pixels(
+        &mut buf, cols, ch, depth,
+        (bx - nx * head * fan).round() as i64,
+        (by - ny * head * fan).round() as i64,
+        x1, y1, color,
+    );
+    let _ = thickness;
+    image
+        .write_output(buf, image.rows(), image.columns(), image.channels(), image.depth())
+        .map_err(|e| DrawError::OutputError(e.to_string()))?;
+    Ok(())
+}
+
+/// fillConvexPoly: scanline fill specialized for convex vertex sets.
+pub(crate) fn fill_convex_poly_into(
+    image: &Mat,
+    points: &[i64],
+    color: &[f64],
+) -> Result<(), DrawError> {
+    fill_poly_into(image, points, true, color)
+}

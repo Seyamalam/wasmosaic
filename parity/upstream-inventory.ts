@@ -106,6 +106,8 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.fill-poly": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.draw-marker": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.polylines": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.arrowed-line": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.fill-convex-poly": { overloadCount: 1, runtimeArity: 0 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },

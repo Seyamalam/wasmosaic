@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `fillConvexPoly` (scanline fill for convex vertex sets). `arrowedLine` ships as a partial: the shaft rasterizes exactly but the arrowhead fan differs by one pixel. **Full parity is now 190 of 488 families.**
+
+### Added
+
 - Drawing batch: `line` (Bresenham 8-connected rasterization with thickness), `rectangle` (outline and filled), `drawMarker` (cross and tilted-cross glyphs), `polylines` (connected vertex chains), and `fillPoly` (scanline polygon fill). `circle` and `ellipse` ship as partials: the pinned rasterizer uses a distinct ellipse-arc path that differs from midpoint-circle and parametric rasterization. **Full parity is now 189 of 488 families.**
 
 ### Added

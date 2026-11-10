@@ -130,6 +130,7 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `sqrBoxFilter`, `bilateralFilter`, `pyrUp`, `Laplacian`                        | Matching `cv` filters                                     | Residual accumulation/algorithm diffs remain                        |
 | `adaptiveThreshold`, `applyColorMap`                                           | Matching `cv` misc filters                                | U8-gated; 22 pinned colormap tables                                 |
 | `line`, `rectangle`, `drawMarker`, `polylines`, `fillPoly`                     | Matching `cv` drawing primitives                          | Bresenham lines, rects, markers, vertex chains, scanline fill       |
+| `fillConvexPoly`, `arrowedLine`                                                | Matching `cv` convex fill and arrows                      | Scanline convex fill; arrowhead fan differs by a pixel              |
 | `circle`, `ellipse`                                                            | Matching `cv` curve primitives                            | Upstream uses a different ellipse-arc raster path                   |
 | `dft`                                                                          | Matching `cv` Fourier transform                           | 2-D F32 DFT with complex/scale flags                                |
 | `kmeans`                                                                       | Matching `cv` clustering                                  | Compactness accumulation ulp differs                                |

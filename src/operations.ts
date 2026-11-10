@@ -207,6 +207,8 @@ export const OPENCV_OPERATIONS = [
   { method: "fillPoly", wasmExport: "matFillPolyInto" },
   { method: "drawMarker", wasmExport: "matDrawMarkerInto" },
   { method: "polylines", wasmExport: "matPolylinesInto" },
+  { method: "arrowedLine", wasmExport: "matArrowedLineInto" },
+  { method: "fillConvexPoly", wasmExport: "matFillConvexPolyInto" },
   { method: "integral", wasmExport: "matIntegralInto" },
   { method: "integral2", wasmExport: "matIntegral2Into" },
   { method: "moments", wasmExport: "matMoments" },

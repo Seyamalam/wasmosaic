@@ -110,3 +110,31 @@ pub fn mat_polylines_into(
     imgproc_draw::polylines_into(image, &pts, closed, &color_from(color), thickness)
         .map_err(JsError::from)
 }
+
+#[allow(clippy::too_many_arguments)]
+#[wasm_bindgen(js_name = matArrowedLineInto)]
+pub fn mat_arrowed_line_into(
+    image: &Mat,
+    x0: i32,
+    y0: i32,
+    x1: i32,
+    y1: i32,
+    color: &[f64],
+    thickness: i32,
+    line_type: i32,
+    shift: i32,
+    tip_length: f64,
+) -> Result<(), JsError> {
+    imgproc_draw::arrowed_line_into(image, i64::from(x0), i64::from(y0), i64::from(x1), i64::from(y1), &color_from(color), thickness, line_type, shift, tip_length)
+        .map_err(JsError::from)
+}
+
+#[wasm_bindgen(js_name = matFillConvexPolyInto)]
+pub fn mat_fill_convex_poly_into(
+    image: &Mat,
+    points: &[i32],
+    color: &[f64],
+) -> Result<(), JsError> {
+    let pts: Vec<i64> = points.iter().map(|&v| i64::from(v)).collect();
+    imgproc_draw::fill_convex_poly_into(image, &pts, &color_from(color)).map_err(JsError::from)
+}

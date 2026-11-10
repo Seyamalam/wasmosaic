@@ -261,6 +261,8 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `drawMarker`                                | `cv.drawMarker`                                | Full    | Cross and tilted-cross marker glyphs                 |
 | imgproc    | `polylines`                                 | `cv.polylines`                                 | Full    | Connected vertex chains                              |
 | imgproc    | `fillPoly`                                  | `cv.fillPoly`                                  | Full    | Scanline polygon fill                                |
+| imgproc    | `fillConvexPoly`                            | `cv.fillConvexPoly`                            | Full    | Scanline fill for convex vertex sets                 |
+| imgproc    | `arrowedLine`                               | `cv.arrowedLine`                               | Partial | Arrowhead fan raster differs by a pixel              |
 | imgproc    | `circle`                                    | `cv.circle`                                    | Partial | Upstream ellipse-arc raster differs                  |
 | imgproc    | `ellipse`                                   | `cv.ellipse`                                   | Partial | Upstream ellipse-arc raster differs                  |
 | core       | `dft`                                       | `cv.dft`                                       | Full    | 2-D F32 DFT with complex/scale flags                 |

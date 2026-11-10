@@ -1718,6 +1718,20 @@ export function runCoreOpsCases(cv, reference) {
     return { image: api.summary(image) };
   });
 
+  run("arrowedLine", (handles) => {
+    const image = track(handles, api.mat(9, 9, 1, 0, Array.from({ length: 81 }).fill(0)));
+    cv.arrowedLine(image, { x: 1, y: 4 }, { x: 7, y: 4 }, [255, 0, 0, 0], 1, 8, 0, 0.3);
+    return { image: api.summary(image) };
+  });
+  run("fillConvexPoly", (handles) => {
+    const image = track(handles, drawSrc());
+    const pts = track(handles, api.mat(1, 3, 2, 3, [1, 1, 5, 1, 3, 5]));
+    const mv = reference ? new cv.MatVector() : cv.createMatVector();
+    mv.push_back(pts);
+    cv.fillConvexPoly(image, mv, [255, 0, 0, 0], 8, 0);
+    return { image: api.summary(image) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1806,6 +1820,8 @@ export function runCoreOpsCases(cv, reference) {
       fillPoly: cv.fillPoly.length,
       drawMarker: cv.drawMarker.length,
       polylines: cv.polylines.length,
+      arrowedLine: cv.arrowedLine.length,
+      fillConvexPoly: cv.fillConvexPoly.length,
     },
   }));
 

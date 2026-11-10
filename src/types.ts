@@ -639,6 +639,23 @@ export interface OpenCvBackend {
     color: Float64Array | number[],
     thickness: number,
   ): void;
+  matArrowedLineInto(
+    image: WasmMatHandle,
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    color: Float64Array | number[],
+    thickness: number,
+    lineType: number,
+    shift: number,
+    tipLength: number,
+  ): void;
+  matFillConvexPolyInto(
+    image: WasmMatHandle,
+    points: Int32Array | number[],
+    color: Float64Array | number[],
+  ): void;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1590,6 +1607,23 @@ export interface OpenCv {
     isClosed: boolean,
     color: Scalar,
     thickness?: number,
+    lineType?: number,
+    shift?: number,
+  ): void;
+  arrowedLine(
+    image: Mat,
+    pt1: Point,
+    pt2: Point,
+    color: Scalar,
+    thickness?: number,
+    lineType?: number,
+    shift?: number,
+    tipLength?: number,
+  ): void;
+  fillConvexPoly(
+    image: Mat,
+    points: MatVector | Mat,
+    color: Scalar,
     lineType?: number,
     shift?: number,
   ): void;

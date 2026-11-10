@@ -2276,6 +2276,53 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  arrowedLine(
+    ...arguments_: [
+      image: Mat,
+      pt1: Point,
+      pt2: Point,
+      color: Scalar,
+      thickness?: number,
+      lineType?: number,
+      shift?: number,
+      tipLength?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 8, "arrowedLine");
+    const [image, pt1, pt2, color, thickness = 1, lineType = 8, shift = 0, tipLength = 0.1] =
+      arguments_;
+    this.#backend.matArrowedLineInto(
+      matHandleForBinding(image),
+      toWasmI32(pt1.x),
+      toWasmI32(pt1.y),
+      toWasmI32(pt2.x),
+      toWasmI32(pt2.y),
+      scalarForBinding(color),
+      toWasmI32(thickness),
+      toWasmI32(lineType),
+      toWasmI32(shift),
+      tipLength,
+    );
+  }
+
+  fillConvexPoly(
+    ...arguments_: [
+      image: Mat,
+      points: MatVector | Mat,
+      color: Scalar,
+      lineType?: number,
+      shift?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 5, "fillConvexPoly");
+    const [image, points, color] = arguments_;
+    this.#backend.matFillConvexPolyInto(
+      matHandleForBinding(image),
+      contourPoints(points),
+      scalarForBinding(color),
+    );
+  }
+
   compareHist(h1: Mat, h2: Mat, method: number): number {
     return this.#backend.matCompareHist(
       matHandleForBinding(h1),

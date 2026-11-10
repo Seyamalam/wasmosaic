@@ -2169,6 +2169,13 @@ class CopyingBackend implements OpenCvBackend {
   matPolylinesInto(): void {
     throw new OpenCvInputError("mock polylines is not implemented");
   }
+  matArrowedLineInto(): void {
+    throw new OpenCvInputError("mock arrowedLine is not implemented");
+  }
+
+  matFillConvexPolyInto(): void {
+    throw new OpenCvInputError("mock fillConvexPoly is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,
