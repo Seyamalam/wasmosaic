@@ -42,7 +42,7 @@ impl fmt::Display for MatShape {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum CoreWasmError {
+pub(crate) enum CoreWasmError {
     IncorrectDepth {
         operand: &'static str,
         actual: MatDepth,
@@ -375,7 +375,7 @@ fn apply_bitwise_not_into(
     Ok(())
 }
 
-fn bitwise_mask(source: &Mat, mask: &Mat) -> Result<Option<Vec<u8>>, CoreWasmError> {
+pub(crate) fn bitwise_mask(source: &Mat, mask: &Mat) -> Result<Option<Vec<u8>>, CoreWasmError> {
     if mask.byte_length() == 0 {
         return Ok(None);
     }

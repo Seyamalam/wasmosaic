@@ -275,8 +275,50 @@ export interface OpenCvBackend {
     columnRepeats: number,
   ): void;
   matAbsdiffU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
+  matAbsdiffInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
   matAddU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
+  matAddInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
+  matAddMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void;
+  matAddMaskedDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+    dtype: number,
+  ): void;
+  matAddDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    dtype: number,
+  ): void;
   matBitwiseAndU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
+  matBitwiseAndInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
+  matBitwiseAndMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void;
+  matBitwiseOrInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
+  matBitwiseOrMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void;
+  matBitwiseXorInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
+  matBitwiseXorMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void;
   matBitwiseNot(source: WasmMatHandle): WasmMatHandle;
   matBitwiseNotInto(source: WasmMatHandle, destination: WasmMatHandle): void;
   matBitwiseNotMaskedInto(
@@ -288,6 +330,12 @@ export interface OpenCvBackend {
   matBitwiseOrU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
   matBitwiseXorU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
   matCompareEqU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
+  matCompareInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    kind: number,
+  ): void;
   matCountNonZero(source: WasmMatHandle): number;
   matDeterminant(source: WasmMatHandle): number;
   matArcLength(contour: WasmMatHandle, closed: boolean): number;
@@ -298,6 +346,12 @@ export interface OpenCvBackend {
     lowerBound: WasmMatHandle,
     upperBound: WasmMatHandle,
   ): WasmMatHandle;
+  matInRangeInto(
+    source: WasmMatHandle,
+    lowerBound: WasmMatHandle,
+    upperBound: WasmMatHandle,
+    destination: WasmMatHandle,
+  ): void;
   matGetAffineTransform(source: WasmMatHandle, destination: WasmMatHandle): WasmMatHandle;
   matGetPerspectiveTransform(
     source: WasmMatHandle,
@@ -480,12 +534,34 @@ export interface OpenCvBackend {
     constant: Float64Array,
   ): void;
   matMaxU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
+  matMaxInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
+  matMinInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
   matMean(source: WasmMatHandle): Float64Array;
   matMeanMasked(source: WasmMatHandle, mask: WasmMatHandle): Float64Array;
   matMinMaxLoc(source: WasmMatHandle): Float64Array;
   matMinMaxLocMasked(source: WasmMatHandle, mask: WasmMatHandle): Float64Array;
   matMinU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
   matSubtractU8(left: WasmMatHandle, right: WasmMatHandle): WasmMatHandle;
+  matSubtractInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void;
+  matSubtractMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void;
+  matSubtractMaskedDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+    dtype: number,
+  ): void;
+  matSubtractDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    dtype: number,
+  ): void;
   matSum(source: WasmMatHandle): Float64Array;
   matTranspose(source: WasmMatHandle): WasmMatHandle;
   matTransposeInto(source: WasmMatHandle, destination: WasmMatHandle): void;
@@ -619,8 +695,10 @@ export interface OpenCv {
   readonly ROTATE_90_CLOCKWISE: 0;
   readonly ROTATE_180: 1;
   readonly ROTATE_90_COUNTERCLOCKWISE: 2;
-  absdiff(left: Mat, right: Mat): Mat;
-  add(left: Mat, right: Mat): Mat;
+  absdiff(source1: Mat, source2: Mat, destination: Mat): void;
+  add(source1: Mat, source2: Mat, destination: Mat): void;
+  add(source1: Mat, source2: Mat, destination: Mat, mask: Mat): void;
+  add(source1: Mat, source2: Mat, destination: Mat, mask: Mat, dtype: number): void;
   addWeighted(
     a: Mat,
     alpha: number,
@@ -631,16 +709,20 @@ export interface OpenCv {
     dtype?: number,
   ): void;
   addWeightedAlloc(a: Mat, alpha: number, b: Mat, beta: number, gamma: number): Mat;
-  bitwiseAnd(left: Mat, right: Mat): Mat;
+  bitwiseAnd(source1: Mat, source2: Mat, destination: Mat): void;
+  bitwiseAnd(source1: Mat, source2: Mat, destination: Mat, mask: Mat): void;
   bitwiseNot(source: Mat, destination: Mat): void;
   bitwiseNot(source: Mat, destination: Mat, mask: Mat): void;
   bitwiseNotAlloc(source: Mat): Mat;
-  bitwiseOr(left: Mat, right: Mat): Mat;
-  bitwiseXor(left: Mat, right: Mat): Mat;
+  bitwiseOr(source1: Mat, source2: Mat, destination: Mat): void;
+  bitwiseOr(source1: Mat, source2: Mat, destination: Mat, mask: Mat): void;
+  bitwiseXor(source1: Mat, source2: Mat, destination: Mat): void;
+  bitwiseXor(source1: Mat, source2: Mat, destination: Mat, mask: Mat): void;
   approxPolyDP(curve: Mat, approximation: Mat, epsilon: number, closed: boolean): void;
   arcLength(contour: Mat, closed: boolean): number;
   boundingRect(contour: Mat): Rect;
   clipLine(rectangle: Rect, start: Point, end: Point): readonly [Point, Point] | undefined;
+  compare(source1: Mat, source2: Mat, destination: Mat, compareOp: number): void;
   compareEqual(left: Mat, right: Mat): Mat;
   cartToPolar(x: Mat, y: Mat, magnitude: Mat, angle: Mat, degrees?: boolean): void;
   Canny(
@@ -740,7 +822,7 @@ export interface OpenCv {
   matFromI8(rows: number, columns: number, channels: number, data: Int8Array): Mat;
   matFromU16(rows: number, columns: number, channels: number, data: Uint16Array): Mat;
   matFromU8(rows: number, columns: number, channels: number, data: Uint8Array): Mat;
-  inRange(source: Mat, lowerBound: Mat, upperBound: Mat): Mat;
+  inRange(source: Mat, lowerBound: Mat, upperBound: Mat, destination: Mat): void;
   insertChannel(source: Mat, destination: Mat, channel: number): void;
   invertAffineTransform(transform: Mat, destination: Mat): void;
   invertAffineTransformAlloc(transform: Mat): Mat;
@@ -753,7 +835,7 @@ export interface OpenCv {
   lut(source: Mat, table: Mat, destination: Mat): void;
   magnitude(x: Mat, y: Mat, destination: Mat): void;
   magnitudeAlloc(x: Mat, y: Mat): Mat;
-  max(left: Mat, right: Mat): Mat;
+  max(source1: Mat, source2: Mat, destination: Mat): void;
   mean(source: Mat): Scalar;
   mean(source: Mat, mask: Mat): Scalar;
   meanStdDev(source: Mat, means: Mat, standardDeviations: Mat, mask?: Mat): void;
@@ -762,7 +844,7 @@ export interface OpenCv {
   ): Mat;
   minMaxLoc(source: Mat): MinMaxLocation;
   minMaxLoc(source: Mat, mask: Mat): MinMaxLocation;
-  min(left: Mat, right: Mat): Mat;
+  min(source1: Mat, source2: Mat, destination: Mat): void;
   mixChannels(source: Mat, destination: Mat, fromTo: Uint16Array): void;
   multiply(a: Mat, b: Mat, destination: Mat, scale?: number, dtype?: number): void;
   multiplyAlloc(a: Mat, b: Mat, scale?: number): Mat;
@@ -836,7 +918,9 @@ export interface OpenCv {
     maximum: number,
     type: number,
   ): number;
-  subtract(left: Mat, right: Mat): Mat;
+  subtract(source1: Mat, source2: Mat, destination: Mat): void;
+  subtract(source1: Mat, source2: Mat, destination: Mat, mask: Mat): void;
+  subtract(source1: Mat, source2: Mat, destination: Mat, mask: Mat, dtype: number): void;
   split(source: Mat): Mat[];
   sqrt(source: Mat, destination: Mat): void;
   sqrtAlloc(source: Mat): Mat;

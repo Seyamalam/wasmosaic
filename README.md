@@ -76,7 +76,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | core       | `bitwiseNot`                                | `cv.bitwise_not`                               | Full    | All-depth destination/mask contract        |
 | core       | `bitwiseOr`                                 | `cv.bitwise_or`                                | Partial | U8 matrix operands, no mask                |
 | core       | `bitwiseXor`                                | `cv.bitwise_xor`                               | Partial | U8 matrix operands, no mask                |
-| core       | `compareEqual`                              | `cv.compare`                                   | Partial | U8 equality mode                           |
+| core       | `compare`                                   | `cv.compare`                                   | Full    | All-depth six-operator contract            |
 | core       | `countNonZero`                              | `cv.countNonZero`                              | Full    | Exact all-depth single-channel reduction   |
 | core       | `convertScaleAbs`                           | `cv.convertScaleAbs`                           | Full    | Exact all-depth mutable-output contract    |
 | core       | `copyMakeBorder`                            | `cv.copyMakeBorder`                            | Partial | All depths and five border modes           |

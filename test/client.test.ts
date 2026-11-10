@@ -2811,6 +2811,221 @@ class CopyingBackend implements OpenCvBackend {
     return binaryU8(left, right, (leftValue, rightValue) => Math.max(leftValue - rightValue, 0));
   }
 
+  matAbsdiffInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matAbsdiffU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matAddInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matAddU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matAddMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void {
+    this.#binaryMasked(left, right, destination, mask, (l, r) => this.matAddU8(l, r));
+  }
+
+  matAddDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    _dtype: number,
+  ): void {
+    this.matAddInto(left, right, destination);
+  }
+
+  matAddMaskedDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+    _dtype: number,
+  ): void {
+    this.matAddMaskedInto(left, right, destination, mask);
+  }
+
+  matSubtractInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matSubtractU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matSubtractMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void {
+    this.#binaryMasked(left, right, destination, mask, (l, r) => this.matSubtractU8(l, r));
+  }
+
+  matSubtractDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    _dtype: number,
+  ): void {
+    this.matSubtractInto(left, right, destination);
+  }
+
+  matSubtractMaskedDtypeInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+    _dtype: number,
+  ): void {
+    this.matSubtractMaskedInto(left, right, destination, mask);
+  }
+
+  matMaxInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matMaxU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matMinInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matMinU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matBitwiseAndInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matBitwiseAndU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matBitwiseAndMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void {
+    this.#binaryMasked(left, right, destination, mask, (l, r) => this.matBitwiseAndU8(l, r));
+  }
+
+  matBitwiseOrInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matBitwiseOrU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matBitwiseOrMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void {
+    this.#binaryMasked(left, right, destination, mask, (l, r) => this.matBitwiseOrU8(l, r));
+  }
+
+  matBitwiseXorInto(left: WasmMatHandle, right: WasmMatHandle, destination: WasmMatHandle): void {
+    {
+      const r = this.matBitwiseXorU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matBitwiseXorMaskedInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+  ): void {
+    this.#binaryMasked(left, right, destination, mask, (l, r) => this.matBitwiseXorU8(l, r));
+  }
+
+  matCompareInto(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    _kind: number,
+  ): void {
+    {
+      const r = this.matCompareEqU8(left, right);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  matInRangeInto(
+    source: WasmMatHandle,
+    lowerBound: WasmMatHandle,
+    upperBound: WasmMatHandle,
+    destination: WasmMatHandle,
+  ): void {
+    {
+      const r = this.matInRangeU8(source, lowerBound, upperBound);
+      if (!(destination instanceof CopyingMatHandle)) {
+        throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+      }
+      destination.replaceFrom(r, r.toUint8Array());
+    }
+  }
+
+  #binaryMasked(
+    left: WasmMatHandle,
+    right: WasmMatHandle,
+    destination: WasmMatHandle,
+    mask: WasmMatHandle,
+    kernel: (l: WasmMatHandle, r: WasmMatHandle) => WasmMatHandle,
+  ): void {
+    const result = kernel(left, right).toUint8Array();
+    const maskData = mask.toUint8Array();
+    const channels = left.channels || 1;
+    for (let pixel = 0; pixel < maskData.length; pixel += 1) {
+      if (byteAt(maskData, pixel) === 0) result.fill(0, pixel * channels, (pixel + 1) * channels);
+    }
+    if (!(destination instanceof CopyingMatHandle)) {
+      throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+    }
+    if (!(destination instanceof CopyingMatHandle)) {
+      throw new OpenCvInputError("mock destination must use CopyingMatHandle");
+    }
+    destination.replaceFrom(left, result);
+  }
+
   matSum(source: WasmMatHandle): Float64Array {
     const output = new Float64Array(4);
     const data = source.toUint8Array();
@@ -4239,9 +4454,12 @@ describe("OpenCv client", () => {
 
     const left = client.matFromU8(1, 3, 1, new Uint8Array([250, 2, 3]));
     const right = client.matFromU8(1, 3, 1, new Uint8Array([10, 5, 3]));
-    const added = client.add(left, right);
-    const subtracted = client.subtract(left, right);
-    const difference = client.absdiff(left, right);
+    const added = client.emptyMat();
+    client.add(left, right, added);
+    const subtracted = client.emptyMat();
+    client.subtract(left, right, subtracted);
+    const difference = client.emptyMat();
+    client.absdiff(left, right, difference);
     const equal = client.compareEqual(left, right);
     const inverted = client.bitwiseNotAlloc(left);
 

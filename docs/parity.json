@@ -1249,34 +1249,34 @@
       "implementationOrigin": "original",
       "method": "absdiff",
       "module": "core",
-      "notes": "U8 matrices with matching dimensions and channels; other depths remain missing.",
+      "notes": "All scalar depths and channel counts, caller-owned and reallocated destinations, strict three-argument contract, and depth or shape mismatch errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.absdiff",
       "upstreamId": "core.function.absdiff",
-      "wasmExport": "matAbsdiffU8"
+      "wasmExport": "matAbsdiffInto"
     },
     {
       "implementationOrigin": "original",
       "method": "add",
       "module": "core",
-      "notes": "Saturating U8 matrix-to-matrix addition; scalar, mask, dtype, and output forms remain.",
+      "notes": "All scalar depths and channel counts, optional U8/I8 masks, optional dtype with CV depth extraction and I32 wrapping arithmetic, destination reallocation, and error paths; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.add",
       "upstreamId": "core.function.add",
-      "wasmExport": "matAddU8"
+      "wasmExport": "matAddInto"
     },
     {
       "implementationOrigin": "original",
       "method": "bitwiseAnd",
       "module": "core",
-      "notes": "U8 matrix-to-matrix AND without masks or scalar operands.",
+      "notes": "All scalar depths and channel counts on raw bit patterns, optional U8/I8 masks, destination reallocation, strict same-depth operand validation, and masked destination preservation; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.bitwise_and",
       "upstreamId": "core.function.bitwise-and",
-      "wasmExport": "matBitwiseAndU8"
+      "wasmExport": "matBitwiseAndInto"
     },
     {
       "implementationOrigin": "original",
@@ -1293,34 +1293,34 @@
       "implementationOrigin": "original",
       "method": "bitwiseOr",
       "module": "core",
-      "notes": "U8 matrix-to-matrix OR without masks or scalar operands.",
+      "notes": "All scalar depths and channel counts on raw bit patterns, optional U8/I8 masks, destination reallocation, strict same-depth operand validation, and masked destination preservation; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.bitwise_or",
       "upstreamId": "core.function.bitwise-or",
-      "wasmExport": "matBitwiseOrU8"
+      "wasmExport": "matBitwiseOrInto"
     },
     {
       "implementationOrigin": "original",
       "method": "bitwiseXor",
       "module": "core",
-      "notes": "U8 matrix-to-matrix XOR without masks or scalar operands.",
+      "notes": "All scalar depths and channel counts on raw bit patterns, optional U8/I8 masks, destination reallocation, strict same-depth operand validation, and masked destination preservation; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.bitwise_xor",
       "upstreamId": "core.function.bitwise-xor",
-      "wasmExport": "matBitwiseXorU8"
+      "wasmExport": "matBitwiseXorInto"
     },
     {
       "implementationOrigin": "original",
-      "method": "compareEqual",
+      "method": "compare",
       "module": "core",
-      "notes": "U8 equality comparison; the remaining comparison modes and scalar form are missing.",
+      "notes": "All six comparison operators across every scalar depth and channel count, U8 mask output with destination reallocation, strict four-argument contract, and invalid-operator errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.compare",
       "upstreamId": "core.function.compare",
-      "wasmExport": "matCompareEqU8"
+      "wasmExport": "matCompareInto"
     },
     {
       "implementationOrigin": "original",
@@ -1502,23 +1502,23 @@
       "implementationOrigin": "original",
       "method": "inRange",
       "module": "core",
-      "notes": "Inclusive U8 matrix bounds; scalar bounds and other depths remain missing.",
+      "notes": "All scalar depths, single-channel or per-channel Mat bounds, single-channel U8 output with destination reallocation, and bound-depth errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.inRange",
       "upstreamId": "core.function.in-range",
-      "wasmExport": "matInRangeU8"
+      "wasmExport": "matInRangeInto"
     },
     {
       "implementationOrigin": "original",
       "method": "max",
       "module": "core",
-      "notes": "U8 matrix-to-matrix maximum; scalar operands and other depths remain missing.",
+      "notes": "All scalar depths and channel counts, caller-owned and reallocated destinations, strict three-argument contract, and depth or shape mismatch errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.max",
       "upstreamId": "core.function.max",
-      "wasmExport": "matMaxU8"
+      "wasmExport": "matMaxInto"
     },
     {
       "implementationOrigin": "original",
@@ -1535,12 +1535,12 @@
       "implementationOrigin": "original",
       "method": "min",
       "module": "core",
-      "notes": "U8 matrix-to-matrix minimum; scalar operands and other depths remain missing.",
+      "notes": "All scalar depths and channel counts, caller-owned and reallocated destinations, strict three-argument contract, and depth or shape mismatch errors; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.min",
       "upstreamId": "core.function.min",
-      "wasmExport": "matMinU8"
+      "wasmExport": "matMinInto"
     },
     {
       "implementationOrigin": "original",
@@ -1590,12 +1590,12 @@
       "implementationOrigin": "original",
       "method": "subtract",
       "module": "core",
-      "notes": "Saturating U8 matrix subtraction; scalar, mask, dtype, and output forms remain.",
+      "notes": "All scalar depths and channel counts, optional U8/I8 masks, optional dtype with CV depth extraction and I32 wrapping arithmetic, destination reallocation, and error paths; zero browser differential differences.",
       "sources": ["https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.subtract",
       "upstreamId": "core.function.subtract",
-      "wasmExport": "matSubtractU8"
+      "wasmExport": "matSubtractInto"
     },
     {
       "implementationOrigin": "original",

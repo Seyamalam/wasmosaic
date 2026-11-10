@@ -94,9 +94,9 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 
 | Package methods                                                       | OpenCV.js families                                        | Current limit                                             |
 | --------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
-| `add`, `subtract`, `absdiff`, `min`, `max`                            | `cv.add`, `cv.subtract`, `cv.absdiff`, `cv.min`, `cv.max` | Matching U8 matrix operands                               |
-| `bitwiseAnd`, `bitwiseOr`, `bitwiseXor`                               | `cv.bitwise_and`, `cv.bitwise_or`, `cv.bitwise_xor`       | U8 matrices without scalar or mask forms                  |
-| `compareEqual`, `inRange`                                             | `cv.compare`, `cv.inRange`                                | Selected U8 forms                                         |
+| `add`, `subtract`, `absdiff`, `min`, `max`                            | `cv.add`, `cv.subtract`, `cv.absdiff`, `cv.min`, `cv.max` | All depths, masks, dtype, and reallocated destinations    |
+| `bitwiseAnd`, `bitwiseOr`, `bitwiseXor`                               | `cv.bitwise_and`, `cv.bitwise_or`, `cv.bitwise_xor`       | All depths on raw bit patterns with optional masks        |
+| `compare`, `inRange`                                                  | `cv.compare`, `cv.inRange`                                | Six comparison modes and all-depth bounds                 |
 | `split`, `merge`                                                      | `cv.split`, `cv.merge`                                    | All depths; selected array call forms                     |
 | `hconcat`, `vconcat`                                                  | `cv.hconcat`, `cv.vconcat`                                | All depths; two through four inputs                       |
 | `copyMakeBorder`                                                      | `cv.copyMakeBorder`                                       | All depths and five border modes                          |

@@ -241,12 +241,41 @@ class WasmOpenCv implements OpenCv {
     this.#backend = backend;
   }
 
-  absdiff(left: Mat, right: Mat): Mat {
-    return new Mat(this.#backend.matAbsdiffU8(left.handleForBackend(), right.handleForBackend()));
+  absdiff(source1: Mat, source2: Mat, destination: Mat): void {
+    requireExactArity(arguments.length, 3, "absdiff");
+    this.#backend.matAbsdiffInto(
+      matHandleForBinding(source1),
+      matHandleForBinding(source2),
+      matHandleForBinding(destination),
+    );
   }
 
-  add(left: Mat, right: Mat): Mat {
-    return new Mat(this.#backend.matAddU8(left.handleForBackend(), right.handleForBackend()));
+  add(
+    ...arguments_:
+      | [source1: Mat, source2: Mat, destination: Mat]
+      | [source1: Mat, source2: Mat, destination: Mat, mask: Mat]
+      | [source1: Mat, source2: Mat, destination: Mat, mask: Mat, dtype: number]
+  ): void {
+    requireArityRange(arguments_.length, 3, 5, "add");
+    const source1 = matHandleForBinding(arguments_[0]);
+    const source2 = matHandleForBinding(arguments_[1]);
+    const destination = matHandleForBinding(arguments_[2]);
+    if (arguments_.length === 3) {
+      this.#backend.matAddInto(source1, source2, destination);
+      return;
+    }
+    const mask = matHandleForBinding(arguments_[3]);
+    if (arguments_.length === 4) {
+      this.#backend.matAddMaskedInto(source1, source2, destination, mask);
+      return;
+    }
+    this.#backend.matAddMaskedDtypeInto(
+      source1,
+      source2,
+      destination,
+      mask,
+      toWasmI32(arguments_[4]),
+    );
   }
 
   approxPolyDP(curve: Mat, approximation: Mat, epsilon: number, closed: boolean): void {
@@ -301,9 +330,24 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  bitwiseAnd(left: Mat, right: Mat): Mat {
-    return new Mat(
-      this.#backend.matBitwiseAndU8(left.handleForBackend(), right.handleForBackend()),
+  bitwiseAnd(
+    ...arguments_:
+      | [source1: Mat, source2: Mat, destination: Mat]
+      | [source1: Mat, source2: Mat, destination: Mat, mask: Mat]
+  ): void {
+    requireOverloadArity(arguments_.length, 3, 4, "bitwise_and");
+    const source1 = matHandleForBinding(arguments_[0]);
+    const source2 = matHandleForBinding(arguments_[1]);
+    const destination = matHandleForBinding(arguments_[2]);
+    if (arguments_.length === 3) {
+      this.#backend.matBitwiseAndInto(source1, source2, destination);
+      return;
+    }
+    this.#backend.matBitwiseAndMaskedInto(
+      source1,
+      source2,
+      destination,
+      matHandleForBinding(arguments_[3]),
     );
   }
 
@@ -324,13 +368,45 @@ class WasmOpenCv implements OpenCv {
     return new Mat(this.#backend.matBitwiseNot(source.handleForBackend()));
   }
 
-  bitwiseOr(left: Mat, right: Mat): Mat {
-    return new Mat(this.#backend.matBitwiseOrU8(left.handleForBackend(), right.handleForBackend()));
+  bitwiseOr(
+    ...arguments_:
+      | [source1: Mat, source2: Mat, destination: Mat]
+      | [source1: Mat, source2: Mat, destination: Mat, mask: Mat]
+  ): void {
+    requireOverloadArity(arguments_.length, 3, 4, "bitwise_or");
+    const source1 = matHandleForBinding(arguments_[0]);
+    const source2 = matHandleForBinding(arguments_[1]);
+    const destination = matHandleForBinding(arguments_[2]);
+    if (arguments_.length === 3) {
+      this.#backend.matBitwiseOrInto(source1, source2, destination);
+      return;
+    }
+    this.#backend.matBitwiseOrMaskedInto(
+      source1,
+      source2,
+      destination,
+      matHandleForBinding(arguments_[3]),
+    );
   }
 
-  bitwiseXor(left: Mat, right: Mat): Mat {
-    return new Mat(
-      this.#backend.matBitwiseXorU8(left.handleForBackend(), right.handleForBackend()),
+  bitwiseXor(
+    ...arguments_:
+      | [source1: Mat, source2: Mat, destination: Mat]
+      | [source1: Mat, source2: Mat, destination: Mat, mask: Mat]
+  ): void {
+    requireOverloadArity(arguments_.length, 3, 4, "bitwise_xor");
+    const source1 = matHandleForBinding(arguments_[0]);
+    const source2 = matHandleForBinding(arguments_[1]);
+    const destination = matHandleForBinding(arguments_[2]);
+    if (arguments_.length === 3) {
+      this.#backend.matBitwiseXorInto(source1, source2, destination);
+      return;
+    }
+    this.#backend.matBitwiseXorMaskedInto(
+      source1,
+      source2,
+      destination,
+      matHandleForBinding(arguments_[3]),
     );
   }
 
@@ -354,6 +430,16 @@ class WasmOpenCv implements OpenCv {
         end.x,
         end.y,
       ),
+    );
+  }
+
+  compare(source1: Mat, source2: Mat, destination: Mat, compareOp: number): void {
+    requireExactArity(arguments.length, 4, "compare");
+    this.#backend.matCompareInto(
+      matHandleForBinding(source1),
+      matHandleForBinding(source2),
+      matHandleForBinding(destination),
+      toWasmI32(compareOp),
     );
   }
 
@@ -955,13 +1041,13 @@ class WasmOpenCv implements OpenCv {
     return new Mat(this.#backend.matFromU8(data, rows, columns, channels));
   }
 
-  inRange(source: Mat, lowerBound: Mat, upperBound: Mat): Mat {
-    return new Mat(
-      this.#backend.matInRangeU8(
-        source.handleForBackend(),
-        lowerBound.handleForBackend(),
-        upperBound.handleForBackend(),
-      ),
+  inRange(source: Mat, lowerBound: Mat, upperBound: Mat, destination: Mat): void {
+    requireExactArity(arguments.length, 4, "inRange");
+    this.#backend.matInRangeInto(
+      matHandleForBinding(source),
+      matHandleForBinding(lowerBound),
+      matHandleForBinding(upperBound),
+      matHandleForBinding(destination),
     );
   }
 
@@ -1035,8 +1121,13 @@ class WasmOpenCv implements OpenCv {
     return new Mat(this.#backend.matMagnitude(x.handleForBackend(), y.handleForBackend()));
   }
 
-  max(left: Mat, right: Mat): Mat {
-    return new Mat(this.#backend.matMaxU8(left.handleForBackend(), right.handleForBackend()));
+  max(source1: Mat, source2: Mat, destination: Mat): void {
+    requireExactArity(arguments.length, 3, "max");
+    this.#backend.matMaxInto(
+      matHandleForBinding(source1),
+      matHandleForBinding(source2),
+      matHandleForBinding(destination),
+    );
   }
 
   mean(...arguments_: [source: Mat] | [source: Mat, mask: Mat]): Scalar {
@@ -1098,8 +1189,13 @@ class WasmOpenCv implements OpenCv {
     return new Mat(this.#backend.matMerge4(first, second, third, fourth));
   }
 
-  min(left: Mat, right: Mat): Mat {
-    return new Mat(this.#backend.matMinU8(left.handleForBackend(), right.handleForBackend()));
+  min(source1: Mat, source2: Mat, destination: Mat): void {
+    requireExactArity(arguments.length, 3, "min");
+    this.#backend.matMinInto(
+      matHandleForBinding(source1),
+      matHandleForBinding(source2),
+      matHandleForBinding(destination),
+    );
   }
 
   mixChannels(source: Mat, destination: Mat, fromTo: Uint16Array): void {
@@ -1467,8 +1563,32 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
-  subtract(left: Mat, right: Mat): Mat {
-    return new Mat(this.#backend.matSubtractU8(left.handleForBackend(), right.handleForBackend()));
+  subtract(
+    ...arguments_:
+      | [source1: Mat, source2: Mat, destination: Mat]
+      | [source1: Mat, source2: Mat, destination: Mat, mask: Mat]
+      | [source1: Mat, source2: Mat, destination: Mat, mask: Mat, dtype: number]
+  ): void {
+    requireArityRange(arguments_.length, 3, 5, "subtract");
+    const source1 = matHandleForBinding(arguments_[0]);
+    const source2 = matHandleForBinding(arguments_[1]);
+    const destination = matHandleForBinding(arguments_[2]);
+    if (arguments_.length === 3) {
+      this.#backend.matSubtractInto(source1, source2, destination);
+      return;
+    }
+    const mask = matHandleForBinding(arguments_[3]);
+    if (arguments_.length === 4) {
+      this.#backend.matSubtractMaskedInto(source1, source2, destination, mask);
+      return;
+    }
+    this.#backend.matSubtractMaskedDtypeInto(
+      source1,
+      source2,
+      destination,
+      mask,
+      toWasmI32(arguments_[4]),
+    );
   }
 
   split(source: Mat): Mat[] {

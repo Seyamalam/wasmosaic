@@ -23,7 +23,7 @@ pub(crate) enum ScalarDepth {
 }
 
 impl ScalarDepth {
-    const fn width(self) -> usize {
+    pub(crate) const fn width(self) -> usize {
         match self {
             Self::U8 | Self::I8 => 1,
             Self::U16 | Self::I16 => 2,

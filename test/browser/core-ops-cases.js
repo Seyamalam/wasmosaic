@@ -311,6 +311,187 @@ export function runCoreOpsCases(cv, reference) {
         });
       }
 
+  // ---- elementwise binary ops: add/subtract/absdiff/max/min across depths, channels,
+  //      masks, dtype, and error paths
+  const bop = {
+    add: (...a) => cv.add(...a),
+    subtract: (...a) => cv.subtract(...a),
+    absdiff: (...a) => cv.absdiff(...a),
+    max: (...a) => cv.max(...a),
+    min: (...a) => cv.min(...a),
+  };
+  for (const name of ["add", "subtract", "absdiff", "max", "min"])
+    for (const depth of depths)
+      for (const channels of [1, 3]) {
+        const rows = 2,
+          columns = 3,
+          count = rows * columns * channels;
+        run(`${name}/${depth}/${channels}/plain`, (handles) => {
+          const s1 = track(handles, api.mat(rows, columns, channels, depth, arrays[depth](count)));
+          const s2 = track(
+            handles,
+            api.mat(
+              rows,
+              columns,
+              channels,
+              depth,
+              arrays[depth](count).map((v) => (Number.isInteger(v) ? v * 2 + 3 : v * -0.5 + 1)),
+            ),
+          );
+          const destination = track(handles, api.empty());
+          bop[name](s1, s2, destination);
+          return { destination: api.summary(destination) };
+        });
+      }
+  for (const name of ["add", "subtract"])
+    for (const depth of depths)
+      for (const variant of ["mask", "dtype5", "maskDtype", "badDtype", "badShape", "badDepth"])
+        run(`${name}/${depth}/${variant}`, (handles) => {
+          const rows = 2,
+            columns = 3,
+            count = rows * columns * 1;
+          const source1 = track(handles, api.mat(rows, columns, 1, depth, arrays[depth](count)));
+          const source2 = track(
+            handles,
+            api.mat(
+              variant === "badShape" ? rows + 1 : rows,
+              columns,
+              1,
+              variant === "badDepth" ? 6 : depth,
+              (variant === "badDepth" ? arrays[6] : arrays[depth])(
+                (variant === "badShape" ? rows + 1 : rows) * columns,
+              ),
+            ),
+          );
+          const mask = track(handles, api.mat(rows, columns, 1, 0, [255, 0, 255, 0, 255, 0]));
+          const destination = track(handles, api.empty());
+          const s2 = variant === "badShape" || variant === "badDepth" ? source2 : source2;
+          if (variant === "mask") bop[name](source1, s2, destination, mask);
+          else if (variant === "dtype5") bop[name](source1, s2, destination, api.empty(), 5);
+          else if (variant === "maskDtype") bop[name](source1, s2, destination, mask, 6);
+          else if (variant === "badDtype") bop[name](source1, s2, destination, mask, 9);
+          else bop[name](source1, s2, destination);
+          return { destination: api.summary(destination) };
+        });
+
+  // ---- absdiff/max/min strict 3-arg errors
+  for (const name of ["absdiff", "max", "min"]) {
+    run(`${name}/extra-arg`, (handles) => {
+      const s = track(handles, api.mat(1, 2, 1, 0, [1, 2]));
+      const d = track(handles, api.empty());
+      const mask = track(handles, api.mat(1, 2, 1, 0, [255, 255]));
+      bop[name](s, s, d, mask);
+      return { destination: api.summary(d) };
+    });
+    run(`${name}/mismatch-depth`, (handles) => {
+      const s1 = track(handles, api.mat(1, 2, 1, 0, [1, 2]));
+      const s2 = track(handles, api.mat(1, 2, 1, 5, [1, 2]));
+      const d = track(handles, api.empty());
+      bop[name](s1, s2, d);
+      return { destination: api.summary(d) };
+    });
+  }
+
+  // ---- bitwise ops: all depths (raw bit patterns), masks
+  const bops = {
+    and: (...a) => (reference ? cv.bitwise_and(...a) : cv.bitwiseAnd(...a)),
+    or: (...a) => (reference ? cv.bitwise_or(...a) : cv.bitwiseOr(...a)),
+    xor: (...a) => (reference ? cv.bitwise_xor(...a) : cv.bitwiseXor(...a)),
+  };
+  for (const op of ["and", "or", "xor"])
+    for (const depth of depths)
+      for (const variant of ["plain", "mask", "badDepth"]) {
+        const rows = 2,
+          columns = 3;
+        run(`bitwise_${op}/${depth}/${variant}`, (handles) => {
+          const source1 = track(handles, api.mat(rows, columns, 1, depth, arrays[depth](6)));
+          const source2 = track(
+            handles,
+            api.mat(
+              variant === "badDepth" ? rows : rows,
+              columns,
+              1,
+              variant === "badDepth" ? 0 : depth,
+              arrays[variant === "badDepth" ? 0 : depth](6).map((v) =>
+                Number.isInteger(v) ? v + 7 : v * 2,
+              ),
+            ),
+          );
+          const destination = track(handles, api.empty());
+          if (variant === "mask") {
+            const mask = track(handles, api.mat(rows, columns, 1, 0, [0, 255, 0, 255, 0, 255]));
+            bops[op](source1, source2, destination, mask);
+          } else {
+            bops[op](source1, source2, destination);
+          }
+          return { destination: api.summary(destination) };
+        });
+      }
+
+  // ---- compare: all ops, depths, scalar edge values
+  for (const depth of depths)
+    for (const op of [0, 1, 2, 3, 4, 5, 9])
+      run(`compare/${depth}/${op}`, (handles) => {
+        const rows = 2,
+          columns = 3;
+        const source1 = track(handles, api.mat(rows, columns, 1, depth, arrays[depth](6)));
+        const source2 = track(
+          handles,
+          api.mat(
+            rows,
+            columns,
+            1,
+            depth,
+            arrays[depth](6).map((v, i) =>
+              i % 2 === 0 ? v : Number.isInteger(v) ? v + 1 : v + 0.5,
+            ),
+          ),
+        );
+        const destination = track(handles, api.empty());
+        cv.compare(source1, source2, destination, op);
+        return { destination: api.summary(destination) };
+      });
+
+  // ---- inRange: depths, single/per-channel bounds
+  for (const depth of depths)
+    for (const boundChannels of [1, 3])
+      for (const sourceChannels of [1, 3]) {
+        const rows = 2,
+          columns = 3,
+          boundCount = rows * columns * boundChannels,
+          sourceCount = rows * columns * sourceChannels;
+        const boundValues = (offset) =>
+          Array.from({ length: boundCount }, (_, i) => {
+            const v = arrays[depth](boundCount)[i];
+            return Number.isInteger(v) ? v + offset : v + offset * 0.1;
+          });
+        run(`inRange/${depth}/${sourceChannels}/${boundChannels}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(rows, columns, sourceChannels, depth, arrays[depth](sourceCount)),
+          );
+          const lower = track(
+            handles,
+            api.mat(rows, columns, boundChannels, depth, boundValues(-20)),
+          );
+          const upper = track(
+            handles,
+            api.mat(rows, columns, boundChannels, depth, boundValues(20)),
+          );
+          const destination = track(handles, api.empty());
+          cv.inRange(source, lower, upper, destination);
+          return { destination: api.summary(destination) };
+        });
+      }
+  run("inRange/bad-bound-depth", (handles) => {
+    const source = track(handles, api.mat(2, 3, 1, 0, [1, 2, 3, 4, 5, 6]));
+    const lower = track(handles, api.mat(2, 3, 1, 5, [0, 0, 0, 0, 0, 0]));
+    const upper = track(handles, api.mat(2, 3, 1, 0, [9, 9, 9, 9, 9, 9]));
+    const destination = track(handles, api.empty());
+    cv.inRange(source, lower, upper, destination);
+    return { destination: api.summary(destination) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -323,6 +504,16 @@ export function runCoreOpsCases(cv, reference) {
       perspectiveTransform: cv.perspectiveTransform.length,
       invert: cv.invert.length,
       solve: cv.solve.length,
+      add: cv.add.length,
+      subtract: cv.subtract.length,
+      absdiff: cv.absdiff.length,
+      max: cv.max.length,
+      min: cv.min.length,
+      compare: cv.compare.length,
+      inRange: cv.inRange.length,
+      bitwiseAnd: (reference ? cv.bitwise_and : cv.bitwiseAnd).length,
+      bitwiseOr: (reference ? cv.bitwise_or : cv.bitwiseOr).length,
+      bitwiseXor: (reference ? cv.bitwise_xor : cv.bitwiseXor).length,
     },
   }));
 
