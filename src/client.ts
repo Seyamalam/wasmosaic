@@ -136,6 +136,7 @@ import type {
   HanningWindowType,
   LogLevel,
   MinMaxLocation,
+  Moments,
   NormalizeType,
   NormType,
   OpenCv,
@@ -1352,6 +1353,246 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  erode(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      kernel: Mat,
+      anchor?: Point,
+      iterations?: number,
+      borderType?: BorderType,
+      borderValue?: Scalar,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 7, "erode");
+    const [
+      source,
+      destination,
+      kernel,
+      anchor = { x: -1, y: -1 },
+      iterations = 1,
+      borderType = BORDER_CONSTANT,
+      borderValue,
+    ] = arguments_;
+    const convertedAnchor = point2iForBinding(anchor);
+    this.#backend.matErodeInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      matHandleForBinding(kernel),
+      convertedAnchor.x,
+      convertedAnchor.y,
+      toWasmI32(iterations),
+      toWasmI32(borderType),
+      borderValue === undefined ? new Float64Array() : scalarForBinding(borderValue),
+      borderValue === undefined,
+    );
+  }
+
+  dilate(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      kernel: Mat,
+      anchor?: Point,
+      iterations?: number,
+      borderType?: BorderType,
+      borderValue?: Scalar,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 7, "dilate");
+    const [
+      source,
+      destination,
+      kernel,
+      anchor = { x: -1, y: -1 },
+      iterations = 1,
+      borderType = BORDER_CONSTANT,
+      borderValue,
+    ] = arguments_;
+    const convertedAnchor = point2iForBinding(anchor);
+    this.#backend.matDilateInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      matHandleForBinding(kernel),
+      convertedAnchor.x,
+      convertedAnchor.y,
+      toWasmI32(iterations),
+      toWasmI32(borderType),
+      borderValue === undefined ? new Float64Array() : scalarForBinding(borderValue),
+      borderValue === undefined,
+    );
+  }
+
+  blur(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      kernelSize: Size,
+      anchor?: Point,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 5, "blur");
+    const [
+      source,
+      destination,
+      kernelSize,
+      anchor = { x: -1, y: -1 },
+      borderType = BORDER_DEFAULT,
+    ] = arguments_;
+    const convertedSize = size2iForBinding(kernelSize);
+    const convertedAnchor = point2iForBinding(anchor);
+    this.#backend.matBlurInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      convertedSize.width,
+      convertedSize.height,
+      convertedAnchor.x,
+      convertedAnchor.y,
+      toWasmI32(borderType),
+    );
+  }
+
+  boxFilter(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      destinationDepth: number,
+      kernelSize: Size,
+      anchor?: Point,
+      normalize?: boolean,
+      borderType?: BorderType,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 7, "boxFilter");
+    const [
+      source,
+      destination,
+      destinationDepth,
+      kernelSize,
+      anchor = { x: -1, y: -1 },
+      normalize = true,
+      borderType = BORDER_DEFAULT,
+    ] = arguments_;
+    const convertedSize = size2iForBinding(kernelSize);
+    const convertedAnchor = point2iForBinding(anchor);
+    this.#backend.matBoxFilterInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(destinationDepth),
+      convertedSize.width,
+      convertedSize.height,
+      convertedAnchor.x,
+      convertedAnchor.y,
+      normalize,
+      toWasmI32(borderType),
+    );
+  }
+
+  medianBlur(source: Mat, destination: Mat, kernelSize: number): void {
+    requireExactArity(arguments.length, 3, "medianBlur");
+    this.#backend.matMedianBlurInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(kernelSize),
+    );
+  }
+
+  integral(
+    ...arguments_: [source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number]
+  ): void {
+    requireArityRange(arguments_.length, 2, 4, "integral");
+    const [source, sum, sumDepth = -1, squaredSumDepth = -1] = arguments_;
+    this.#backend.matIntegralInto(
+      matHandleForBinding(source),
+      matHandleForBinding(sum),
+      toWasmI32(sumDepth),
+      toWasmI32(squaredSumDepth),
+    );
+  }
+
+  integral2(
+    ...arguments_: [
+      source: Mat,
+      sum: Mat,
+      squaredSum: Mat,
+      sumDepth?: number,
+      squaredSumDepth?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 3, 5, "integral2");
+    const [source, sum, squaredSum, sumDepth = -1, squaredSumDepth = -1] = arguments_;
+    this.#backend.matIntegral2Into(
+      matHandleForBinding(source),
+      matHandleForBinding(sum),
+      matHandleForBinding(squaredSum),
+      toWasmI32(sumDepth),
+      toWasmI32(squaredSumDepth),
+    );
+  }
+
+  moments(...arguments_: [source: Mat, binaryImage?: boolean]): Moments {
+    requireArityRange(arguments_.length, 1, 2, "moments");
+    const [source, binaryImage = false] = arguments_;
+    const values = this.#backend.matMoments(matHandleForBinding(source), binaryImage);
+    const moment = (index: number) => requiredFloat(values, index);
+    return {
+      m00: moment(0),
+      m10: moment(1),
+      m01: moment(2),
+      m20: moment(3),
+      m11: moment(4),
+      m02: moment(5),
+      m30: moment(6),
+      m21: moment(7),
+      m12: moment(8),
+      m03: moment(9),
+      mu20: moment(10),
+      mu11: moment(11),
+      mu02: moment(12),
+      mu30: moment(13),
+      mu21: moment(14),
+      mu12: moment(15),
+      mu03: moment(16),
+      nu20: moment(17),
+      nu11: moment(18),
+      nu02: moment(19),
+      nu30: moment(20),
+      nu21: moment(21),
+      nu12: moment(22),
+      nu03: moment(23),
+    };
+  }
+
+  HuMoments(source: Moments, destination: Mat): void {
+    requireExactArity(arguments.length, 2, "HuMoments");
+    this.#backend.matHuMomentsInto(momentsForBinding(source), matHandleForBinding(destination));
+  }
+
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+  matchShapes(first: Mat, second: Mat, method: number, parameter: number): number {
+    requireExactArity(arguments.length, 4, "matchShapes");
+    // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+    return this.#backend.matMatchShapes(
+      matHandleForBinding(first),
+      matHandleForBinding(second),
+      toWasmI32(method),
+      toWasmF64(parameter),
+    );
+  }
+
+  getFontScaleFromHeight(
+    ...arguments_: [fontFace: number, pixelHeight: number, thickness: number]
+  ): number {
+    requireArityRange(arguments_.length, 3, 3, "getFontScaleFromHeight");
+    const [fontFace, pixelHeight, thickness] = arguments_;
+    return this.#backend.fontScaleFromHeight(
+      toWasmI32(fontFace),
+      toWasmI32(pixelHeight),
+      toWasmI32(thickness),
+    );
+  }
+
   norm(
     ...arguments_:
       [source: Mat, normType?: NormType] | [source: Mat, normType?: NormType, mask?: Mat]
@@ -2259,6 +2500,40 @@ function scalarForBinding(value: unknown): Float64Array {
     toWasmF64(indexed[2]),
     toWasmF64(indexed[3]),
   ]);
+}
+
+const MOMENT_FIELDS = [
+  "m00",
+  "m10",
+  "m01",
+  "m20",
+  "m11",
+  "m02",
+  "m30",
+  "m21",
+  "m12",
+  "m03",
+  "mu20",
+  "mu11",
+  "mu02",
+  "mu30",
+  "mu21",
+  "mu12",
+  "mu03",
+  "nu20",
+  "nu11",
+  "nu02",
+  "nu30",
+  "nu21",
+  "nu12",
+  "nu03",
+] as const;
+
+function momentsForBinding(value: Moments): Float64Array {
+  // SAFETY: Each field is parsed immediately as an Embind double, so a missing or
+  // nonnumeric field becomes NaN and is rejected by toWasmF64.
+  const values = MOMENT_FIELDS.map((field) => toWasmF64(value[field]));
+  return new Float64Array(values);
 }
 
 function validateBorderSize(value: number, name: string): void {

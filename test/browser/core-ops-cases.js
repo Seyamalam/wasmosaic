@@ -768,6 +768,262 @@ export function runCoreOpsCases(cv, reference) {
     });
   }
 
+  // ---- erode/dilate: depths, kernel masks, anchors, iterations, borders
+  const kernelMasks = {
+    full: [1, 1, 1, 1, 1, 1, 1, 1, 1],
+    cross: [0, 1, 0, 1, 1, 1, 0, 1, 0],
+    diag: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    row: [0, 0, 0, 1, 1, 1, 0, 0, 0],
+  };
+  for (const op of ["erode", "dilate"])
+    for (const depth of depths)
+      for (const [kernelName, mask] of Object.entries(kernelMasks))
+        for (const variant of ["base", "anchor", "iter2", "badDepth"])
+          run(`${op}/${depth}/${kernelName}/${variant}`, (handles) => {
+            const source = track(handles, api.mat(4, 5, 1, depth, arrays[depth](20)));
+            const kernelDepth = variant === "badDepth" ? 4 : 0;
+            const kernel = track(
+              handles,
+              api.mat(
+                3,
+                3,
+                1,
+                kernelDepth,
+                mask.map((v) => v * 100),
+              ),
+            );
+            const destination = track(handles, api.empty());
+            if (variant === "anchor") {
+              cv[op](source, destination, kernel, pt(0, 0));
+            } else if (variant === "iter2") {
+              cv[op](source, destination, kernel, pt(-1, -1), 2);
+            } else {
+              cv[op](source, destination, kernel);
+            }
+            return { destination: api.summary(destination) };
+          });
+  for (const op of ["erode", "dilate"])
+    for (const borderType of [0, 1, 2, 4, 3, 99])
+      for (const borderValue of ["default", "zero", "mid"]) {
+        run(`${op}/border/${borderType}/${borderValue}`, (handles) => {
+          const source = track(handles, api.mat(4, 5, 1, 0, arrays[0](20)));
+          const kernel = track(
+            handles,
+            api.mat(
+              3,
+              3,
+              1,
+              0,
+              kernelMasks.full.map((v) => v * 100),
+            ),
+          );
+          const destination = track(handles, api.empty());
+          if (borderValue === "default") {
+            cv[op](source, destination, kernel, pt(-1, -1), 1, borderType);
+          } else {
+            cv[op](
+              source,
+              destination,
+              kernel,
+              pt(-1, -1),
+              1,
+              borderType,
+              borderValue === "zero" ? [0, 0, 0, 0] : [50, 60, 70, 80],
+            );
+          }
+          return { destination: api.summary(destination) };
+        });
+      }
+  for (const op of ["erode", "dilate"])
+    for (const channels of [3, 4])
+      run(`${op}/channels/${channels}`, (handles) => {
+        const source = track(handles, api.mat(4, 5, channels, 0, arrays[0](4 * 5 * channels)));
+        const kernel = track(handles, api.mat(3, 3, 1, 0, kernelMasks.cross));
+        const destination = track(handles, api.empty());
+        cv[op](source, destination, kernel);
+        return { destination: api.summary(destination) };
+      });
+
+  // ---- blur/boxFilter: depths, kernel sizes, anchors, borders, ddepth, normalize
+  for (const depth of depths)
+    for (const channels of [1, 3])
+      for (const ksize of [
+        [3, 3],
+        [5, 1],
+        [2, 4],
+      ])
+        run(`blur/${depth}/${channels}/${ksize[0]}x${ksize[1]}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(5, 6, channels, depth, arrays[depth](5 * 6 * channels)),
+          );
+          const destination = track(handles, api.empty());
+          cv.blur(source, destination, { width: ksize[0], height: ksize[1] });
+          return { destination: api.summary(destination) };
+        });
+  for (const borderType of [0, 1, 2, 4, 3, 99])
+    run(`blur/border/${borderType}`, (handles) => {
+      const source = track(handles, api.mat(4, 5, 1, 0, arrays[0](20)));
+      const destination = track(handles, api.empty());
+      cv.blur(source, destination, { width: 3, height: 3 }, pt(-1, -1), borderType);
+      return { destination: api.summary(destination) };
+    });
+  for (const anchorP of [
+    [-1, -1],
+    [0, 0],
+    [2, 1],
+    [3, 0],
+    [0, 3],
+  ])
+    run(`blur/anchor/${anchorP[0]}x${anchorP[1]}`, (handles) => {
+      const source = track(handles, api.mat(4, 5, 1, 0, arrays[0](20)));
+      const destination = track(handles, api.empty());
+      cv.blur(source, destination, { width: 3, height: 3 }, pt(anchorP[0], anchorP[1]));
+      return { destination: api.summary(destination) };
+    });
+  for (const depth of depths)
+    for (const ddepth of [-1, 0, 3, 5, 6])
+      for (const normalize of [true, false])
+        run(`boxFilter/${depth}/d${ddepth}/n${normalize ? 1 : 0}`, (handles) => {
+          const source = track(handles, api.mat(4, 5, 1, depth, arrays[depth](20)));
+          const destination = track(handles, api.empty());
+          cv.boxFilter(source, destination, ddepth, { width: 3, height: 3 }, pt(-1, -1), normalize);
+          return { destination: api.summary(destination) };
+        });
+  for (const ddepth of [9, 99])
+    run(`boxFilter/badDepth/${ddepth}`, (handles) => {
+      const source = track(handles, api.mat(4, 5, 1, 0, arrays[0](20)));
+      const destination = track(handles, api.empty());
+      cv.boxFilter(source, destination, ddepth, { width: 3, height: 3 });
+      return { destination: api.summary(destination) };
+    });
+
+  // ---- medianBlur: depths, kernel sizes, channels
+  for (const depth of depths)
+    for (const ksize of [1, 3, 5, 7])
+      for (const channels of [1, 3])
+        run(`medianBlur/${depth}/${ksize}/${channels}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(9, 8, channels, depth, arrays[depth](9 * 8 * channels)),
+          );
+          const destination = track(handles, api.empty());
+          cv.medianBlur(source, destination, ksize);
+          return { destination: api.summary(destination) };
+        });
+  for (const ksize of [0, 2, -3])
+    run(`medianBlur/bad/${ksize}`, (handles) => {
+      const source = track(handles, api.mat(4, 5, 1, 0, arrays[0](20)));
+      const destination = track(handles, api.empty());
+      cv.medianBlur(source, destination, ksize);
+      return { destination: api.summary(destination) };
+    });
+
+  // ---- integral/integral2: depths, channels, requested depths
+  for (const depth of depths)
+    for (const channels of [1, 3])
+      for (const sdepth of [-1, 4, 5, 6])
+        run(`integral/${depth}/${channels}/d${sdepth}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(3, 4, channels, depth, arrays[depth](3 * 4 * channels)),
+          );
+          const sum = track(handles, api.empty());
+          cv.integral(source, sum, sdepth);
+          return { sum: api.summary(sum) };
+        });
+  for (const depth of depths)
+    for (const sdepth of [-1, 4])
+      for (const sqdepth of [-1, 5])
+        run(`integral2/${depth}/d${sdepth}/q${sqdepth}`, (handles) => {
+          const source = track(handles, api.mat(3, 4, 1, depth, arrays[depth](12)));
+          const sum = track(handles, api.empty());
+          const squared = track(handles, api.empty());
+          cv.integral2(source, sum, squared, sdepth, sqdepth);
+          return { sum: api.summary(sum), squared: api.summary(squared) };
+        });
+
+  // ---- moments: depths, binary flag, channel/empty errors
+  for (const depth of depths)
+    for (const channels of [1, 3])
+      for (const binary of [false, true])
+        run(`moments/${depth}/${channels}/b${binary ? 1 : 0}`, (handles) => {
+          const source = track(
+            handles,
+            api.mat(4, 5, channels, depth, arrays[depth](4 * 5 * channels)),
+          );
+          const m = cv.moments(source, binary);
+          return {
+            m00: m.m00,
+            m10: m.m10,
+            m01: m.m01,
+            m20: m.m20,
+            m11: m.m11,
+            m02: m.m02,
+            m30: m.m30,
+            m21: m.m21,
+            m12: m.m12,
+            m03: m.m03,
+            mu20: m.mu20,
+            mu11: m.mu11,
+            mu02: m.mu02,
+            mu30: m.mu30,
+            mu21: m.mu21,
+            mu12: m.mu12,
+            mu03: m.mu03,
+            nu20: m.nu20,
+            nu11: m.nu11,
+            nu02: m.nu02,
+            nu30: m.nu30,
+            nu21: m.nu21,
+            nu12: m.nu12,
+            nu03: m.nu03,
+          };
+        });
+  for (const depth of depths)
+    run(`HuMoments/${depth}`, (handles) => {
+      const source = track(handles, api.mat(4, 5, 1, depth, arrays[depth](20)));
+      const m = cv.moments(source);
+      const hu = track(handles, api.empty());
+      cv.HuMoments(m, hu);
+      return { hu: api.summary(hu) };
+    });
+
+  // ---- matchShapes: contour pairs, methods, images
+  const contourA = [0, 0, 10, 0, 10, 10, 0, 10];
+  const contourB = [0, 0, 20, 0, 20, 20, 0, 20];
+  const contourC = [0, 0, 10, 0, 20, 5, 10, 10, 0, 10];
+  for (const method of [1, 2, 3, 0, 7])
+    for (const [name, pair] of /** @type {[string, number[][]][]} */ ([
+      ["same", [contourA, contourA]],
+      ["scaled", [contourA, contourB]],
+      ["different", [contourA, contourC]],
+    ]))
+      run(`matchShapes/${method}/${name}`, (handles) => {
+        const first = track(handles, api.mat(pair[0].length / 2, 1, 2, 4, pair[0]));
+        const second = track(handles, api.mat(pair[1].length / 2, 1, 2, 4, pair[1]));
+        // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+        return { score: cv.matchShapes(first, second, method, 0) };
+      });
+  for (const depth of [4, 5])
+    run(`matchShapes/float/${depth}`, (handles) => {
+      const first = track(handles, api.mat(5, 1, 2, depth, [0, 0, 4, 0, 4, 4, 0, 4, 2, 2]));
+      const second = track(handles, api.mat(5, 1, 2, depth, [0, 0, 4, 0, 4, 4, 0, 4, 3, 3]));
+      // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+      return { score: cv.matchShapes(first, second, 2, 0.5) };
+    });
+
+  // ---- getFontScaleFromHeight: faces, heights, thickness
+  for (const face of [0, 1, 2, 3, 4, 5, 6, 7, 8, 16, 17, 24, -1])
+    for (const height of [0, 12, 20, -5])
+      run(`fontScale/${face}/${height}`, () => ({
+        scale: cv.getFontScaleFromHeight(face, height, -1),
+      }));
+  for (const thickness of [-1, 0, 1, 2, 3, 10])
+    run(`fontScale/thickness/${thickness}`, () => ({
+      scale: cv.getFontScaleFromHeight(0, 20, thickness),
+    }));
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -799,6 +1055,18 @@ export function runCoreOpsCases(cv, reference) {
       copyMakeBorder: cv.copyMakeBorder.length,
       ellipse2Poly: cv.ellipse2Poly.length,
       equalizeHist: cv.equalizeHist.length,
+      erode: cv.erode.length,
+      dilate: cv.dilate.length,
+      blur: cv.blur.length,
+      boxFilter: cv.boxFilter.length,
+      medianBlur: cv.medianBlur.length,
+      integral: cv.integral.length,
+      integral2: cv.integral2.length,
+      moments: cv.moments.length,
+      HuMoments: cv.HuMoments.length,
+      // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+      matchShapes: cv.matchShapes.length,
+      getFontScaleFromHeight: cv.getFontScaleFromHeight.length,
     },
   }));
 

@@ -228,6 +228,17 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `findContours`                              | `cv.findContours`                              | Partial | U8 holes, trees, chains and MatVector      |
 | imgproc    | `warpAffine`                                | `cv.warpAffine`                                | Partial | U8 nearest/linear affine image warps       |
 | imgproc    | `equalizeHist`                              | `cv.equalizeHist`                              | Full    | U8 single-channel, dst form                |
+| imgproc    | `erode`                                     | `cv.erode`                                     | Full    | Depth-gated mask erosion and borders       |
+| imgproc    | `dilate`                                    | `cv.dilate`                                    | Full    | Depth-gated mask dilation and borders      |
+| imgproc    | `blur`                                      | `cv.blur`                                      | Full    | Depth-gated normalized box blur            |
+| imgproc    | `boxFilter`                                 | `cv.boxFilter`                                 | Full    | ddepth/normalize box filtering             |
+| imgproc    | `medianBlur`                                | `cv.medianBlur`                                | Full    | Depth-gated median filtering               |
+| imgproc    | `integral`                                  | `cv.integral`                                  | Full    | Sum-only integral images                   |
+| imgproc    | `integral2`                                 | `cv.integral2`                                 | Full    | Integral plus squared-sum images           |
+| imgproc    | `moments`                                   | `cv.moments`                                   | Partial | Raster moments; residual ulp diffs         |
+| imgproc    | `HuMoments`                                 | `cv.HuMoments`                                 | Full    | Seven raw Hu invariants                    |
+| imgproc    | `matchShapes`                               | `cv.matchShapes`                               | Partial | I1/I2/I3; residual accumulation diffs      |
+| imgproc    | `getFontScaleFromHeight`                    | `cv.getFontScaleFromHeight`                    | Full    | Hershey scale from pixel height            |
 | imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks |
 | imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Partial | Nearest/linear projective sampling         |
 | photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process    |

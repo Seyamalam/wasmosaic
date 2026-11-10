@@ -87,6 +87,33 @@ export type HanningWindowType = 5 | 6;
 export type LogLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 /** Extrema and first row-major locations returned by `minMaxLoc`. */
+export interface Moments {
+  readonly m00: number;
+  readonly m10: number;
+  readonly m01: number;
+  readonly m20: number;
+  readonly m11: number;
+  readonly m02: number;
+  readonly m30: number;
+  readonly m21: number;
+  readonly m12: number;
+  readonly m03: number;
+  readonly mu20: number;
+  readonly mu11: number;
+  readonly mu02: number;
+  readonly mu30: number;
+  readonly mu21: number;
+  readonly mu12: number;
+  readonly mu03: number;
+  readonly nu20: number;
+  readonly nu11: number;
+  readonly nu02: number;
+  readonly nu30: number;
+  readonly nu21: number;
+  readonly nu12: number;
+  readonly nu03: number;
+}
+
 export interface MinMaxLocation {
   readonly maxLoc: Point;
   readonly maxVal: number;
@@ -235,6 +262,72 @@ export interface OpenCvBackend {
     scaleY: number,
     interpolation: number,
   ): void;
+  matErodeInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    kernel: WasmMatHandle,
+    anchorX: number,
+    anchorY: number,
+    iterations: number,
+    borderType: number,
+    borderValue: Float64Array,
+    defaultBorderValue: boolean,
+  ): void;
+  matDilateInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    kernel: WasmMatHandle,
+    anchorX: number,
+    anchorY: number,
+    iterations: number,
+    borderType: number,
+    borderValue: Float64Array,
+    defaultBorderValue: boolean,
+  ): void;
+  matBlurInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    kernelWidth: number,
+    kernelHeight: number,
+    anchorX: number,
+    anchorY: number,
+    borderType: number,
+  ): void;
+  matBoxFilterInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    destinationDepth: number,
+    kernelWidth: number,
+    kernelHeight: number,
+    anchorX: number,
+    anchorY: number,
+    normalize: boolean,
+    borderType: number,
+  ): void;
+  matMedianBlurInto(source: WasmMatHandle, destination: WasmMatHandle, kernelSize: number): void;
+  matIntegralInto(
+    source: WasmMatHandle,
+    sum: WasmMatHandle,
+    sumDepth: number,
+    squaredSumDepth: number,
+  ): void;
+  matIntegral2Into(
+    source: WasmMatHandle,
+    sum: WasmMatHandle,
+    squaredSum: WasmMatHandle,
+    sumDepth: number,
+    squaredSumDepth: number,
+  ): void;
+  matMoments(source: WasmMatHandle, binary: boolean): Float64Array;
+  matHuMomentsInto(moments: Float64Array, destination: WasmMatHandle): void;
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+  matMatchShapes(
+    first: WasmMatHandle,
+    second: WasmMatHandle,
+    method: number,
+    parameter: number,
+  ): number;
+  fontScaleFromHeight(fontFace: number, pixelHeight: number, thickness: number): number;
   matGaussianBlurInto(
     source: WasmMatHandle,
     destination: WasmMatHandle,
@@ -866,6 +959,54 @@ export interface OpenCv {
   getPerspectiveTransform(source: Mat, destination: Mat, solveMethod?: number): Mat;
   getRotationMatrix2D(center: Point, angleDegrees: number, scale: number): Mat;
   getStructuringElement(kind: StructuringElementKind, size: Size, anchor?: Point): Mat;
+  erode(
+    source: Mat,
+    destination: Mat,
+    kernel: Mat,
+    anchor?: Point,
+    iterations?: number,
+    borderType?: BorderType,
+    borderValue?: Scalar,
+  ): void;
+  dilate(
+    source: Mat,
+    destination: Mat,
+    kernel: Mat,
+    anchor?: Point,
+    iterations?: number,
+    borderType?: BorderType,
+    borderValue?: Scalar,
+  ): void;
+  blur(
+    source: Mat,
+    destination: Mat,
+    kernelSize: Size,
+    anchor?: Point,
+    borderType?: BorderType,
+  ): void;
+  boxFilter(
+    source: Mat,
+    destination: Mat,
+    destinationDepth: number,
+    kernelSize: Size,
+    anchor?: Point,
+    normalize?: boolean,
+    borderType?: BorderType,
+  ): void;
+  medianBlur(source: Mat, destination: Mat, kernelSize: number): void;
+  integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
+  integral2(
+    source: Mat,
+    sum: Mat,
+    squaredSum: Mat,
+    sumDepth?: number,
+    squaredSumDepth?: number,
+  ): void;
+  moments(source: Mat, binaryImage?: boolean): Moments;
+  HuMoments(source: Moments, destination: Mat): void;
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+  matchShapes(first: Mat, second: Mat, method: number, parameter: number): number;
+  getFontScaleFromHeight(fontFace: number, pixelHeight: number, thickness: number): number;
   invert(image: RgbaImage): RgbaImage;
   matFromF32(rows: number, columns: number, channels: number, data: Float32Array): Mat;
   matFromF64(rows: number, columns: number, channels: number, data: Float64Array): Mat;

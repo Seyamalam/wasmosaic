@@ -377,9 +377,7 @@ fn mix_channels_vecs(
             let scratch = usize::try_from(first.rows())
                 .ok()
                 .and_then(|rows| rows.checked_mul(first.columns() as usize))
-                .and_then(|pixels| {
-                    pixels.checked_mul(usize::from(destination.channels()))
-                })
+                .and_then(|pixels| pixels.checked_mul(usize::from(destination.channels())))
                 .and_then(|elements| {
                     elements.checked_mul(usize::from(source_kernels[0].element_byte_width()))
                 })
@@ -596,19 +594,14 @@ mod vec_tests {
     #[test]
     fn mix_channels_vec_routes_flat_pairs() {
         let sources = mat_vector_new();
-        sources.push_back(
-            &Mat::from_owned_bytes((0..12).collect(), 2, 2, 3, MatDepth::U8).unwrap(),
-        );
+        sources
+            .push_back(&Mat::from_owned_bytes((0..12).collect(), 2, 2, 3, MatDepth::U8).unwrap());
         sources.push_back(
             &Mat::from_owned_bytes(vec![40, 41, 42, 43], 2, 2, 1, MatDepth::U8).unwrap(),
         );
         let destinations = mat_vector_new();
-        destinations.push_back(
-            &Mat::from_owned_bytes(vec![0; 4], 2, 2, 1, MatDepth::U8).unwrap(),
-        );
-        destinations.push_back(
-            &Mat::from_owned_bytes(vec![0; 8], 2, 2, 2, MatDepth::U8).unwrap(),
-        );
+        destinations.push_back(&Mat::from_owned_bytes(vec![0; 4], 2, 2, 1, MatDepth::U8).unwrap());
+        destinations.push_back(&Mat::from_owned_bytes(vec![0; 8], 2, 2, 2, MatDepth::U8).unwrap());
         mix_channels_vecs(&sources, &destinations, &[2, 0, 3, 1, 0, 2]).unwrap();
         assert_eq!(
             destinations.get(0).unwrap().compact_bytes(),

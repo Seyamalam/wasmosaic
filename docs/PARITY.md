@@ -124,6 +124,9 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `findContours`                                                        | `cv.findContours`                                         | U8 holes, nested hierarchy, SIMPLE/NONE chains            |
 | `warpAffine`                                                          | `cv.warpAffine`                                           | U8 nearest/linear warps and constant/replicate borders    |
 | `equalizeHist`                                                        | `cv.equalizeHist`                                         | Full pinned contract                                      |
+| `erode`, `dilate`, `blur`, `boxFilter`, `medianBlur`                  | Matching `cv` filter families                             | Depth-gated windows, masks, anchors, borders, rounding    |
+| `integral`, `integral2`, `HuMoments`, `getFontScaleFromHeight`        | Matching `cv` analysis and text helpers                   | Integral sums, Hu invariants, Hershey scale               |
+| `moments`, `matchShapes`                                              | `cv.moments`, `cv.matchShapes`                            | Raster/contour moments; residual ulp diffs remain         |
 | `matchTemplate`                                                       | `cv.matchTemplate`                                        | Six U8/F32 methods, binary/weighted masks, F32 score maps |
 | `createTonemapDrago`, `createTonemapMantiuk`, `createTonemapReinhard` | Matching global `cv.createTonemap*` functions             | Global factories absent; pixel processing remains         |
 

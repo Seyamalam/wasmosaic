@@ -169,7 +169,7 @@ pub(crate) fn normalize_into(
         let mut maximum = f64::NEG_INFINITY;
         for index in 0..elements {
             if selected(mask, index / usize::from(channels), columns) {
-                let value = read(source, index, source_depth);
+                let value = read_scalar(source, index, source_depth);
                 minimum = minimum.min(value);
                 maximum = maximum.max(value);
             }
@@ -212,10 +212,12 @@ pub(crate) fn normalize_into(
     for index in 0..elements {
         if selected(mask, index / usize::from(channels), columns) {
             let value = match minmax {
-                Some((base, low)) => (read(source, index, source_depth) - base) * scale + low,
-                None => read(source, index, source_depth).mul_add(scale, shift),
+                Some((base, low)) => {
+                    (read_scalar(source, index, source_depth) - base) * scale + low
+                }
+                None => read_scalar(source, index, source_depth).mul_add(scale, shift),
             };
-            write(destination, index, destination_depth, value);
+            write_scalar(destination, index, destination_depth, value);
         }
     }
     Ok(())
@@ -278,8 +280,8 @@ fn numeric_norm(
             continue;
         }
         let value = second
-            .map_or(read(data, index, depth), |other| {
-                read(data, index, depth) - read(other, index, depth)
+            .map_or(read_scalar(data, index, depth), |other| {
+                read_scalar(data, index, depth) - read_scalar(other, index, depth)
             })
             .abs();
         aggregate = match base {
@@ -321,7 +323,7 @@ fn hamming(
     total
 }
 
-fn read(data: &[u8], index: usize, depth: ScalarDepth) -> f64 {
+pub(crate) fn read_scalar(data: &[u8], index: usize, depth: ScalarDepth) -> f64 {
     let offset = index * depth.width();
     match depth {
         ScalarDepth::U8 => f64::from(data[offset]),
@@ -343,7 +345,7 @@ fn read(data: &[u8], index: usize, depth: ScalarDepth) -> f64 {
 }
 
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-fn write(data: &mut [u8], index: usize, depth: ScalarDepth, value: f64) {
+pub(crate) fn write_scalar(data: &mut [u8], index: usize, depth: ScalarDepth, value: f64) {
     let offset = index * depth.width();
     let rounded = if value.is_finite() && value.abs() < 2_147_483_648.0 {
         value.round_ties_even()

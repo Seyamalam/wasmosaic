@@ -1933,6 +1933,109 @@ class CopyingBackend implements OpenCvBackend {
     );
   }
 
+  matErodeInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _kernel: WasmMatHandle,
+    _anchorX: number,
+    _anchorY: number,
+    _iterations: number,
+    _borderType: number,
+    _borderValue: Float64Array,
+    _defaultBorderValue: boolean,
+  ): void {
+    throw new OpenCvInputError("mock erode is not implemented");
+  }
+
+  matDilateInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _kernel: WasmMatHandle,
+    _anchorX: number,
+    _anchorY: number,
+    _iterations: number,
+    _borderType: number,
+    _borderValue: Float64Array,
+    _defaultBorderValue: boolean,
+  ): void {
+    throw new OpenCvInputError("mock dilate is not implemented");
+  }
+
+  matBlurInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _kernelWidth: number,
+    _kernelHeight: number,
+    _anchorX: number,
+    _anchorY: number,
+    _borderType: number,
+  ): void {
+    throw new OpenCvInputError("mock blur is not implemented");
+  }
+
+  matBoxFilterInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _destinationDepth: number,
+    _kernelWidth: number,
+    _kernelHeight: number,
+    _anchorX: number,
+    _anchorY: number,
+    _normalize: boolean,
+    _borderType: number,
+  ): void {
+    throw new OpenCvInputError("mock boxFilter is not implemented");
+  }
+
+  matMedianBlurInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _kernelSize: number,
+  ): void {
+    throw new OpenCvInputError("mock medianBlur is not implemented");
+  }
+
+  matIntegralInto(
+    _source: WasmMatHandle,
+    _sum: WasmMatHandle,
+    _sumDepth: number,
+    _squaredSumDepth: number,
+  ): void {
+    throw new OpenCvInputError("mock integral is not implemented");
+  }
+
+  matIntegral2Into(
+    _source: WasmMatHandle,
+    _sum: WasmMatHandle,
+    _squaredSum: WasmMatHandle,
+    _sumDepth: number,
+    _squaredSumDepth: number,
+  ): void {
+    throw new OpenCvInputError("mock integral2 is not implemented");
+  }
+
+  matMoments(_source: WasmMatHandle, _binary: boolean): Float64Array {
+    throw new OpenCvInputError("mock moments is not implemented");
+  }
+
+  matHuMomentsInto(_moments: Float64Array, _destination: WasmMatHandle): void {
+    throw new OpenCvInputError("mock HuMoments is not implemented");
+  }
+
+  // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- Upstream binding name.
+  matMatchShapes(
+    _first: WasmMatHandle,
+    _second: WasmMatHandle,
+    _method: number,
+    _parameter: number,
+  ): number {
+    throw new OpenCvInputError("mock matchShapes is not implemented");
+  }
+
+  fontScaleFromHeight(_fontFace: number, _pixelHeight: number, _thickness: number): number {
+    throw new OpenCvInputError("mock getFontScaleFromHeight is not implemented");
+  }
+
   matSobelInto(
     source: WasmMatHandle,
     destination: WasmMatHandle,
