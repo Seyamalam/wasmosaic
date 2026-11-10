@@ -1916,6 +1916,112 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  remap(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      map1: Mat,
+      map2: Mat,
+      interpolation: Interpolation,
+      borderType?: BorderType,
+      borderValue?: Scalar,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 7, "remap");
+    const [source, destination, map1, map2, interpolation, _borderType, borderValue] = arguments_;
+    this.#backend.matRemapInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      matHandleForBinding(map1),
+      matHandleForBinding(map2),
+      toWasmI32(interpolation),
+      borderValue === undefined ? 0 : requiredFloat(scalarForBinding(borderValue), 0),
+    );
+  }
+
+  convertMaps(
+    ...arguments_: [
+      map1: Mat,
+      map2: Mat,
+      dst1: Mat,
+      dst2: Mat,
+      destinationType?: number,
+      nninterpolation?: boolean,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 6, "convertMaps");
+    const [map1, map2, dst1, dst2] = arguments_;
+    this.#backend.matConvertMapsInto(
+      matHandleForBinding(map1),
+      matHandleForBinding(map2),
+      matHandleForBinding(dst1),
+      matHandleForBinding(dst2),
+    );
+  }
+
+  getRectSubPix(
+    ...arguments_: [
+      source: Mat,
+      patchSize: Size,
+      center: Point,
+      destination: Mat,
+      patchType?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 5, "getRectSubPix");
+    const [source, patchSize, center, destination] = arguments_;
+    this.#backend.matGetRectSubPixInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(patchSize.width),
+      toWasmI32(patchSize.height),
+      center.x,
+      center.y,
+    );
+  }
+
+  demosaicing(...arguments_: [source: Mat, destination: Mat, code: number, dstCn?: number]): void {
+    requireArityRange(arguments_.length, 3, 4, "demosaicing");
+    const [source, destination, code] = arguments_;
+    this.#backend.matDemosaicingInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      toWasmI32(code),
+    );
+  }
+
+  calcHist(
+    ...arguments_: [
+      image: Mat,
+      channels: number[],
+      mask: Mat,
+      hist: Mat,
+      histSize: number[],
+      ranges: number[],
+      accumulate?: boolean,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 6, 7, "calcHist");
+    const [image, _channels, _mask, hist, histSize, ranges, accumulate = false] = arguments_;
+    const source = image instanceof MatVector ? image.get(0) : image;
+    this.#backend.matCalcHistInto(
+      matHandleForBinding(source),
+      matHandleForBinding(hist),
+      toWasmI32(histSize[0] ?? 0),
+      ranges[0] ?? 0,
+      ranges[1] ?? 0,
+      accumulate,
+    );
+  }
+
+  compareHist(h1: Mat, h2: Mat, method: number): number {
+    return this.#backend.matCompareHist(
+      matHandleForBinding(h1),
+      matHandleForBinding(h2),
+      toWasmI32(method),
+    );
+  }
+
   gemm(
     ...arguments_: [
       src1: Mat,

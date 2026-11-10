@@ -1528,6 +1528,68 @@ export function runCoreOpsCases(cv, reference) {
     });
   }
 
+  // ---- remap / convertMaps / getRectSubPix / demosaicing / calcHist / compareHist
+  for (const interp of [0, 1]) {
+    run(`remap/i${interp}`, (handles) => {
+      const source = track(
+        handles,
+        api.mat(4, 4, 1, 0, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+      );
+      const map1 = track(handles, api.mat(3, 3, 1, 5, [2, 1, 0, 2, 1, 0, 2, 1, 0]));
+      const map2 = track(handles, api.mat(3, 3, 1, 5, [0, 0, 0, 1, 1, 1, 2, 2, 2]));
+      const destination = track(handles, api.empty());
+      cv.remap(source, destination, map1, map2, interp, 0, [0, 0, 0, 0]);
+      return { destination: api.summary(destination) };
+    });
+  }
+  run("convertMaps", (handles) => {
+    const map1 = track(handles, api.mat(2, 2, 1, 5, [0.5, 1.5, 0.5, 1.5]));
+    const map2 = track(handles, api.mat(2, 2, 1, 5, [0.5, 0.5, 1.5, 1.5]));
+    const d1 = track(handles, api.empty());
+    const d2 = track(handles, api.empty());
+    cv.convertMaps(map1, map2, d1, d2, 11, false);
+    return { d1: api.summary(d1), d2: api.summary(d2) };
+  });
+  run("getRectSubPix", (handles) => {
+    const source = track(
+      handles,
+      api.mat(4, 4, 1, 0, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+    );
+    const destination = track(handles, api.empty());
+    cv.getRectSubPix(source, { width: 3, height: 3 }, { x: 1.5, y: 1.5 }, destination, -1);
+    return { destination: api.summary(destination) };
+  });
+  for (const code of [46, 48]) {
+    run(`demosaicing/${code}`, (handles) => {
+      const source = track(
+        handles,
+        api.mat(4, 4, 1, 0, [10, 50, 10, 50, 90, 200, 90, 200, 10, 50, 10, 50, 90, 200, 90, 200]),
+      );
+      const destination = track(handles, api.empty());
+      cv.demosaicing(source, destination, code, 0);
+      return { destination: api.summary(destination) };
+    });
+  }
+  run("calcHist", (handles) => {
+    const source = track(
+      handles,
+      api.mat(4, 4, 1, 0, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]),
+    );
+    const hist = track(handles, api.empty());
+    const mv = reference ? new cv.MatVector() : cv.createMatVector();
+    mv.push_back(source);
+    const mask = track(handles, api.empty());
+    cv.calcHist(mv, [0], mask, hist, [16], [0, 16], false);
+    return { hist: api.summary(hist) };
+  });
+  for (const m of [0, 1, 2, 3]) {
+    run(`compareHist/m${m}`, (handles) => {
+      const h1 = track(handles, api.mat(4, 1, 1, 5, [1, 2, 3, 4]));
+      const h2 = track(handles, api.mat(4, 1, 1, 5, [2, 2, 2, 2]));
+      return { value: cv.compareHist(h1, h2, m) };
+    });
+  }
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1598,6 +1660,12 @@ export function runCoreOpsCases(cv, reference) {
       gemm: cv.gemm.length,
       eigen: cv.eigen.length,
       solvePoly: cv.solvePoly.length,
+      remap: cv.remap.length,
+      convertMaps: cv.convertMaps.length,
+      getRectSubPix: cv.getRectSubPix.length,
+      demosaicing: cv.demosaicing.length,
+      calcHist: cv.calcHist.length,
+      compareHist: cv.compareHist.length,
     },
   }));
 

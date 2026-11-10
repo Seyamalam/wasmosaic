@@ -503,6 +503,38 @@ export interface OpenCvBackend {
     eigenvectors: WasmMatHandle,
   ): boolean;
   matSolvePolyInto(coeffs: WasmMatHandle, roots: WasmMatHandle, maxIters: number): number;
+  matRemapInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    map1: WasmMatHandle,
+    map2: WasmMatHandle,
+    interpolation: number,
+    borderValue: number,
+  ): void;
+  matConvertMapsInto(
+    map1: WasmMatHandle,
+    map2: WasmMatHandle,
+    dst1: WasmMatHandle,
+    dst2: WasmMatHandle,
+  ): void;
+  matGetRectSubPixInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    width: number,
+    height: number,
+    centerX: number,
+    centerY: number,
+  ): void;
+  matDemosaicingInto(source: WasmMatHandle, destination: WasmMatHandle, code: number): void;
+  matCalcHistInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    histSize: number,
+    rangeLow: number,
+    rangeHigh: number,
+    accumulate: boolean,
+  ): void;
+  matCompareHist(h1: WasmMatHandle, h2: WasmMatHandle, method: number): number;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1330,6 +1362,41 @@ export interface OpenCv {
   magnitude(x: Mat, y: Mat, destination: Mat): void;
   eigen(source: Mat, eigenvalues: Mat, eigenvectors?: Mat): boolean;
   solvePoly(coeffs: Mat, roots: Mat, maxIters?: number): number;
+  remap(
+    source: Mat,
+    destination: Mat,
+    map1: Mat,
+    map2: Mat,
+    interpolation: Interpolation,
+    borderType?: BorderType,
+    borderValue?: Scalar,
+  ): void;
+  convertMaps(
+    map1: Mat,
+    map2: Mat,
+    dst1: Mat,
+    dst2: Mat,
+    destinationType?: number,
+    nninterpolation?: boolean,
+  ): void;
+  getRectSubPix(
+    source: Mat,
+    patchSize: Size,
+    center: Point,
+    destination: Mat,
+    patchType?: number,
+  ): void;
+  demosaicing(source: Mat, destination: Mat, code: number, dstCn?: number): void;
+  calcHist(
+    image: Mat | MatVector,
+    channels: number[],
+    mask: Mat,
+    hist: Mat,
+    histSize: number[],
+    ranges: number[],
+    accumulate?: boolean,
+  ): void;
+  compareHist(h1: Mat, h2: Mat, method: number): number;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

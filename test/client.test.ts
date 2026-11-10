@@ -2100,6 +2100,29 @@ class CopyingBackend implements OpenCvBackend {
   matSolvePolyInto(): number {
     throw new OpenCvInputError("mock solvePoly is not implemented");
   }
+  matRemapInto(): void {
+    throw new OpenCvInputError("mock remap is not implemented");
+  }
+
+  matConvertMapsInto(): void {
+    throw new OpenCvInputError("mock convertMaps is not implemented");
+  }
+
+  matGetRectSubPixInto(): void {
+    throw new OpenCvInputError("mock getRectSubPix is not implemented");
+  }
+
+  matDemosaicingInto(): void {
+    throw new OpenCvInputError("mock demosaicing is not implemented");
+  }
+
+  matCalcHistInto(): void {
+    throw new OpenCvInputError("mock calcHist is not implemented");
+  }
+
+  matCompareHist(): number {
+    throw new OpenCvInputError("mock compareHist is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,

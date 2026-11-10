@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Resampling and histogram batch: `remap` (F32-map nearest/bilinear resampling), `convertMaps` (CV_16SC2 + CV_16UC1 fixed-point packing), `getRectSubPix` (bilinear sub-pixel patch extraction), `calcHist` (F32 histogram bin counting), and `compareHist` (correlation, chi-square, intersection, and Bhattacharyya). `demosaicing` ships as a partial: the Bayer decode runs but its interpolation pattern differs. **Full parity is now 183 of 488 families.**
+
+### Added
+
 - Dense algebra batch: `gemm` (F64 matrix multiply with GEMM_1_T/GEMM_2_T/GEMM_3_T transpose flags) and `eigen` (cyclic-Jacobi symmetric eigensolver with descending eigenvalues and eigenvectors). `solvePoly` ships as a partial: the companion-matrix root finder produces the correct root set but ordering and far-edge convergence differ. **Full parity is now 178 of 488 families.**
 
 ### Added

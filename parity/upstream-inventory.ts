@@ -88,6 +88,12 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "core.function.gemm": { overloadCount: 1, runtimeArity: 0 },
   "core.function.eigen": { overloadCount: 1, runtimeArity: 0 },
   "core.function.solve-poly": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.remap": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.convert-maps": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.get-rect-sub-pix": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.demosaicing": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.calc-hist": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.compare-hist": { overloadCount: 1, runtimeArity: 3 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },

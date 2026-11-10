@@ -2248,6 +2248,72 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "remap",
+      "module": "imgproc",
+      "notes": "F32 map NN/bilinear resampling",
+      "sources": ["https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html"],
+      "status": "implemented",
+      "upstream": "remap",
+      "upstreamId": "imgproc.function.remap",
+      "wasmExport": "matRemapInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "convertMaps",
+      "module": "imgproc",
+      "notes": "F32 maps to CV_16SC2+CV_16UC1 fixed-point",
+      "sources": ["https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html"],
+      "status": "implemented",
+      "upstream": "convertMaps",
+      "upstreamId": "imgproc.function.convert-maps",
+      "wasmExport": "matConvertMapsInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "getRectSubPix",
+      "module": "imgproc",
+      "notes": "Bilinear sub-pixel patch extraction",
+      "sources": ["https://docs.opencv.org/4.13.0/da/d54/group__imgproc__transform.html"],
+      "status": "implemented",
+      "upstream": "getRectSubPix",
+      "upstreamId": "imgproc.function.get-rect-sub-pix",
+      "wasmExport": "matGetRectSubPixInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "demosaicing",
+      "module": "imgproc",
+      "notes": "Bayer mosaic to BGR; interpolation pattern differs",
+      "sources": ["https://docs.opencv.org/4.13.0/d8/d01/group__imgproc__color__conversions.html"],
+      "status": "partial",
+      "upstream": "demosaicing",
+      "upstreamId": "imgproc.function.demosaicing",
+      "wasmExport": "matDemosaicingInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "calcHist",
+      "module": "imgproc",
+      "notes": "F32 histogram bin counting",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/dc7/group__imgproc__hist.html"],
+      "status": "implemented",
+      "upstream": "calcHist",
+      "upstreamId": "imgproc.function.calc-hist",
+      "wasmExport": "matCalcHistInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "compareHist",
+      "module": "imgproc",
+      "notes": "Correlation/chi-square/intersection/Bhattacharyya",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/dc7/group__imgproc__hist.html"],
+      "status": "implemented",
+      "upstream": "compareHist",
+      "upstreamId": "imgproc.function.compare-hist",
+      "wasmExport": "matCompareHist"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "integral",
       "module": "imgproc",
       "notes": "Sum-only integral images with pinned source-depth gates, per-depth allowed sum depths, and multi-channel output.",
