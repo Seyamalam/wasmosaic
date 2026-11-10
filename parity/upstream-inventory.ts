@@ -114,6 +114,12 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.rotated-rectangle-intersection": { overloadCount: 1, runtimeArity: 3 },
   "imgproc.function.distance-transform-with-labels": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.min-enclosing-triangle": { overloadCount: 1, runtimeArity: 2 },
+  "imgproc.function.draw-contours": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.approx-poly-n": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.find-contours-link-runs": { overloadCount: 1, runtimeArity: 3 },
+  "imgproc.function.good-features-to-track": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.div-spectrums": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.hough-lines": { overloadCount: 1, runtimeArity: 0 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },

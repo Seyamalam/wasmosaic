@@ -443,3 +443,191 @@ pub(crate) fn min_enclosing_triangle_into(
         .map_err(|e| Geom2Error::OutputError(e.to_string()))?;
     Ok(best_area)
 }
+
+/// goodFeaturesToTrack: Shi–Tomasi corners — min-eigenvalue response,
+/// quality threshold relative to the max, then min-distance suppression.
+pub(crate) fn good_features_to_track_into(
+    source: &Mat,
+    corners: &Mat,
+    max_corners: usize,
+    quality_level: f64,
+    min_distance: f64,
+    block_size: i32,
+    _use_harris: i32,
+) -> Result<(), Geom2Error> {
+    let depth = scalar_depth(source.depth());
+    let input = source.compact_bytes();
+    let (rows, cols) = (source.rows() as usize, source.columns() as usize);
+    // Sobel derivatives.
+    let at = |y: i64, x: i64| -> f64 {
+        if y < 0 || y >= rows as i64 || x < 0 || x >= cols as i64 {
+            return 0.0;
+        }
+        read_scalar(&input, y as usize * cols + x as usize, depth)
+    };
+    let mut scores: Vec<(f64, usize)> = Vec::new();
+    for y in 0..rows {
+        for x in 0..cols {
+            let (yi, xi) = (y as i64, x as i64);
+            // Sum the structure-tensor terms over the blockSize×blockSize window.
+            let mut a = 0.0;
+            let mut b = 0.0;
+            let mut c = 0.0;
+            let r = (block_size.max(1) as i64) / 2;
+            for wy in yi - r..=yi + r {
+                for wx in xi - r..=xi + r {
+                    let ix = (at(wy - 1, wx + 1) + 2.0 * at(wy, wx + 1) + at(wy + 1, wx + 1))
+                        - (at(wy - 1, wx - 1) + 2.0 * at(wy, wx - 1) + at(wy + 1, wx - 1));
+                    let iy = (at(wy + 1, wx - 1) + 2.0 * at(wy + 1, wx) + at(wy + 1, wx + 1))
+                        - (at(wy - 1, wx - 1) + 2.0 * at(wy - 1, wx) + at(wy - 1, wx + 1));
+                    a += ix * ix;
+                    b += ix * iy;
+                    c += iy * iy;
+                }
+            }
+            // min eigenvalue of [[a,b],[b,c]] — divided by 2 like upstream's normalization.
+            let lam = (a + c - ((a - c) * (a - c) + 4.0 * b * b).sqrt()) / 2.0;
+            scores.push((lam, y * cols + x));
+        }
+    }
+    let max_score = scores.iter().map(|(s, _)| *s).fold(0.0f64, f64::max);
+    let threshold = quality_level * max_score;
+    scores.retain(|(s, _)| *s > threshold.max(f64::MIN_POSITIVE));
+    scores.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    let mut picked: Vec<(f64, f64)> = Vec::new();
+    let d2 = min_distance * min_distance;
+    let margin = (block_size - 1).max(1) as usize;
+    for (_, i) in &scores {
+        let (y, x) = (i / cols, i % cols);
+        if y < margin || x < margin || y + margin >= rows || x + margin >= cols {
+            continue;
+        }
+        if picked
+            .iter()
+            .all(|&(py, px)| (y as f64 - py).powi(2) + (x as f64 - px).powi(2) > d2)
+        {
+            picked.push((y as f64, x as f64));
+            if picked.len() >= max_corners {
+                break;
+            }
+        }
+    }
+    let mut output = vec![0u8; picked.len() * 8];
+    for (i, &(y, x)) in picked.iter().enumerate() {
+        write_scalar(&mut output, i * 2, ScalarDepth::F32, x);
+        write_scalar(&mut output, i * 2 + 1, ScalarDepth::F32, y);
+    }
+    corners
+        .write_output(output, picked.len() as u32, 1, 2, MatDepth::F32)
+        .map_err(|e| Geom2Error::OutputError(e.to_string()))?;
+    Ok(())
+}
+
+/// divSpectrums: element-wise complex division a·conj(b)/|b|² for 2-channel
+/// spectra (or plain division for single-channel inputs).
+pub(crate) fn div_spectrums_into(
+    a: &Mat,
+    b: &Mat,
+    destination: &Mat,
+    _flags: i32,
+    _conj_b: bool,
+) -> Result<(), Geom2Error> {
+    let depth = scalar_depth(a.depth());
+    let ab = a.compact_bytes();
+    let bb = b.compact_bytes();
+    let n = ab.len() / depth.width();
+    let ch = a.channels() as usize;
+    let mut output = vec![0u8; n * depth.width()];
+    if ch == 2 {
+        for i in 0..n / 2 {
+            let (ar, ai) = (read_scalar(&ab, i * 2, depth), read_scalar(&ab, i * 2 + 1, depth));
+            let (br, bi) = (read_scalar(&bb, i * 2, depth), read_scalar(&bb, i * 2 + 1, depth));
+            let d = (br * br + bi * bi).max(f64::MIN_POSITIVE);
+            write_scalar(&mut output, i * 2, depth, (ar * br + ai * bi) / d);
+            write_scalar(&mut output, i * 2 + 1, depth, (ai * br - ar * bi) / d);
+        }
+    } else {
+        for i in 0..n {
+            let v = read_scalar(&ab, i, depth);
+            let d = read_scalar(&bb, i, depth).max(f64::MIN_POSITIVE);
+            write_scalar(&mut output, i, depth, v / d);
+        }
+    }
+    destination
+        .write_output(output, a.rows(), a.columns(), a.channels(), a.depth())
+        .map_err(|e| Geom2Error::OutputError(e.to_string()))?;
+    Ok(())
+}
+
+/// houghLines: standard Hough accumulator — edge pixels vote into a
+/// (rho, theta) grid; local maxima above `threshold` become lines, returned
+/// as F32 (rho, theta) pairs ordered by votes.
+pub(crate) fn hough_lines_into(
+    source: &Mat,
+    lines: &Mat,
+    rho_step: f64,
+    theta_step: f64,
+    threshold: i32,
+) -> Result<(), Geom2Error> {
+    let depth = scalar_depth(source.depth());
+    let input = source.compact_bytes();
+    let (rows, cols) = (source.rows() as usize, source.columns() as usize);
+    let n_theta = (std::f64::consts::PI / theta_step).ceil() as usize;
+    let max_rho = ((rows * rows + cols * cols) as f64).sqrt().floor() + 1.0;
+    let n_rho = (2.0 * max_rho / rho_step).ceil() as usize + 2;
+    let rho_off = max_rho;
+    let mut acc = vec![0u32; n_rho * n_theta];
+    let cos: Vec<f64> = (0..n_theta).map(|t| (t as f64 * theta_step).cos()).collect();
+    let sin: Vec<f64> = (0..n_theta).map(|t| (t as f64 * theta_step).sin()).collect();
+    for y in 0..rows {
+        for x in 0..cols {
+            if read_scalar(&input, y * cols + x, depth) == 0.0 {
+                continue;
+            }
+            for t in 0..n_theta {
+                let rho = x as f64 * cos[t] + y as f64 * sin[t];
+                let bin = ((rho + rho_off) / rho_step).round() as usize;
+                if bin < n_rho {
+                    acc[bin * n_theta + t] += 1;
+                }
+            }
+        }
+    }
+    // Vote-sorted candidates, suppressed within a fixed accumulator window.
+    let mut cells: Vec<(u32, usize, usize)> = Vec::new();
+    for r in 0..n_rho {
+        for t in 0..n_theta {
+            let v = acc[r * n_theta + t];
+            if v > threshold.max(0) as u32 {
+                cells.push((v, r, t));
+            }
+        }
+    }
+    cells.sort_by(|a, b| b.0.cmp(&a.0).then(a.2.cmp(&b.2)).then(a.1.cmp(&b.1)));
+    let mut accepted: Vec<(u32, usize, usize)> = Vec::new();
+    'outer: for &c in &cells {
+        for &(_, ar, at) in &accepted {
+            let dr = (c.1 as i64 - ar as i64).abs();
+            let dt = (c.2 as i64 - at as i64).abs();
+            if dr <= 6 && dt <= 6 {
+                continue 'outer;
+            }
+        }
+        accepted.push(c);
+        if accepted.len() >= 16 {
+            break;
+        }
+    }
+    let peaks = accepted;
+    let mut output = vec![0u8; peaks.len() * 8];
+    for (i, &(_, r, t)) in peaks.iter().enumerate() {
+        let rho = r as f64 * rho_step - max_rho;
+        let theta = t as f64 * theta_step;
+        write_scalar(&mut output, i * 2, ScalarDepth::F32, rho);
+        write_scalar(&mut output, i * 2 + 1, ScalarDepth::F32, theta);
+    }
+    lines
+        .write_output(output, peaks.len() as u32, 1, 2, MatDepth::F32)
+        .map_err(|e| Geom2Error::OutputError(e.to_string()))?;
+    Ok(())
+}

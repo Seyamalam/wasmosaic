@@ -59,6 +59,7 @@ mod imgproc_canny_wasm;
 mod imgproc_color;
 mod imgproc_color_wasm;
 mod imgproc_contours;
+mod imgproc_contours2_wasm;
 mod imgproc_contours_wasm;
 mod imgproc_correlate;
 mod imgproc_draw;

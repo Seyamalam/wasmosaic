@@ -8,6 +8,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Contour, spectral, and feature batch: `drawContours` (chain outline and fill raster), `approxPolyN` (Douglas–Peucker reduced to an exact vertex count), `findContoursLinkRuns` (link-runs extraction variant), `goodFeaturesToTrack` (Shi–Tomasi min-eigenvalue corners with block-summed covariance and min-distance suppression), `divSpectrums` (element-wise complex spectral division), and `HoughLines` (standard Hough accumulator with vote-sorted suppression). **Full parity is now 200 of 488 families.**
+
+### Added
+
 - Convex geometry and analysis batch: `convexityDefects` (hull-vertex defect measurement), `blendLinear` (element-wise weighted blend), `rotatedRectangleIntersection` (rotated-rect clip to an F32 polygon), and `distanceTransformWithLabels` (Euclidean distance plus owning-component labels). `intersectConvexConvex` and `minEnclosingTriangle` ship as partials: the pinned upstream binding errors on the exercised call forms. **Full parity is now 194 of 488 families.**
 
 ### Added

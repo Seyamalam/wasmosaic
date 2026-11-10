@@ -695,6 +695,45 @@ export interface OpenCvBackend {
     labelType: number,
   ): void;
   matMinEnclosingTriangleInto(points: WasmMatHandle, triangle: WasmMatHandle): number;
+  matDrawContoursInto(
+    image: WasmMatHandle,
+    contours: WasmMatVectorHandle,
+    contourIndex: number,
+    color: Float64Array | number[],
+    thickness: number,
+    lineType: number,
+    offsetX: number,
+    offsetY: number,
+  ): void;
+  matApproxPolyNInto(
+    curve: WasmMatHandle,
+    approximation: WasmMatHandle,
+    nsides: number,
+    closed: boolean,
+  ): void;
+  matGoodFeaturesToTrackInto(
+    source: WasmMatHandle,
+    corners: WasmMatHandle,
+    maxCorners: number,
+    qualityLevel: number,
+    minDistance: number,
+    blockSize: number,
+    useHarris: number,
+  ): void;
+  matDivSpectrumsInto(
+    a: WasmMatHandle,
+    b: WasmMatHandle,
+    destination: WasmMatHandle,
+    flags: number,
+    conjB: boolean,
+  ): void;
+  matHoughLinesInto(
+    source: WasmMatHandle,
+    lines: WasmMatHandle,
+    rhoStep: number,
+    thetaStep: number,
+    threshold: number,
+  ): void;
   matIntegralInto(
     source: WasmMatHandle,
     sum: WasmMatHandle,
@@ -1683,6 +1722,42 @@ export interface OpenCv {
     labelType?: number,
   ): void;
   minEnclosingTriangle(points: Mat, triangle: Mat): number;
+  drawContours(
+    image: Mat,
+    contours: MatVector,
+    contourIdx: number,
+    color: Scalar,
+    thickness?: number,
+    lineType?: number,
+    hierarchy?: Mat,
+    maxLevel?: number,
+    offset?: Point,
+  ): void;
+  approxPolyN(curve: Mat, approxCurve: Mat, nsides: number, closed?: boolean): void;
+  findContoursLinkRuns(image: Mat, contours: MatVector, hierarchy: Mat): void;
+  goodFeaturesToTrack(
+    image: Mat,
+    corners: Mat,
+    maxCorners: number,
+    qualityLevel: number,
+    minDistance: number,
+    mask?: Mat,
+    blockSize?: number,
+    useHarrisDetector?: boolean,
+    k?: number,
+  ): void;
+  divSpectrums(a: Mat, b: Mat, dst: Mat, flags?: number, conjB?: boolean): void;
+  HoughLines(
+    image: Mat,
+    lines: Mat,
+    rho: number,
+    theta: number,
+    threshold: number,
+    srn?: number,
+    stn?: number,
+    min_theta?: number,
+    max_theta?: number,
+  ): void;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

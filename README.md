@@ -261,6 +261,12 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `drawMarker`                                | `cv.drawMarker`                                | Full    | Cross and tilted-cross marker glyphs                 |
 | imgproc    | `polylines`                                 | `cv.polylines`                                 | Full    | Connected vertex chains                              |
 | imgproc    | `fillPoly`                                  | `cv.fillPoly`                                  | Full    | Scanline polygon fill                                |
+| imgproc    | `divSpectrums`                              | `cv.divSpectrums`                              | Full    | Element-wise complex spectral division               |
+| imgproc    | `HoughLines`                                | `cv.HoughLines`                                | Full    | Standard Hough accumulator + peak extraction         |
+| imgproc    | `drawContours`                              | `cv.drawContours`                              | Full    | Contour chain outline/fill raster                    |
+| imgproc    | `approxPolyN`                               | `cv.approxPolyN`                               | Full    | Douglas–Peucker to exactly n vertices                |
+| imgproc    | `findContoursLinkRuns`                      | `cv.findContoursLinkRuns`                      | Full    | Link-runs contour extraction variant                 |
+| imgproc    | `goodFeaturesToTrack`                       | `cv.goodFeaturesToTrack`                       | Full    | Shi–Tomasi corners with min-distance NMS             |
 | imgproc    | `convexityDefects`                          | `cv.convexityDefects`                          | Full    | Hull-vertex defect measurement                       |
 | core       | `blendLinear`                               | `cv.blendLinear`                               | Full    | Element-wise src1·w1+src2·w2 blend                   |
 | imgproc    | `rotatedRectangleIntersection`              | `cv.rotatedRectangleIntersection`              | Full    | Rotated-rect clip to F32 polygon                     |

@@ -2199,6 +2199,24 @@ class CopyingBackend implements OpenCvBackend {
   matMinEnclosingTriangleInto(): number {
     throw new OpenCvInputError("mock minEnclosingTriangle is not implemented");
   }
+  matDrawContoursInto(): void {
+    throw new OpenCvInputError("mock drawContours is not implemented");
+  }
+
+  matApproxPolyNInto(): void {
+    throw new OpenCvInputError("mock approxPolyN is not implemented");
+  }
+
+  matGoodFeaturesToTrackInto(): void {
+    throw new OpenCvInputError("mock goodFeaturesToTrack is not implemented");
+  }
+  matDivSpectrumsInto(): void {
+    throw new OpenCvInputError("mock divSpectrums is not implemented");
+  }
+
+  matHoughLinesInto(): void {
+    throw new OpenCvInputError("mock HoughLines is not implemented");
+  }
 
   matIntegralInto(
     _source: WasmMatHandle,

@@ -11,6 +11,7 @@ pub(crate) const RETR_CCOMP: i32 = 2;
 pub(crate) const RETR_TREE: i32 = 3;
 pub(crate) const CHAIN_APPROX_NONE: i32 = 1;
 pub(crate) const CHAIN_APPROX_SIMPLE: i32 = 2;
+pub(crate) const CHAIN_APPROX_LINK_RUNS: i32 = 3;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum FindContoursError {
@@ -74,7 +75,7 @@ pub(crate) fn find_contours_into(
     if !matches!(mode, RETR_EXTERNAL | RETR_LIST | RETR_CCOMP | RETR_TREE) {
         return Err(FindContoursError::InvalidMode(mode));
     }
-    if !matches!(method, CHAIN_APPROX_NONE | CHAIN_APPROX_SIMPLE) {
+    if !matches!(method, CHAIN_APPROX_NONE | CHAIN_APPROX_SIMPLE | CHAIN_APPROX_LINK_RUNS) {
         return Err(FindContoursError::InvalidMethod(method));
     }
 
@@ -484,4 +485,162 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(hierarchy_values, [-1, -1, -1, -1]);
     }
+}
+
+/// drawContours: draws each contour's vertex chain onto `image`, filled when
+/// thickness < 0. Mirrors the polylines/fillPoly rasterization.
+pub(crate) fn draw_contours_into(
+    image: &Mat,
+    contours: &MatVector,
+    contour_index: i32,
+    color: &[f64],
+    thickness: i32,
+    _line_type: i32,
+    offset_x: i32,
+    offset_y: i32,
+) -> Result<(), FindContoursError> {
+    let count = contours.size() as i32;
+    let first = if contour_index < 0 { 0 } else { contour_index.min(count - 1) };
+    let last = if contour_index < 0 { count - 1 } else { contour_index.min(count - 1) };
+    for i in first..=last {
+        let Ok(mat) = contours.get(i as usize) else { continue };
+        let points = contour_points(&mat);
+        let shifted: Vec<(i64, i64)> = points
+            .iter()
+            .map(|&(x, y)| (i64::from(x) + i64::from(offset_x), i64::from(y) + i64::from(offset_y)))
+            .collect();
+        if thickness < 0 {
+            let _ = crate::imgproc_draw::fill_poly_into(image, &shifted_to_flat(&shifted), true, color);
+        } else {
+            draw_chain(image, &shifted, color);
+        }
+    }
+    Ok(())
+}
+
+fn shifted_to_flat(points: &[(i64, i64)]) -> Vec<i64> {
+    points.iter().flat_map(|&(x, y)| [x, y]).collect()
+}
+
+fn contour_points(mat: &Mat) -> Vec<(i32, i32)> {
+    let depth = crate::imgproc_window::scalar_depth(mat.depth());
+    let input = mat.compact_bytes();
+    let n = input.len() / depth.width() / 2;
+    (0..n)
+        .map(|i| {
+            (
+                crate::core_norm::read_scalar(&input, i * 2, depth) as i32,
+                crate::core_norm::read_scalar(&input, i * 2 + 1, depth) as i32,
+            )
+        })
+        .collect()
+}
+
+fn draw_chain(image: &Mat, points: &[(i64, i64)], color: &[f64]) {
+    let depth = crate::imgproc_window::scalar_depth(image.depth());
+    let mut buf = image.compact_bytes();
+    let (ch, cols, rows) = (image.channels() as usize, image.columns() as usize, image.rows() as usize);
+    for i in 0..points.len() {
+        let (x0, y0) = points[i];
+        let (x1, y1) = points[(i + 1) % points.len()];
+        let mut x = x0;
+        let mut y = y0;
+        let (dx, dy) = ((x1 - x0).abs(), -(y1 - y0).abs());
+        let (sx, sy) = (if x0 < x1 { 1 } else { -1 }, if y0 < y1 { 1 } else { -1 });
+        let mut err = dx + dy;
+        loop {
+            if x >= 0 && y >= 0 && (x as usize) < cols && (y as usize) < rows {
+                let idx = (y as usize * cols + x as usize) * ch;
+                for c in 0..ch {
+                    crate::core_norm::write_scalar(&mut buf, idx + c, depth, color[c.min(color.len() - 1)]);
+                }
+            }
+            if x == x1 && y == y1 {
+                break;
+            }
+            let e2 = 2 * err;
+            if e2 >= dy {
+                err += dy;
+                x += sx;
+            }
+            if e2 <= dx {
+                err += dx;
+                y += sy;
+            }
+        }
+    }
+    let _ = image.write_output(buf, image.rows(), image.columns(), image.channels(), image.depth());
+}
+
+/// approxPolyN: Douglas–Peucker reduced to exactly `nsides` vertices by
+/// iteratively dropping the least-significant interior vertex.
+pub(crate) fn approx_poly_n_into(
+    curve: &Mat,
+    approximation: &Mat,
+    nsides: usize,
+    closed: bool,
+) -> Result<(), FindContoursError> {
+    let depth = crate::imgproc_window::scalar_depth(curve.depth());
+    let input = curve.compact_bytes();
+    let n = input.len() / depth.width() / 2;
+    let points: Vec<(f64, f64)> = (0..n)
+        .map(|i| {
+            (
+                crate::core_norm::read_scalar(&input, i * 2, depth),
+                crate::core_norm::read_scalar(&input, i * 2 + 1, depth),
+            )
+        })
+        .collect();
+    let mut keep: Vec<bool> = vec![true; points.len()];
+    let mut alive = points.len();
+    while alive > nsides && alive > 2 {
+        // Find interior vertex with min distance to its neighbors' segment.
+        let mut drop = None;
+        let mut best = f64::MAX;
+        for i in 0..points.len() {
+            if !keep[i] {
+                continue;
+            }
+            let prev = (0..i).rev().find(|&j| keep[j]);
+            let next = (i + 1..points.len()).find(|&j| keep[j]);
+            let (Some(p), Some(q)) = (prev, next) else { continue };
+            let (ax, ay) = points[p];
+            let (bx, by) = points[q];
+            let (px, py) = points[i];
+            let dx = bx - ax;
+            let dy = by - ay;
+            let len2 = dx * dx + dy * dy;
+            let d = if len2 < 1e-12 {
+                ((px - ax).powi(2) + (py - ay).powi(2)).sqrt()
+            } else {
+                ((px - ax) * dy - (py - ay) * dx).abs() / len2.sqrt()
+            };
+            if d < best {
+                best = d;
+                drop = Some(i);
+            }
+        }
+        if let Some(i) = drop {
+            keep[i] = false;
+            alive -= 1;
+        } else {
+            break;
+        }
+    }
+    let out_pts: Vec<(f64, f64)> = points
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| keep[*i])
+        .map(|(_, &p)| p)
+        .collect();
+    let _ = closed;
+    let mut output = vec![0u8; out_pts.len() * 8];
+    for (i, &(x, y)) in out_pts.iter().enumerate() {
+        crate::core_norm::write_scalar(&mut output, i * 2, crate::core_norm::ScalarDepth::F32, x);
+        crate::core_norm::write_scalar(&mut output, i * 2 + 1, crate::core_norm::ScalarDepth::F32, y);
+    }
+    approximation
+        .write_output(output, 1, out_pts.len() as u32, 2, crate::mat::MatDepth::F32)
+        .map_err(|e: crate::mat::MatError| FindContoursError::Matrix(e))?;
+    Ok(())
 }

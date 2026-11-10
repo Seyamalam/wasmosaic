@@ -2402,6 +2402,139 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  drawContours(
+    ...arguments_: [
+      image: Mat,
+      contours: MatVector,
+      contourIdx: number,
+      color: Scalar,
+      thickness?: number,
+      lineType?: number,
+      hierarchy?: Mat,
+      maxLevel?: number,
+      offset?: Point,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 9, "drawContours");
+    const [
+      image,
+      contours,
+      contourIdx,
+      color,
+      thickness = 1,
+      lineType = 8,
+      ,
+      ,
+      offset = { x: 0, y: 0 },
+    ] = arguments_;
+    this.#backend.matDrawContoursInto(
+      matHandleForBinding(image),
+      contours.handleForBackend(),
+      toWasmI32(contourIdx),
+      scalarForBinding(color),
+      toWasmI32(thickness),
+      toWasmI32(lineType),
+      toWasmI32(offset.x),
+      toWasmI32(offset.y),
+    );
+  }
+
+  approxPolyN(
+    ...arguments_: [curve: Mat, approxCurve: Mat, nsides: number, closed?: boolean]
+  ): void {
+    requireArityRange(arguments_.length, 3, 4, "approxPolyN");
+    const [curve, approxCurve, nsides, closed = false] = arguments_;
+    this.#backend.matApproxPolyNInto(
+      matHandleForBinding(curve),
+      matHandleForBinding(approxCurve),
+      toWasmI32(nsides),
+      closed,
+    );
+  }
+
+  findContoursLinkRuns(image: Mat, contours: MatVector, hierarchy: Mat): void {
+    this.#backend.matFindContoursInto(
+      matHandleForBinding(image),
+      contours.handleForBackend(),
+      matHandleForBinding(hierarchy),
+      toWasmI32(2),
+      toWasmI32(3),
+      0,
+      0,
+    );
+  }
+
+  goodFeaturesToTrack(
+    ...arguments_: [
+      image: Mat,
+      corners: Mat,
+      maxCorners: number,
+      qualityLevel: number,
+      minDistance: number,
+      mask?: Mat,
+      blockSize?: number,
+      useHarrisDetector?: boolean,
+      k?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 9, "goodFeaturesToTrack");
+    const [
+      image,
+      corners,
+      maxCorners,
+      qualityLevel,
+      minDistance,
+      ,
+      blockSize = 3,
+      useHarris = false,
+    ] = arguments_;
+    this.#backend.matGoodFeaturesToTrackInto(
+      matHandleForBinding(image),
+      matHandleForBinding(corners),
+      toWasmI32(maxCorners),
+      qualityLevel,
+      minDistance,
+      toWasmI32(blockSize),
+      useHarris ? 1 : 0,
+    );
+  }
+
+  divSpectrums(...arguments_: [a: Mat, b: Mat, dst: Mat, flags?: number, conjB?: boolean]): void {
+    requireArityRange(arguments_.length, 3, 5, "divSpectrums");
+    const [a, b, dst, flags = 0, conjB = false] = arguments_;
+    this.#backend.matDivSpectrumsInto(
+      matHandleForBinding(a),
+      matHandleForBinding(b),
+      matHandleForBinding(dst),
+      toWasmI32(flags),
+      conjB,
+    );
+  }
+
+  HoughLines(
+    ...arguments_: [
+      image: Mat,
+      lines: Mat,
+      rho: number,
+      theta: number,
+      threshold: number,
+      srn?: number,
+      stn?: number,
+      min_theta?: number,
+      max_theta?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 9, "HoughLines");
+    const [image, lines, rho, theta, threshold] = arguments_;
+    this.#backend.matHoughLinesInto(
+      matHandleForBinding(image),
+      matHandleForBinding(lines),
+      rho,
+      theta,
+      toWasmI32(threshold),
+    );
+  }
+
   compareHist(h1: Mat, h2: Mat, method: number): number {
     return this.#backend.matCompareHist(
       matHandleForBinding(h1),

@@ -1784,6 +1784,75 @@ export function runCoreOpsCases(cv, reference) {
     return { area, triangle: api.summary(triangle) };
   });
 
+  // ---- contour batch 2
+  const contourMask = () =>
+    api.mat(4, 5, 1, 0, [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
+  run("drawContours", (handles) => {
+    const mask = track(handles, contourMask());
+    const contours = reference ? new cv.MatVector() : cv.createMatVector();
+    const hierarchy = track(handles, api.empty());
+    cv.findContours(mask, contours, hierarchy, 1, 2);
+    const image = track(handles, api.mat(4, 5, 1, 0, Array.from({ length: 20 }).fill(0)));
+    cv.drawContours(image, contours, -1, [255, 0, 0, 0], 1, 8, hierarchy, 2, { x: 0, y: 0 });
+    return { image: api.summary(image) };
+  });
+  run("approxPolyN", (handles) => {
+    const curve = track(handles, api.mat(1, 4, 2, 5, [0, 0, 1, 0.1, 2, 0, 1.5, 1]));
+    const approx = track(handles, api.empty());
+    cv.approxPolyN(curve, approx, 3);
+    return { approx: api.summary(approx) };
+  });
+  run("goodFeaturesToTrack", (handles) => {
+    const source = track(
+      handles,
+      api.mat(
+        6,
+        6,
+        1,
+        0,
+        [
+          0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 0, 0, 0, 255, 255, 255, 0, 0, 0, 255, 255, 255, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ],
+      ),
+    );
+    const corners = track(handles, api.empty());
+    cv.goodFeaturesToTrack(source, corners, 4, 0.01, 2);
+    return { corners: api.summary(corners) };
+  });
+  run("findContoursLinkRuns", (handles) => {
+    const mask = track(handles, contourMask());
+    const contours = reference ? new cv.MatVector() : cv.createMatVector();
+    const hierarchy = track(handles, api.empty());
+    cv.findContoursLinkRuns(mask, contours, hierarchy);
+    return { count: contours.size() };
+  });
+
+  run("divSpectrums", (handles) => {
+    const a = track(handles, api.mat(2, 2, 2, 5, [3, 4, 1, 0, 0, 2, 5, 0]));
+    const b = track(handles, api.mat(2, 2, 2, 5, [1, 1, 2, 0, 0, 1, 1, 0]));
+    const destination = track(handles, api.empty());
+    cv.divSpectrums(a, b, destination, 0, false);
+    return { destination: api.summary(destination) };
+  });
+  const houghEdge = () => {
+    const values = Array.from({ length: 64 }).fill(0);
+    for (const [x, y] of [
+      [3, 2],
+      [4, 3],
+      [5, 4],
+      [6, 5],
+    ])
+      values[y * 8 + x] = 255;
+    return api.mat(8, 8, 1, 0, values);
+  };
+  run("HoughLines", (handles) => {
+    const edge = track(handles, houghEdge());
+    const lines = track(handles, api.empty());
+    cv.HoughLines(edge, lines, 1, Math.PI / 180, 3);
+    return { lines: api.summary(lines) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1880,6 +1949,12 @@ export function runCoreOpsCases(cv, reference) {
       rotatedRectangleIntersection: cv.rotatedRectangleIntersection.length,
       distanceTransformWithLabels: cv.distanceTransformWithLabels.length,
       minEnclosingTriangle: cv.minEnclosingTriangle.length,
+      drawContours: cv.drawContours.length,
+      approxPolyN: cv.approxPolyN.length,
+      findContoursLinkRuns: cv.findContoursLinkRuns.length,
+      goodFeaturesToTrack: cv.goodFeaturesToTrack.length,
+      divSpectrums: cv.divSpectrums.length,
+      HoughLines: cv.HoughLines.length,
     },
   }));
 

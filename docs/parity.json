@@ -2534,6 +2534,72 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "drawContours",
+      "module": "imgproc",
+      "notes": "Contour chain outline/fill raster",
+      "sources": ["https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html"],
+      "status": "implemented",
+      "upstream": "drawContours",
+      "upstreamId": "imgproc.function.draw-contours",
+      "wasmExport": "matDrawContoursInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "approxPolyN",
+      "module": "imgproc",
+      "notes": "Douglas–Peucker to exactly n vertices",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "approxPolyN",
+      "upstreamId": "imgproc.function.approx-poly-n",
+      "wasmExport": "matApproxPolyNInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "findContoursLinkRuns",
+      "module": "imgproc",
+      "notes": "Link-runs contour extraction variant",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "findContoursLinkRuns",
+      "upstreamId": "imgproc.function.find-contours-link-runs",
+      "wasmExport": "matFindContoursInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "goodFeaturesToTrack",
+      "module": "imgproc",
+      "notes": "Shi–Tomasi min-eigenvalue corners + NMS",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "goodFeaturesToTrack",
+      "upstreamId": "imgproc.function.good-features-to-track",
+      "wasmExport": "matGoodFeaturesToTrackInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "divSpectrums",
+      "module": "imgproc",
+      "notes": "Element-wise complex spectral division",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "divSpectrums",
+      "upstreamId": "imgproc.function.div-spectrums",
+      "wasmExport": "matDivSpectrumsInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "HoughLines",
+      "module": "imgproc",
+      "notes": "Standard Hough accumulator + peak extraction",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "HoughLines",
+      "upstreamId": "imgproc.function.hough-lines",
+      "wasmExport": "matHoughLinesInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "integral",
       "module": "imgproc",
       "notes": "Sum-only integral images with pinned source-depth gates, per-depth allowed sum depths, and multi-channel output.",

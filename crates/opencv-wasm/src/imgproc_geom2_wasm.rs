@@ -71,3 +71,48 @@ pub fn mat_min_enclosing_triangle_into(
 ) -> Result<f64, JsError> {
     imgproc_geom2::min_enclosing_triangle_into(points, triangle).map_err(JsError::from)
 }
+
+#[wasm_bindgen(js_name = matGoodFeaturesToTrackInto)]
+pub fn mat_good_features_to_track_into(
+    source: &Mat,
+    corners: &Mat,
+    max_corners: i32,
+    quality_level: f64,
+    min_distance: f64,
+    block_size: i32,
+    use_harris: i32,
+) -> Result<(), JsError> {
+    imgproc_geom2::good_features_to_track_into(
+        source,
+        corners,
+        max_corners.max(0) as usize,
+        quality_level,
+        min_distance,
+        block_size,
+        use_harris,
+    )
+    .map_err(JsError::from)
+}
+
+#[wasm_bindgen(js_name = matDivSpectrumsInto)]
+pub fn mat_div_spectrums_into(
+    a: &Mat,
+    b: &Mat,
+    destination: &Mat,
+    flags: i32,
+    conj_b: bool,
+) -> Result<(), JsError> {
+    imgproc_geom2::div_spectrums_into(a, b, destination, flags, conj_b).map_err(JsError::from)
+}
+
+#[wasm_bindgen(js_name = matHoughLinesInto)]
+pub fn mat_hough_lines_into(
+    source: &Mat,
+    lines: &Mat,
+    rho_step: f64,
+    theta_step: f64,
+    threshold: i32,
+) -> Result<(), JsError> {
+    imgproc_geom2::hough_lines_into(source, lines, rho_step, theta_step, threshold)
+        .map_err(JsError::from)
+}
