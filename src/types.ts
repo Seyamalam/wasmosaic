@@ -8,6 +8,7 @@ import type {
 import type { KAZE, KAZEOptions, WasmKAZEFactory } from "./kaze.js";
 import type { ORB, ORBOptions, ORB_ScoreTypeNamespace, WasmORBFactory } from "./orb.js";
 import type { GFTTDetector, GFTTDetectorOptions, WasmGFTTDetectorFactory } from "./gftt.js";
+import type { CLAHE, CLAHEOptions, WasmCLAHEFactory } from "./clahe.js";
 import type { MSER, MSEROptions, WasmMSERFactory } from "./mser.js";
 import type {
   TonemapDrago,
@@ -214,6 +215,7 @@ export interface OpenCvBackend {
   readonly GFTTDetector: WasmGFTTDetectorFactory;
   readonly KAZE: WasmKAZEFactory;
   readonly ORB: WasmORBFactory;
+  readonly CLAHEConfig: WasmCLAHEFactory;
   readonly MSERConfig: WasmMSERFactory;
   readonly TonemapDrago: WasmTonemapDragoFactory;
   readonly TonemapMantiuk: WasmTonemapMantiukFactory;
@@ -1307,6 +1309,7 @@ export interface OpenCv {
   createAgastFeatureDetector(options?: AgastFeatureDetectorOptions): AgastFeatureDetector;
   createFastFeatureDetector(options?: FastFeatureDetectorOptions): FastFeatureDetector;
   createGFTTDetector(options?: GFTTDetectorOptions): GFTTDetector;
+  createCLAHE(options?: CLAHEOptions): CLAHE;
   createMSER(options?: MSEROptions): MSER;
   createMatVector(): MatVector;
   createPointVector(): PointVector;

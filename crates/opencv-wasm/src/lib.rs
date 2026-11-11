@@ -56,6 +56,8 @@ mod imgproc_border;
 mod imgproc_border_wasm;
 mod imgproc_canny;
 mod imgproc_canny_wasm;
+mod imgproc_clahe;
+mod imgproc_clahe_wasm;
 mod imgproc_color;
 mod imgproc_color_wasm;
 mod imgproc_contours;
@@ -99,7 +101,7 @@ mod mutable_storage;
 mod photo_tonemap;
 mod photo_tonemap_wasm;
 
-pub use mat::{Mat, MatDepth, mat_empty, mat_from_u8, mat_zeros_u8};
+pub use mat::{Mat, MatDepth, mat_empty, mat_from_u8, mat_from_u16, mat_zeros_u8};
 
 const RGBA_CHANNELS: u32 = 4;
 

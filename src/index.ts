@@ -42,6 +42,8 @@ export type {
   WasmGFTTDetectorFactory,
   WasmGFTTDetectorHandle,
 } from "./gftt.js";
+export { CLAHE, CLAHE_DEFAULTS } from "./clahe.js";
+export type { CLAHEOptions, WasmCLAHEFactory, WasmCLAHEHandle } from "./clahe.js";
 export { MSER, MSER_DEFAULTS } from "./mser.js";
 export type { MSEROptions, WasmMSERFactory, WasmMSERHandle } from "./mser.js";
 export { Tonemap, TonemapDrago, TonemapMantiuk, TonemapReinhard } from "./tonemap.js";

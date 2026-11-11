@@ -19,7 +19,9 @@ import { ORB, ORB_FAST_SCORE, ORB_HARRIS_SCORE, ORB_ScoreType, validateORBOption
 import type { ORBOptions } from "./orb.js";
 import { GFTTDetector, validateGFTTDetectorOptions } from "./gftt.js";
 import type { GFTTDetectorOptions } from "./gftt.js";
+import { CLAHE, validateCLAHEOptions } from "./clahe.js";
 import { MSER, validateMSEROptions } from "./mser.js";
+import type { CLAHEOptions } from "./clahe.js";
 import type { MSEROptions } from "./mser.js";
 import { TonemapDrago, TonemapMantiuk, TonemapReinhard } from "./tonemap.js";
 import {
@@ -597,6 +599,17 @@ class WasmOpenCv implements OpenCv {
         options.blockSize,
         options.useHarrisDetector,
         options.k,
+      ),
+    );
+  }
+
+  createCLAHE(options: CLAHEOptions = {}): CLAHE {
+    validateCLAHEOptions(options);
+    return new CLAHE(
+      this.#backend.CLAHEConfig.create(
+        options.clipLimit,
+        options.tileGridSize?.width,
+        options.tileGridSize?.height,
       ),
     );
   }

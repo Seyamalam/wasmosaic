@@ -303,6 +303,13 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `cornerMinEigenVal`                         | `cv.cornerMinEigenVal`                         | Full    | Normalized min-eigenvalue corner map                 |
 | imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks           |
 | imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Partial | Nearest/linear projective sampling                   |
+| imgproc    | `createCLAHE`                               | `cv.CLAHE` constructor                         | Partial | Static factory absent from pinned artifact           |
+| imgproc    | `CLAHE.apply`                               | `cv.CLAHE.apply`                               | Full    | U8/U16 tiles, clip/redistribute, bilinear LUT        |
+| imgproc    | `CLAHE.collectGarbage`                      | `cv.CLAHE.collectGarbage`                      | Full    | Exact arity and no-op behavior                       |
+| imgproc    | `CLAHE.getClipLimit`                        | `cv.CLAHE.getClipLimit`                        | Full    | Exact F64 state and lifecycle                        |
+| imgproc    | `CLAHE.getTilesGridSize`                    | `cv.CLAHE.getTilesGridSize`                    | Full    | Exact size state and lifecycle                       |
+| imgproc    | `CLAHE.setClipLimit`                        | `cv.CLAHE.setClipLimit`                        | Full    | Exact number coercion and call contract              |
+| imgproc    | `CLAHE.setTilesGridSize`                    | `cv.CLAHE.setTilesGridSize`                    | Full    | Exact size coercion and call contract                |
 | photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process              |
 | photo      | `createTonemapMantiuk`                      | `cv.createTonemapMantiuk`                      | Partial | Global factory absent; no pixel process              |
 | photo      | `createTonemapReinhard`                     | `cv.createTonemapReinhard`                     | Partial | Global factory absent; no pixel process              |
@@ -323,7 +330,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | photo      | `TonemapReinhard.setIntensity`              | `cv.TonemapReinhard.setIntensity`              | Full    | Exact float coercion and call contract               |
 | photo      | `TonemapReinhard.setLightAdaptation`        | `cv.TonemapReinhard.setLightAdaptation`        | Full    | Exact float coercion and call contract               |
 
-Current full parity is **203 of 488 (41.60%)**. There are **50 partial families**, for **253 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
+Current full parity is **209 of 488 (42.83%)**. There are **51 partial families**, for **260 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
 
 The fixture passes the complete pinned browser contract for `determinant`. The function requires exactly one live `Mat` and accepts only nonempty square single-channel F32 or F64 matrices, including non-contiguous regions. It preserves the input, matches the direct 1x1, 2x2, and 3x3 paths with signed-zero and non-finite propagation, and keeps F32 and F64 arithmetic distinct during elimination for larger matrices. The audit locks the absolute pivot cutoffs, exact cutoff acceptance, row-swap signs, singular positive zero, stored-F32 widening in the small formulas, and Hilbert precision. Integer, multichannel, nonsquare, empty, deleted, and non-Mat inputs reject before computation.
 

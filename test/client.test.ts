@@ -22,6 +22,7 @@ import {
   KAZE_DEFAULTS,
   KAZE_DiffusivityType,
   KAZEDiffusivity,
+  CLAHE_DEFAULTS,
   MSER,
   MSER_DEFAULTS,
   OpenCvInputError,
@@ -57,6 +58,8 @@ import type {
   WasmGFTTDetectorHandle,
   WasmKAZEFactory,
   WasmKAZEHandle,
+  WasmCLAHEFactory,
+  WasmCLAHEHandle,
   WasmMSERFactory,
   WasmMSERHandle,
   WasmMatHandle,
@@ -383,6 +386,51 @@ class CopyingGFTTDetectorHandle implements WasmGFTTDetectorHandle {
 
   setQualityLevel(value: number): void {
     this.#qualityLevel = value;
+  }
+}
+
+class CopyingCLAHEHandle implements WasmCLAHEHandle {
+  #clipLimit: number;
+  #freed = false;
+  #tilesX: number;
+  #tilesY: number;
+
+  constructor(
+    clipLimit: number,
+    tilesX: number,
+    tilesY: number,
+    readonly onFree: () => void,
+  ) {
+    this.#clipLimit = clipLimit;
+    this.#tilesX = tilesX;
+    this.#tilesY = tilesY;
+  }
+
+  apply(): void {}
+
+  collectGarbage(): void {}
+
+  free(): void {
+    if (this.#freed) return;
+    this.#freed = true;
+    this.onFree();
+  }
+
+  getClipLimit(): number {
+    return this.#clipLimit;
+  }
+
+  getTilesGridSize(): ArrayLike<number> {
+    return [this.#tilesX, this.#tilesY];
+  }
+
+  setClipLimit(value: number): void {
+    this.#clipLimit = value;
+  }
+
+  setTilesGridSize(width: number, height: number): void {
+    this.#tilesX = width;
+    this.#tilesY = height;
   }
 }
 
@@ -1055,6 +1103,7 @@ class CopyingBackend implements OpenCvBackend {
   #fastFeatureDetectorFreeCount = 0;
   #gfttDetectorFreeCount = 0;
   #kazeFreeCount = 0;
+  #claheFreeCount = 0;
   #mserFreeCount = 0;
   #orbFreeCount = 0;
   #tonemapFreeCount = 0;
@@ -1175,6 +1224,18 @@ class CopyingBackend implements OpenCvBackend {
       ),
   };
 
+  readonly CLAHEConfig: WasmCLAHEFactory = {
+    create: (clipLimit, tilesX, tilesY): WasmCLAHEHandle =>
+      new CopyingCLAHEHandle(
+        clipLimit ?? CLAHE_DEFAULTS.clipLimit,
+        tilesX ?? CLAHE_DEFAULTS.tileGridSize.width,
+        tilesY ?? CLAHE_DEFAULTS.tileGridSize.height,
+        () => {
+          this.#claheFreeCount += 1;
+        },
+      ),
+  };
+
   readonly MSERConfig: WasmMSERFactory = {
     create: (delta, minArea, maxArea, pass2Only): WasmMSERHandle =>
       new CopyingMSERHandle(
@@ -1253,6 +1314,10 @@ class CopyingBackend implements OpenCvBackend {
 
   get orbFreeCount(): number {
     return this.#orbFreeCount;
+  }
+
+  get claheFreeCount(): number {
+    return this.#claheFreeCount;
   }
 
   get mserFreeCount(): number {
@@ -5920,6 +5985,38 @@ describe("OpenCv client", () => {
     expect(() => localClient.createMSER({ delta: 1.5 })).toThrow(OpenCvInputError);
     expect(() => localClient.createMSER({ minArea: -2_147_483_649 })).toThrow(OpenCvInputError);
     expect(() => localClient.createMSER({ maxArea: 2_147_483_648 })).toThrow(OpenCvInputError);
+  });
+
+  test("creates a Rust-owned CLAHE processor with pinned defaults and setters", () => {
+    const backend = new CopyingBackend();
+    const localClient = createOpenCv(backend);
+    const clahe = localClient.createCLAHE();
+
+    expect(clahe.getClipLimit()).toBe(CLAHE_DEFAULTS.clipLimit);
+    expect(clahe.getTilesGridSize()).toEqual({ width: 8, height: 8 });
+
+    clahe.setClipLimit(12);
+    clahe.setTilesGridSize({ width: 4, height: 6 });
+    expect(clahe.getClipLimit()).toBe(12);
+    expect(clahe.getTilesGridSize()).toEqual({ width: 4, height: 6 });
+    clahe.collectGarbage();
+
+    const configured = localClient.createCLAHE({
+      clipLimit: 9,
+      tileGridSize: { width: 2, height: 3 },
+    });
+    expect(configured.getClipLimit()).toBe(9);
+    expect(configured.getTilesGridSize()).toEqual({ width: 2, height: 3 });
+
+    clahe.delete();
+    configured.dispose();
+    expect(() => clahe.delete()).toThrow(BindingError);
+    expect(backend.claheFreeCount).toBe(2);
+
+    expect(() => localClient.createCLAHE({ clipLimit: Number.NaN })).toThrow(OpenCvInputError);
+    expect(() => localClient.createCLAHE({ tileGridSize: { width: 0, height: 4 } })).toThrow(
+      OpenCvInputError,
+    );
   });
 
   test("creates all tone-mapping state families from their pinned constructor defaults", () => {

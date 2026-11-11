@@ -1,3 +1,4 @@
+import type { WasmCLAHEHandle } from "./clahe.js";
 import type { WasmMatHandle } from "./mat.js";
 import type { WasmMatVectorHandle } from "./mat-vector.js";
 import type { WasmAKAZEHandle } from "./akaze.js";
@@ -157,6 +158,22 @@ declare module "#wasm" {
     setMaxFeatures(value: number): void;
     setMinDistance(value: number): void;
     setQualityLevel(value: number): void;
+  }
+
+  export class CLAHEConfig implements WasmCLAHEHandle {
+    private constructor();
+    static create(
+      clipLimit?: number | null,
+      tilesX?: number | null,
+      tilesY?: number | null,
+    ): CLAHEConfig;
+    apply(source: WasmMatHandle, destination: WasmMatHandle): void;
+    collectGarbage(): void;
+    free(): void;
+    getClipLimit(): number;
+    getTilesGridSize(): ArrayLike<number>;
+    setClipLimit(value: number): void;
+    setTilesGridSize(width: number, height: number): void;
   }
 
   export class MSERConfig implements WasmMSERHandle {

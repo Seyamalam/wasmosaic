@@ -1871,6 +1871,65 @@ export function runCoreOpsCases(cv, reference) {
     return { rect };
   });
 
+  // ---- CLAHE: apply on U8/U16, getters/setters, errors
+  const makeClahe = (clip, width, height) =>
+    reference
+      ? new cv.CLAHE(clip, new cv.Size(width, height))
+      : cv.createCLAHE({ clipLimit: clip, tileGridSize: { width, height } });
+  for (const [clip, tw, th] of /** @type {[number, number, number][]} */ ([
+    [10, 4, 4],
+    [40, 8, 8],
+    [5, 2, 2],
+    [1, 16, 16],
+  ])) {
+    run(`clahe/u8/c${clip}/t${tw}x${th}`, (handles) => {
+      const clahe = track(handles, makeClahe(clip, tw, th));
+      const source = track(handles, api.mat(8, 8, 1, 0, arrays[0](64)));
+      const destination = track(handles, api.empty());
+      clahe.apply(source, destination);
+      return { destination: api.summary(destination) };
+    });
+  }
+  run("clahe/defaults", (handles) => {
+    const clahe = track(handles, reference ? new cv.CLAHE() : cv.createCLAHE());
+    const grid = clahe.getTilesGridSize();
+    return { clip: clahe.getClipLimit(), grid: { width: grid.width, height: grid.height } };
+  });
+  run("clahe/u16", (handles) => {
+    const clahe = track(handles, makeClahe(10, 4, 4));
+    const source = track(handles, api.mat(8, 8, 1, 2, arrays[2](64)));
+    const destination = track(handles, api.empty());
+    clahe.apply(source, destination);
+    return { destination: api.summary(destination) };
+  });
+  run("clahe/config", (handles) => {
+    const clahe = track(handles, makeClahe(12, 3, 5));
+    const before = clahe.getTilesGridSize();
+    const beforeClip = clahe.getClipLimit();
+    clahe.setClipLimit(7);
+    clahe.setTilesGridSize(reference ? new cv.Size(6, 2) : { width: 6, height: 2 });
+    const after = clahe.getTilesGridSize();
+    clahe.collectGarbage();
+    return {
+      before: { clip: beforeClip, width: before.width, height: before.height },
+      after: { clip: clahe.getClipLimit(), width: after.width, height: after.height },
+    };
+  });
+  run("clahe/error/3ch", (handles) => {
+    const clahe = track(handles, makeClahe(10, 4, 4));
+    const source = track(handles, api.mat(4, 4, 3, 0, arrays[0](48)));
+    const destination = track(handles, api.empty());
+    clahe.apply(source, destination);
+    return { destination: api.summary(destination) };
+  });
+  run("clahe/error/f32", (handles) => {
+    const clahe = track(handles, makeClahe(10, 4, 4));
+    const source = track(handles, api.mat(4, 4, 1, 5, arrays[5](16)));
+    const destination = track(handles, api.empty());
+    clahe.apply(source, destination);
+    return { destination: api.summary(destination) };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {

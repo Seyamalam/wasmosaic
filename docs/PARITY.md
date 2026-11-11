@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-Two hundred three families meet the full-family definition. Current full parity is 203 of 488, or 41.60%.
+Two hundred nine families meet the full-family definition. Current full parity is 209 of 488, or 42.83%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -36,6 +36,9 @@ Two hundred three families meet the full-family definition. Current full parity 
 | `GFTTDetector.setK`, `GFTTDetector.setMinDistance`, `GFTTDetector.setQualityLevel`                                   | Matching `cv.GFTTDetector` F64 setters          | Exact number coercion, non-finite values, argument errors, and lifecycle             |
 | `MSER.getDefaultName`, `MSER.getDelta`, `MSER.getMinArea`, `MSER.getMaxArea`, `MSER.getPass2Only`                    | Matching `cv.MSER` getters                      | Exact defaults, return values, arity, and lifecycle                                  |
 | `MSER.setDelta`, `MSER.setMinArea`, `MSER.setMaxArea`, `MSER.setPass2Only`                                           | Matching `cv.MSER` setters                      | Exact i32 or boolean coercion, return values, errors, and lifecycle                  |
+| `CLAHE.apply`                                                                                                        | `cv.CLAHE.apply`                                | U8/U16 tile histograms, clip and redistribute, CDF LUTs, bilinear tile interpolation |
+| `CLAHE.collectGarbage`, `CLAHE.getClipLimit`, `CLAHE.getTilesGridSize`                                               | Matching `cv.CLAHE` helpers                     | Exact arity, return values, and lifecycle                                            |
+| `CLAHE.setClipLimit`, `CLAHE.setTilesGridSize`                                                                       | Matching `cv.CLAHE` setters                     | Exact number/size coercion, undefined return, and lifecycle                          |
 | `ORB.getDefaultName`, `ORB.getFastThreshold`                                                                         | Matching `cv.ORB` getters                       | Exact defaults, return values, arity, and lifecycle                                  |
 | `ORB.setEdgeThreshold`, `ORB.setFastThreshold`, `ORB.setFirstLevel`, `ORB.setMaxFeatures`, `ORB.setNLevels`          | Matching integer `cv.ORB` setters               | Exact i32 conversion, validation, return values, errors, and lifecycle               |
 | `ORB.setPatchSize`, `ORB.setWTA_K`, `ORB.setScaleFactor`, `ORB.setScoreType`                                         | Matching remaining `cv.ORB` setters             | Exact i32, number, and structural enum conversion with lifecycle parity              |
@@ -116,6 +119,7 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `createFastFeatureDetector`                                                                      | `cv.FastFeatureDetector.create`                           | Static factory is absent from the pinned artifact                          |
 | `createGFTTDetector`                                                                             | `cv.GFTTDetector.create`                                  | One factory shape; `gradientSize` overload remains                         |
 | `createMSER`                                                                                     | `cv.MSER.create`                                          | Static factory is absent; `detectRegions` remains                          |
+| `createCLAHE`                                                                                    | `cv.CLAHE` constructor                                    | Static factory is absent from the pinned artifact                          |
 | `createORB`                                                                                      | `cv.ORB.create`                                           | Static factory is absent; detection remains                                |
 | `cvtColor`, `threshold`                                                                          | `cv.cvtColor`, `cv.threshold`                             | U8 color codes 0-11, five threshold modes/Otsu                             |
 | `GaussianBlur`, `morphologyEx`, `Sobel`                                                          | Matching `cv` neighborhood-filter families                | U8 separable blur, morphology, and 3x3 signed gradients                    |

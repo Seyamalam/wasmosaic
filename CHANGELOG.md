@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Contrast-limited adaptive histogram equalization: `createCLAHE` plus the full `CLAHE` object (`apply`, `collectGarbage`, `getClipLimit`, `setClipLimit`, `getTilesGridSize`, `setTilesGridSize`). `apply` implements tile histograms, clip-and-redistribute, CDF-scaled lookup tables, and bilinear tile interpolation for U8 and U16 single-channel matrices; oversized grids collapse to the image dimensions. The factory stays partial because the pinned artifact omits the `createCLAHE` binding. **Full parity is now 209 of 488 families.**
+
+### Added
+
 - Hough segment and ellipse-fit batch: `HoughLinesP` (probabilistic Hough segment extraction with in-band pixel runs and scan-order endpoints), `fitEllipseDirect` (Fitzgibbon direct conic fit under the 4ac-b^2=1 ellipse constraint via a Schur-reduced generalized eigenproblem), and `fitEllipseAMS` (approximate mean-square fit over the data-gradient scatter with a documented degenerate-scatter fallback). **Full parity is now 203 of 488 families.**
 
 ### Added
