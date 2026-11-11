@@ -500,6 +500,12 @@ export interface OpenCvBackend {
     flags: number,
   ): number;
   matWatershedInto(image: WasmMatHandle, markers: WasmMatHandle): void;
+  matRodriguesInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    jacobian: WasmMatHandle,
+    withJacobian: number,
+  ): void;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1552,6 +1558,8 @@ export interface OpenCv {
   ): number;
   distanceTransform(source: Mat, destination: Mat, distanceType: number, maskSize: number): void;
   watershed(image: Mat, markers: Mat): void;
+
+  Rodrigues(source: Mat, destination: Mat, jacobian?: Mat): void;
 
   floodFill(
     image: Mat,

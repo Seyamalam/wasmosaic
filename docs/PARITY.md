@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-Two hundred nine families meet the full-family definition. Current full parity is 209 of 488, or 42.83%.
+Two hundred ten families meet the full-family definition. Current full parity is 210 of 488, or 43.03%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -90,10 +90,11 @@ Two hundred nine families meet the full-family definition. Current full parity i
 | `TonemapMantiuk.getScale`, `TonemapMantiuk.getSaturation`, `TonemapMantiuk.setScale`, `TonemapMantiuk.setSaturation` | Matching `cv.TonemapMantiuk` methods            | Exact defaults, float32 state, conversion, arity, and lifecycle                      |
 | `TonemapReinhard.getColorAdaptation`, `TonemapReinhard.getIntensity`, `TonemapReinhard.getLightAdaptation`           | Matching `cv.TonemapReinhard` getters           | Exact defaults, float32 state, arity, and lifecycle                                  |
 | `TonemapReinhard.setColorAdaptation`, `TonemapReinhard.setIntensity`, `TonemapReinhard.setLightAdaptation`           | Matching `cv.TonemapReinhard` setters           | Exact float conversion, arity, returns, and lifecycle                                |
+| `Rodrigues`                                                                                                          | Matching `cv.Rodrigues`                         | Vector/matrix conversion both directions plus analytic Jacobians                     |
 
 ## Working partial families
 
-Fifty-four families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 178 families in total.
+Fifty-one families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 261 families in total.
 
 | Package methods                                                                                  | OpenCV.js families                                        | Current limit                                                              |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------- |

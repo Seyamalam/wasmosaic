@@ -4,6 +4,17 @@
   "entries": [
     {
       "implementationOrigin": "original",
+      "method": "Rodrigues",
+      "module": "calib3d",
+      "notes": "Axis-angle map between 3x1/1x3 rotation vectors and 3x3 rotation matrices for F32/F64, including the analytic 3x9 and 9x3 Jacobians, second-order small-angle handling, and the near-pi symmetric-part axis extraction.",
+      "sources": ["https://docs.opencv.org/4.13.0/d9/d0c/group__calib3d.html"],
+      "status": "implemented",
+      "upstream": "Rodrigues",
+      "upstreamId": "calib3d.function.rodrigues",
+      "wasmExport": "matRodriguesInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "createAKAZE",
       "module": "features2d",
       "notes": "Creates a Rust-owned AKAZE configuration handle with the OpenCV 4.13 defaults and optional descriptor, threshold, octave, diffusivity, and maximum-point settings; the official 4.13.0 artifact omits the config-listed static AKAZE.create binding, so direct factory comparison is unavailable, and feature detection, descriptor extraction, and broader lifetime audits remain.",

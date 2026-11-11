@@ -2165,6 +2165,14 @@ class CopyingBackend implements OpenCvBackend {
   matWatershedInto(_image: WasmMatHandle, _markers: WasmMatHandle): void {
     throw new OpenCvInputError("mock watershed is not implemented");
   }
+  matRodriguesInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _jacobian: WasmMatHandle,
+    _withJacobian: number,
+  ): void {
+    throw new OpenCvInputError("mock Rodrigues is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6243,6 +6251,30 @@ describe("OpenCv client", () => {
     expect(kaze.getNOctaves()).toBe(1);
     expect(kaze.getThreshold()).toBe(Number.POSITIVE_INFINITY);
     kaze.dispose();
+  });
+});
+
+describe("Rodrigues binding", () => {
+  test("forwards source, destination, and optional jacobian handles", () => {
+    const backend = new CopyingBackend();
+    const calls: number[] = [];
+    backend.matRodriguesInto = (_s, _d, _j, withJacobian) => {
+      calls.push(withJacobian);
+    };
+    const cv = createOpenCv(backend);
+    const rvec = cv.matFromF64(3, 1, 1, new Float64Array([0.3, -0.5, 0.7]));
+    const rotation = cv.emptyMat();
+    cv.Rodrigues(rvec, rotation);
+    const jacobian = cv.emptyMat();
+    cv.Rodrigues(rvec, rotation, jacobian);
+    expect(calls).toEqual([0, 1]);
+    expect(cv.Rodrigues.length).toBe(0);
+    // @ts-expect-error exercise pinned binding arity rejection
+    expect(() => cv.Rodrigues(rvec)).toThrow(BindingError);
+    rvec.dispose();
+    expect(() => cv.Rodrigues(rvec, rotation)).toThrow();
+    rotation.dispose();
+    jacobian.dispose();
   });
 });
 

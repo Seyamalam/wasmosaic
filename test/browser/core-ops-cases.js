@@ -1953,6 +1953,65 @@ export function runCoreOpsCases(cv, reference) {
     return { markers: api.summary(markers) };
   });
 
+  // ---- Rodrigues: vector->matrix, matrix->vector, Jacobian, depths
+  run("rodrigues/rvec-f64", (handles) => {
+    const rvec = track(handles, api.mat(3, 1, 1, 6, [0.3, -0.5, 0.7]));
+    const rotation = track(handles, api.empty());
+    cv.Rodrigues(rvec, rotation);
+    return { destination: api.summary(rotation) };
+  });
+  run("rodrigues/rvec-jacobian", (handles) => {
+    const rvec = track(handles, api.mat(3, 1, 1, 6, [0.3, -0.5, 0.7]));
+    const rotation = track(handles, api.empty());
+    const jacobian = track(handles, api.empty());
+    cv.Rodrigues(rvec, rotation, jacobian);
+    return { destination: api.summary(rotation), jacobian: api.summary(jacobian) };
+  });
+  run("rodrigues/matrix-rvec", (handles) => {
+    const rotation = track(
+      handles,
+      api.mat(
+        3,
+        3,
+        1,
+        6,
+        [
+          0.6548940285, -0.6770606569, -0.3357121957, 0.5371528306, 0.7295115358, -0.4234144018,
+          0.5315831525, 0.0969628071, 0.8414377969,
+        ],
+      ),
+    );
+    const rvec = track(handles, api.empty());
+    const jacobian = track(handles, api.empty());
+    cv.Rodrigues(rotation, rvec, jacobian);
+    return { destination: api.summary(rvec), jacobian: api.summary(jacobian) };
+  });
+  run("rodrigues/zero", (handles) => {
+    const rvec = track(handles, api.mat(3, 1, 1, 6, [0, 0, 0]));
+    const rotation = track(handles, api.empty());
+    const jacobian = track(handles, api.empty());
+    cv.Rodrigues(rvec, rotation, jacobian);
+    return { destination: api.summary(rotation), jacobian: api.summary(jacobian) };
+  });
+  run("rodrigues/row-vector", (handles) => {
+    const rvec = track(handles, api.mat(1, 3, 1, 6, [0.1, 0.2, 0.3]));
+    const rotation = track(handles, api.empty());
+    cv.Rodrigues(rvec, rotation);
+    return { destination: api.summary(rotation) };
+  });
+  run("rodrigues/f32", (handles) => {
+    const rvec = track(handles, api.mat(3, 1, 1, 5, [0.4, -0.2, 0.1]));
+    const rotation = track(handles, api.empty());
+    cv.Rodrigues(rvec, rotation);
+    return { destination: api.summary(rotation) };
+  });
+  run("rodrigues/error/2x2", (handles) => {
+    const source = track(handles, api.mat(2, 2, 1, 6, [1, 2, 3, 4]));
+    const rotation = track(handles, api.empty());
+    cv.Rodrigues(source, rotation);
+    return { destination: api.summary(rotation) };
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference

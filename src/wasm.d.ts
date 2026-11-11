@@ -261,6 +261,12 @@ declare module "#wasm" {
   ): void;
   export function matEqualizeHistInto(source: WasmMatHandle, destination: WasmMatHandle): void;
   export function matWatershedInto(image: WasmMatHandle, markers: WasmMatHandle): void;
+  export function matRodriguesInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    jacobian: WasmMatHandle,
+    withJacobian: number,
+  ): void;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

@@ -194,6 +194,7 @@ export const OPENCV_OPERATIONS = [
   { method: "distanceTransform", wasmExport: "matDistanceTransformInto" },
   { method: "floodFill", wasmExport: "matFloodFillInto" },
   { method: "watershed", wasmExport: "matWatershedInto" },
+  { method: "Rodrigues", wasmExport: "matRodriguesInto" },
   { method: "gemm", wasmExport: "matGemmInto" },
   { method: "eigen", wasmExport: "matEigenInto" },
   { method: "solvePoly", wasmExport: "matSolvePolyInto" },

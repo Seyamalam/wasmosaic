@@ -25,6 +25,7 @@ export interface ParityManifest {
 
 const CORE_ARRAY_SOURCE = "https://docs.opencv.org/4.13.0/d2/de8/group__core__array.html";
 const CORE_SOURCE = "https://docs.opencv.org/4.13.0/d0/de1/group__core.html";
+const CALIB3D_SOURCE = "https://docs.opencv.org/4.13.0/d9/d0c/group__calib3d.html";
 const FEATURES2D_SOURCE = "https://docs.opencv.org/4.13.0/da/d9b/group__features2d.html";
 const IMGPROC_COLOR_SOURCE =
   "https://docs.opencv.org/4.13.0/d8/d01/group__imgproc__color__conversions.html";
@@ -40,6 +41,18 @@ export const PARITY_MANIFEST = {
   baseline: "OpenCV.js 4.13.0 public browser bindings",
   baselineSource: "https://github.com/opencv/opencv/blob/4.13.0/platforms/js/opencv_js.config.py",
   entries: [
+    {
+      implementationOrigin: "original",
+      method: "Rodrigues",
+      module: "calib3d",
+      notes:
+        "Axis-angle map between 3x1/1x3 rotation vectors and 3x3 rotation matrices for F32/F64, including the analytic 3x9 and 9x3 Jacobians, second-order small-angle handling, and the near-pi symmetric-part axis extraction.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "Rodrigues",
+      upstreamId: "calib3d.function.rodrigues",
+      wasmExport: "matRodriguesInto",
+    },
     {
       implementationOrigin: "original",
       method: "createAKAZE",
