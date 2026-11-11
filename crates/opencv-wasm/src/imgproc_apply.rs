@@ -514,7 +514,16 @@ pub(crate) fn fit_ellipse_points(source: &Mat) -> Result<[f64; 5], ApplyError> {
         let (cx, cy, w, h, angle) = min_area_rect(&hull);
         return Ok([cx, cy, w, h, angle]);
     }
+    conic_to_rotated(a, b, c, d, e, f).ok_or(ApplyError::InvalidPoints("degenerate conic"))
+}
+
+/// Convert a conic `ax² + bxy + cy² + dx + ey + f = 0` into `[cx, cy, w, h, angle]`.
+/// Returns `None` when the conic is not a non-degenerate ellipse.
+fn conic_to_rotated(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Option<[f64; 5]> {
     let den = b * b - 4.0 * a * c;
+    if den >= 0.0 {
+        return None;
+    }
     let cx = (2.0 * c * d - b * e) / den;
     let cy = (2.0 * a * e - b * d) / den;
     let common = a * cx * cx + b * cx * cy + c * cy * cy - f;
@@ -541,13 +550,310 @@ pub(crate) fn fit_ellipse_points(source: &Mat) -> Result<[f64; 5], ApplyError> {
     if angle < 0.0 {
         angle += 180.0;
     }
-    Ok([
+    Some([
         f64::from(cx as f32),
         f64::from(cy as f32),
         f64::from(width as f32),
         f64::from(height as f32),
         f64::from(angle as f32),
     ])
+}
+
+/// Per-point conic scatter blocks: S1 = Σ d1·d1ᵀ, S2 = Σ d1·d2ᵀ, S3 = Σ d2·d2ᵀ
+/// with d1 = [x², xy, y²] and d2 = [x, y, 1].
+fn conic_scatter(points: &[Point]) -> ([[f64; 3]; 3], [[f64; 3]; 3], [[f64; 3]; 3]) {
+    let mut s1 = [[0.0; 3]; 3];
+    let mut s2 = [[0.0; 3]; 3];
+    let mut s3 = [[0.0; 3]; 3];
+    for p in points {
+        let d1 = [p.x * p.x, p.x * p.y, p.y * p.y];
+        let d2 = [p.x, p.y, 1.0];
+        for i in 0..3 {
+            for j in 0..3 {
+                s1[i][j] += d1[i] * d1[j];
+                s2[i][j] += d1[i] * d2[j];
+                s3[i][j] += d2[i] * d2[j];
+            }
+        }
+    }
+    (s1, s2, s3)
+}
+
+fn invert3(m: &[[f64; 3]; 3]) -> Option<[[f64; 3]; 3]> {
+    let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+        - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+        + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+    if det.abs() < 1e-14 {
+        return None;
+    }
+    let inv = [
+        [
+            (m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det,
+            (m[0][2] * m[2][1] - m[0][1] * m[2][2]) / det,
+            (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det,
+        ],
+        [
+            (m[1][2] * m[2][0] - m[1][0] * m[2][2]) / det,
+            (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det,
+            (m[0][2] * m[1][0] - m[0][0] * m[1][2]) / det,
+        ],
+        [
+            (m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det,
+            (m[0][1] * m[2][0] - m[0][0] * m[2][1]) / det,
+            (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det,
+        ],
+    ];
+    Some(inv)
+}
+
+/// Real roots of the characteristic polynomial of a 3×3 matrix.
+fn matrix_roots3(a: &[[f64; 3]; 3]) -> Vec<f64> {
+    let tr = a[0][0] + a[1][1] + a[2][2];
+    let minors = a[0][0] * a[1][1] - a[0][1] * a[1][0] + a[0][0] * a[2][2]
+        - a[0][2] * a[2][0]
+        + a[1][1] * a[2][2]
+        - a[1][2] * a[2][1];
+    let det = a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1])
+        - a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0])
+        + a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0]);
+    // λ³ + c2·λ² + c1·λ + c0 = 0
+    let c2 = -tr;
+    let c1 = minors;
+    let c0 = -det;
+    // Depress: λ = t − c2/3.
+    let p = c1 - c2 * c2 / 3.0;
+    let q = 2.0 * c2 * c2 * c2 / 27.0 - c2 * c1 / 3.0 + c0;
+    let shift = -c2 / 3.0;
+    let disc = q * q / 4.0 + p * p * p / 27.0;
+    let mut roots = Vec::new();
+    if disc <= 0.0 && p < 0.0 {
+        let radius = 2.0 * (-p / 3.0).sqrt();
+        let arg = (3.0 * q / (2.0 * p)) * (-3.0 / p).sqrt();
+        let theta = arg.clamp(-1.0, 1.0).acos() / 3.0;
+        for k in 0..3 {
+            roots.push(radius * (theta - 2.0 * std::f64::consts::PI * k as f64 / 3.0).cos() + shift);
+        }
+    } else {
+        let sqrt_disc = disc.max(0.0).sqrt();
+        let t = (-q / 2.0 + sqrt_disc).cbrt() + (-q / 2.0 - sqrt_disc).cbrt();
+        roots.push(t + shift);
+    }
+    roots.sort_by(|x, y| x.partial_cmp(y).unwrap_or(std::cmp::Ordering::Equal));
+    roots
+}
+
+/// Approximate null vector of `(a − λ·I)` via the largest row-pair cross product.
+fn null3(a: &[[f64; 3]; 3], lambda: f64) -> [f64; 3] {
+    let mut r = *a;
+    for i in 0..3 {
+        r[i][i] -= lambda;
+    }
+    let cross = |u: [f64; 3], v: [f64; 3]| {
+        [
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0],
+        ]
+    };
+    let pairs = [
+        cross(r[0], r[1]),
+        cross(r[0], r[2]),
+        cross(r[1], r[2]),
+    ];
+    let mut best = pairs[0];
+    for p in &pairs[1..] {
+        if p.iter().map(|v| v * v).sum::<f64>() > best.iter().map(|v| v * v).sum::<f64>() {
+            best = *p;
+        }
+    }
+    best
+}
+
+/// fitEllipseDirect: direct least-squares conic fit under the
+/// ellipse-specificity constraint `4ac − b² = 1` (Fitzgibbon generalized
+/// eigenproblem, Schur-reduced to 3×3).
+pub(crate) fn fit_ellipse_direct_points(source: &Mat) -> Result<[f64; 5], ApplyError> {
+    let points = read_points(source)?;
+    if points.len() < 5 {
+        return Err(ApplyError::InvalidPoints("at least five points required"));
+    }
+    let (s1, s2, s3) = conic_scatter(&points);
+    let inv3 = invert3(&s3).ok_or(ApplyError::InvalidPoints("singular scatter"))?;
+    // T = −S3⁻¹·S2ᵀ; M = S1 + S2·T.
+    let mut t = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            t[i][j] = -(0..3).map(|k| inv3[i][k] * s2[j][k]).sum::<f64>();
+        }
+    }
+    let mut m = s1;
+    for i in 0..3 {
+        for j in 0..3 {
+            m[i][j] += (0..3).map(|k| s2[i][k] * t[k][j]).sum::<f64>();
+        }
+    }
+    // Constraint matrix C = [[0,0,2],[0,-1,0],[2,0,0]] has inverse
+    // [[0,0,0.5],[0,-1,0],[0.5,0,0]]; solve A·v = λ·v with A = C⁻¹·M.
+    let a3 = [
+        [0.5 * m[2][0], 0.5 * m[2][1], 0.5 * m[2][2]],
+        [-m[1][0], -m[1][1], -m[1][2]],
+        [0.5 * m[0][0], 0.5 * m[0][1], 0.5 * m[0][2]],
+    ];
+    let mut conic: Option<[f64; 6]> = None;
+    for lambda in matrix_roots3(&a3) {
+        let a1 = null3(&a3, lambda);
+        if 4.0 * a1[0] * a1[2] - a1[1] * a1[1] <= 0.0 {
+            continue;
+        }
+        let mut a2 = [0.0; 3];
+        for i in 0..3 {
+            a2[i] = (0..3).map(|k| t[i][k] * a1[k]).sum();
+        }
+        conic = Some([a1[0], a1[1], a1[2], a2[0], a2[1], a2[2]]);
+        break;
+    }
+    let c = conic.ok_or(ApplyError::InvalidPoints("no elliptic conic"))?;
+    conic_to_rotated(c[0], c[1], c[2], c[3], c[4], c[5])
+        .ok_or(ApplyError::InvalidPoints("degenerate conic"))
+}
+
+/// fitEllipseAMS: approximate mean-square fit — minimize `aᵀSa / aᵀNa` where
+/// N is the per-point data-gradient scatter. Solved as a generalized
+/// eigenproblem via Cholesky of N plus a symmetric Jacobi sweep.
+pub(crate) fn fit_ellipse_ams_points(source: &Mat) -> Result<[f64; 5], ApplyError> {
+    let points = read_points(source)?;
+    if points.len() < 5 {
+        return Err(ApplyError::InvalidPoints("at least five points required"));
+    }
+    let mut s = [[0.0f64; 6]; 6];
+    let mut n = [[0.0f64; 6]; 6];
+    for p in &points {
+        let d = [p.x * p.x, p.x * p.y, p.y * p.y, p.x, p.y, 1.0];
+        // Jacobian of the design row with respect to (x, y).
+        let j0 = [2.0 * p.x, p.y, 0.0, 1.0, 0.0, 0.0];
+        let j1 = [0.0, p.x, 2.0 * p.y, 0.0, 1.0, 0.0];
+        for i in 0..6 {
+            for j in 0..6 {
+                s[i][j] += d[i] * d[j];
+                n[i][j] += j0[i] * j0[j] + j1[i] * j1[j];
+            }
+        }
+    }
+    // Cholesky N = L·Lᵀ.
+    let mut l = [[0.0f64; 6]; 6];
+    for i in 0..6 {
+        for j in 0..=i {
+            let mut sum = n[i][j];
+            for k in 0..j {
+                sum -= l[i][k] * l[j][k];
+            }
+            if i == j {
+                if sum <= 1e-14 {
+                    // The gradient scatter is rank-deficient (the constant term
+                    // carries no gradient), so the generalized problem has no
+                    // finite solution — fall back to the direct fit.
+                    return fit_ellipse_direct_points(source);
+                }
+                l[i][j] = sum.sqrt();
+            } else {
+                l[i][j] = sum / l[j][j];
+            }
+        }
+    }
+    // B = L⁻¹·S·L⁻ᵀ by forward substitution.
+    let mut x = [[0.0f64; 6]; 6];
+    for col in 0..6 {
+        for i in 0..6 {
+            let mut sum = s[i][col];
+            for k in 0..i {
+                sum -= l[i][k] * x[k][col];
+            }
+            x[i][col] = sum / l[i][i];
+        }
+    }
+    let mut b = [[0.0f64; 6]; 6];
+    for row in 0..6 {
+        for j in 0..6 {
+            let mut sum = x[row][j];
+            for k in 0..j {
+                sum -= x[row][k] * 0.0 + l[j][k] * b[row][k];
+            }
+            b[row][j] = sum / l[j][j];
+        }
+    }
+    for i in 0..6 {
+        for j in i + 1..6 {
+            let v = 0.5 * (b[i][j] + b[j][i]);
+            b[i][j] = v;
+            b[j][i] = v;
+        }
+    }
+    // Cyclic Jacobi sweeps on B.
+    let mut vec = [[0.0f64; 6]; 6];
+    for i in 0..6 {
+        vec[i][i] = 1.0;
+    }
+    for _ in 0..120 {
+        let mut off = 0.0;
+        for p in 0..6 {
+            for q in p + 1..6 {
+                off += b[p][q] * b[p][q];
+            }
+        }
+        if off < 1e-18 {
+            break;
+        }
+        for p in 0..6 {
+            for q in p + 1..6 {
+                if b[p][q].abs() < 1e-14 {
+                    continue;
+                }
+                let theta = 0.5 * (b[q][q] - b[p][p]) / b[p][q];
+                let t = theta.signum() / (theta.abs() + (theta * theta + 1.0).sqrt());
+                let cs = 1.0 / (t * t + 1.0).sqrt();
+                let sn = t * cs;
+                for k in 0..6 {
+                    let (bp, bq) = (b[p][k], b[q][k]);
+                    b[p][k] = cs * bp - sn * bq;
+                    b[q][k] = sn * bp + cs * bq;
+                }
+                for k in 0..6 {
+                    let (bp, bq) = (b[k][p], b[k][q]);
+                    b[k][p] = cs * bp - sn * bq;
+                    b[k][q] = sn * bp + cs * bq;
+                }
+                for k in 0..6 {
+                    let (vp, vq) = (vec[p][k], vec[q][k]);
+                    vec[p][k] = cs * vp - sn * vq;
+                    vec[q][k] = sn * vp + cs * vq;
+                }
+            }
+        }
+    }
+    // Eigenpairs ascending; conic coefficient a = L⁻ᵀ·w.
+    let mut pairs: Vec<(f64, usize)> = (0..6).map(|i| (b[i][i], i)).collect();
+    pairs.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap_or(std::cmp::Ordering::Equal));
+    let mut chosen: Option<[f64; 6]> = None;
+    for &(_, idx) in &pairs {
+        // w is a row of `vec` (Jacobi accumulates rotations on rows).
+        let w = vec[idx];
+        // a = L⁻ᵀ·w: solve Lᵀ·a = w by back substitution.
+        let mut a = [0.0f64; 6];
+        for i in (0..6).rev() {
+            let mut sum = w[i];
+            for k in i + 1..6 {
+                sum -= l[k][i] * a[k];
+            }
+            a[i] = sum / l[i][i];
+        }
+        if 4.0 * a[0] * a[2] - a[1] * a[1] > 0.0 {
+            chosen = Some(a);
+            break;
+        }
+    }
+    let c = chosen.ok_or(ApplyError::InvalidPoints("no elliptic conic"))?;
+    conic_to_rotated(c[0], c[1], c[2], c[3], c[4], c[5])
+        .ok_or(ApplyError::InvalidPoints("degenerate conic"))
 }
 
 /// fitLine DIST_L2: direction = principal eigenvector; `[vx, vy, x0, y0]`.

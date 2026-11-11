@@ -66,6 +66,20 @@ pub fn mat_fit_ellipse(points: &Mat) -> Result<Vec<f64>, JsError> {
         .map_err(JsError::from)
 }
 
+#[wasm_bindgen(js_name = matFitEllipseDirect)]
+pub fn mat_fit_ellipse_direct(points: &Mat) -> Result<Vec<f64>, JsError> {
+    imgproc_apply::fit_ellipse_direct_points(points)
+        .map(|ellipse| ellipse.to_vec())
+        .map_err(JsError::from)
+}
+
+#[wasm_bindgen(js_name = matFitEllipseAMS)]
+pub fn mat_fit_ellipse_ams(points: &Mat) -> Result<Vec<f64>, JsError> {
+    imgproc_apply::fit_ellipse_ams_points(points)
+        .map(|ellipse| ellipse.to_vec())
+        .map_err(JsError::from)
+}
+
 #[allow(clippy::too_many_arguments)]
 #[wasm_bindgen(js_name = matFitLineInto)]
 pub fn mat_fit_line_into(

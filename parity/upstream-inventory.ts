@@ -120,6 +120,9 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "imgproc.function.good-features-to-track": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.div-spectrums": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.hough-lines": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.hough-lines-p": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.fit-ellipse-direct": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.fit-ellipse-ams": { overloadCount: 1, runtimeArity: 0 },
 
   "core.function.add-weighted": { overloadCount: 2, runtimeArity: 0 },
   "core.function.bitwise-not": { overloadCount: 2, runtimeArity: 0 },

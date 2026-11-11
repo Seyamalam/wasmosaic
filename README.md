@@ -263,6 +263,9 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `fillPoly`                                  | `cv.fillPoly`                                  | Full    | Scanline polygon fill                                |
 | imgproc    | `divSpectrums`                              | `cv.divSpectrums`                              | Full    | Element-wise complex spectral division               |
 | imgproc    | `HoughLines`                                | `cv.HoughLines`                                | Full    | Standard Hough accumulator + peak extraction         |
+| imgproc    | `HoughLinesP`                               | `cv.HoughLinesP`                               | Full    | Probabilistic segment extraction; scan-order ends    |
+| imgproc    | `fitEllipseDirect`                          | `cv.fitEllipseDirect`                          | Full    | Fitzgibbon 4ac−b²=1 generalized eigen fit            |
+| imgproc    | `fitEllipseAMS`                             | `cv.fitEllipseAMS`                             | Full    | Gradient-scatter generalized eigen fit               |
 | imgproc    | `drawContours`                              | `cv.drawContours`                              | Full    | Contour chain outline/fill raster                    |
 | imgproc    | `approxPolyN`                               | `cv.approxPolyN`                               | Full    | Douglas–Peucker to exactly n vertices                |
 | imgproc    | `findContoursLinkRuns`                      | `cv.findContoursLinkRuns`                      | Full    | Link-runs contour extraction variant                 |
@@ -320,7 +323,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | photo      | `TonemapReinhard.setIntensity`              | `cv.TonemapReinhard.setIntensity`              | Full    | Exact float coercion and call contract               |
 | photo      | `TonemapReinhard.setLightAdaptation`        | `cv.TonemapReinhard.setLightAdaptation`        | Full    | Exact float coercion and call contract               |
 
-Current full parity is **125 of 488 (25.61%)**. There are **55 partial families**, for **180 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
+Current full parity is **203 of 488 (41.60%)**. There are **50 partial families**, for **253 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
 
 The fixture passes the complete pinned browser contract for `determinant`. The function requires exactly one live `Mat` and accepts only nonempty square single-channel F32 or F64 matrices, including non-contiguous regions. It preserves the input, matches the direct 1x1, 2x2, and 3x3 paths with signed-zero and non-finite propagation, and keeps F32 and F64 arithmetic distinct during elimination for larger matrices. The audit locks the absolute pivot cutoffs, exact cutoff acceptance, row-swap signs, singular positive zero, stored-F32 widening in the small formulas, and Hilbert precision. Integer, multichannel, nonsquare, empty, deleted, and non-Mat inputs reject before computation.
 

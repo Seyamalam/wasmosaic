@@ -2071,6 +2071,14 @@ class CopyingBackend implements OpenCvBackend {
     throw new OpenCvInputError("mock fitEllipse is not implemented");
   }
 
+  matFitEllipseDirect(): Float64Array {
+    throw new OpenCvInputError("mock fitEllipseDirect is not implemented");
+  }
+
+  matFitEllipseAMS(): Float64Array {
+    throw new OpenCvInputError("mock fitEllipseAMS is not implemented");
+  }
+
   matFitLineInto(): void {
     throw new OpenCvInputError("mock fitLine is not implemented");
   }
@@ -2216,6 +2224,9 @@ class CopyingBackend implements OpenCvBackend {
 
   matHoughLinesInto(): void {
     throw new OpenCvInputError("mock HoughLines is not implemented");
+  }
+  matHoughLinesPInto(): void {
+    throw new OpenCvInputError("mock HoughLinesP is not implemented");
   }
 
   matIntegralInto(

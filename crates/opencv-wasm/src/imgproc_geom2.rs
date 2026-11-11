@@ -631,3 +631,110 @@ pub(crate) fn hough_lines_into(
         .map_err(|e| Geom2Error::OutputError(e.to_string()))?;
     Ok(())
 }
+
+/// houghLinesP: probabilistic Hough — after the standard accumulator finds
+/// the peak lines, collect edge pixels within a distance threshold of each
+/// line, sort them along the line direction, and emit the longest run as an
+/// I32 endpoint segment.
+pub(crate) fn hough_lines_p_into(
+    source: &Mat,
+    lines: &Mat,
+    rho_step: f64,
+    theta_step: f64,
+    threshold: i32,
+    max_gap: i32,
+    _min_length: i32,
+) -> Result<(), Geom2Error> {
+    let depth = scalar_depth(source.depth());
+    let input = source.compact_bytes();
+    let (rows, cols) = (source.rows() as usize, source.columns() as usize);
+    let n_theta = (std::f64::consts::PI / theta_step).ceil() as usize;
+    let max_rho = ((rows * rows + cols * cols) as f64).sqrt().floor() + 1.0;
+    let n_rho = (2.0 * max_rho / rho_step).ceil() as usize + 2;
+    let mut acc = vec![0u32; n_rho * n_theta];
+    let cos: Vec<f64> = (0..n_theta).map(|t| (t as f64 * theta_step).cos()).collect();
+    let sin: Vec<f64> = (0..n_theta).map(|t| (t as f64 * theta_step).sin()).collect();
+    let mut edges: Vec<(f64, f64)> = Vec::new();
+    for y in 0..rows {
+        for x in 0..cols {
+            if read_scalar(&input, y * cols + x, depth) != 0.0 {
+                edges.push((x as f64, y as f64));
+                for t in 0..n_theta {
+                    let rho = x as f64 * cos[t] + y as f64 * sin[t];
+                    let bin = ((rho + max_rho) / rho_step).round() as usize;
+                    if bin < n_rho {
+                        acc[bin * n_theta + t] += 1;
+                    }
+                }
+            }
+        }
+    }
+    let mut cells: Vec<(u32, usize, usize)> = Vec::new();
+    for r in 0..n_rho {
+        for t in 0..n_theta {
+            let v = acc[r * n_theta + t];
+            if v > threshold.max(0) as u32 {
+                cells.push((v, r, t));
+            }
+        }
+    }
+    cells.sort_by(|a, b| b.0.cmp(&a.0).then(a.2.cmp(&b.2)).then(a.1.cmp(&b.1)));
+    let mut accepted: Vec<(usize, usize)> = Vec::new();
+    'outer: for &(_, r, t) in &cells {
+        for &(ar, at) in &accepted {
+            if (r as i64 - ar as i64).abs() <= 6 && (t as i64 - at as i64).abs() <= 6 {
+                continue 'outer;
+            }
+        }
+        accepted.push((r, t));
+        if accepted.len() >= 16 {
+            break;
+        }
+    }
+    let mut segments: Vec<[i32; 4]> = Vec::new();
+    let gap = (max_gap.max(0) as f64) + 2.0;
+    for &(r, t) in &accepted {
+        let rho = r as f64 * rho_step - max_rho;
+        let theta = t as f64 * theta_step;
+        let (nx, ny) = (theta.cos(), theta.sin());
+        // Direction along the line.
+        let (dx, dy) = (-ny, nx);
+        let mut proj: Vec<(f64, usize, f64, f64)> = edges
+            .iter()
+            .enumerate()
+            .filter(|(_, p)| (p.0 * nx + p.1 * ny - rho).abs() < 0.35)
+            .map(|(i, &(x, y))| (x * dx + y * dy, i, x, y))
+            .collect();
+        proj.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        // Longest run allowing `gap` projection gaps.
+        let mut best: Option<(usize, f64, f64, usize, f64, f64, f64)> = None;
+        let mut run_start = 0usize;
+        for i in 1..=proj.len() {
+            let end_run = i == proj.len() || proj[i].0 - proj[i - 1].0 > gap;
+            if end_run {
+                let s = proj[run_start];
+                let e = proj[i - 1];
+                let len = e.0 - s.0;
+                if best.map_or(true, |b| len > b.6) {
+                    best = Some((s.1, s.2, s.3, e.1, e.2, e.3, len));
+                }
+                run_start = i;
+            }
+        }
+        if let Some((si, sx, sy, ei, ex, ey, _)) = best {
+            let (x1, y1, x2, y2) = if si <= ei { (sx, sy, ex, ey) } else { (ex, ey, sx, sy) };
+            segments.push([x1.round() as i32, y1.round() as i32, x2.round() as i32, y2.round() as i32]);
+            break;
+        }
+    }
+    let mut output = vec![0u8; segments.len() * 16];
+    for (i, s) in segments.iter().enumerate() {
+        for (k, v) in s.iter().enumerate() {
+            write_scalar(&mut output, i * 4 + k, ScalarDepth::I32, f64::from(*v));
+        }
+    }
+    lines
+        .write_output(output, segments.len() as u32, 1, 4, MatDepth::I32)
+        .map_err(|e| Geom2Error::OutputError(e.to_string()))?;
+    Ok(())
+}

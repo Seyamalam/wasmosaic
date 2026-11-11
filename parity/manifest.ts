@@ -2798,6 +2798,42 @@ export const PARITY_MANIFEST = {
       upstreamId: "imgproc.function.hough-lines",
       wasmExport: "matHoughLinesInto",
     },
+
+    {
+      implementationOrigin: "original",
+      method: "HoughLinesP",
+      module: "imgproc",
+      notes: "Probabilistic Hough segment extraction",
+      sources: [IMGPROC_SOURCE],
+      status: "implemented",
+      upstream: "HoughLinesP",
+      upstreamId: "imgproc.function.hough-lines-p",
+      wasmExport: "matHoughLinesPInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "fitEllipseDirect",
+      module: "imgproc",
+      notes:
+        "Fitzgibbon direct conic fit under the 4ac-b^2=1 ellipse constraint via a Schur-reduced 3x3 generalized eigenproblem.",
+      sources: [IMGPROC_SOURCE],
+      status: "implemented",
+      upstream: "fitEllipseDirect",
+      upstreamId: "imgproc.function.fit-ellipse-direct",
+      wasmExport: "matFitEllipseDirect",
+    },
+    {
+      implementationOrigin: "original",
+      method: "fitEllipseAMS",
+      module: "imgproc",
+      notes:
+        "Approximate mean-square ellipse fit via a 6x6 generalized eigenproblem over the data-gradient scatter; degenerate scatter falls back to the direct fit.",
+      sources: [IMGPROC_SOURCE],
+      status: "implemented",
+      upstream: "fitEllipseAMS",
+      upstreamId: "imgproc.function.fit-ellipse-ams",
+      wasmExport: "matFitEllipseAMS",
+    },
     {
       implementationOrigin: "original",
       method: "integral",

@@ -116,3 +116,18 @@ pub fn mat_hough_lines_into(
     imgproc_geom2::hough_lines_into(source, lines, rho_step, theta_step, threshold)
         .map_err(JsError::from)
 }
+
+#[allow(clippy::too_many_arguments)]
+#[wasm_bindgen(js_name = matHoughLinesPInto)]
+pub fn mat_hough_lines_p_into(
+    source: &Mat,
+    lines: &Mat,
+    rho_step: f64,
+    theta_step: f64,
+    threshold: i32,
+    min_length: i32,
+    max_gap: i32,
+) -> Result<(), JsError> {
+    imgproc_geom2::hough_lines_p_into(source, lines, rho_step, theta_step, threshold, max_gap, min_length)
+        .map_err(JsError::from)
+}

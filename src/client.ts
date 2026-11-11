@@ -2535,6 +2535,54 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  HoughLinesP(
+    ...arguments_: [
+      image: Mat,
+      lines: Mat,
+      rho: number,
+      theta: number,
+      threshold: number,
+      minLineLength?: number,
+      maxLineGap?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 5, 7, "HoughLinesP");
+    const [image, lines, rho, theta, threshold, minLineLength = 0, maxLineGap = 0] = arguments_;
+    this.#backend.matHoughLinesPInto(
+      matHandleForBinding(image),
+      matHandleForBinding(lines),
+      rho,
+      theta,
+      toWasmI32(threshold),
+      toWasmI32(minLineLength),
+      toWasmI32(maxLineGap),
+    );
+  }
+
+  fitEllipseDirect(points: Mat): RotatedRect {
+    const ellipse = this.#backend.matFitEllipseDirect(matHandleForBinding(points));
+    const [x, y, width, height, angle] = [
+      requiredFloat(ellipse, 0),
+      requiredFloat(ellipse, 1),
+      requiredFloat(ellipse, 2),
+      requiredFloat(ellipse, 3),
+      requiredFloat(ellipse, 4),
+    ];
+    return { center: { x, y }, size: { width, height }, angle };
+  }
+
+  fitEllipseAMS(points: Mat): RotatedRect {
+    const ellipse = this.#backend.matFitEllipseAMS(matHandleForBinding(points));
+    const [x, y, width, height, angle] = [
+      requiredFloat(ellipse, 0),
+      requiredFloat(ellipse, 1),
+      requiredFloat(ellipse, 2),
+      requiredFloat(ellipse, 3),
+      requiredFloat(ellipse, 4),
+    ];
+    return { center: { x, y }, size: { width, height }, angle };
+  }
+
   compareHist(h1: Mat, h2: Mat, method: number): number {
     return this.#backend.matCompareHist(
       matHandleForBinding(h1),

@@ -6,6 +6,8 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Hough segment and ellipse-fit batch: `HoughLinesP` (probabilistic Hough segment extraction with in-band pixel runs and scan-order endpoints), `fitEllipseDirect` (Fitzgibbon direct conic fit under the 4ac-b^2=1 ellipse constraint via a Schur-reduced generalized eigenproblem), and `fitEllipseAMS` (approximate mean-square fit over the data-gradient scatter with a documented degenerate-scatter fallback). **Full parity is now 203 of 488 families.**
+
 ### Added
 
 - Contour, spectral, and feature batch: `drawContours` (chain outline and fill raster), `approxPolyN` (Douglas–Peucker reduced to an exact vertex count), `findContoursLinkRuns` (link-runs extraction variant), `goodFeaturesToTrack` (Shi–Tomasi min-eigenvalue corners with block-summed covariance and min-distance suppression), `divSpectrums` (element-wise complex spectral division), and `HoughLines` (standard Hough accumulator with vote-sorted suppression). **Full parity is now 200 of 488 families.**

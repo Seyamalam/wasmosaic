@@ -1853,6 +1853,24 @@ export function runCoreOpsCases(cv, reference) {
     return { lines: api.summary(lines) };
   });
 
+  run("HoughLinesP", (handles) => {
+    const edge = track(handles, houghEdge());
+    const lines = track(handles, api.empty());
+    cv.HoughLinesP(edge, lines, 1, Math.PI / 180, 3, 0, 0);
+    return { lines: api.summary(lines) };
+  });
+  const fitPts = () => api.mat(1, 5, 2, 5, [1, 8, 3, 2, 7, 3, 5, 5, 3, 6]);
+  run("fitEllipseDirect", (handles) => {
+    const points = track(handles, fitPts());
+    const rect = cv.fitEllipseDirect(points);
+    return { rect };
+  });
+  run("fitEllipseAMS", (handles) => {
+    const points = track(handles, fitPts());
+    const rect = cv.fitEllipseAMS(points);
+    return { rect };
+  });
+
   // ---- contract arity audit
   run("contract", () => ({
     lengths: {
@@ -1955,6 +1973,9 @@ export function runCoreOpsCases(cv, reference) {
       goodFeaturesToTrack: cv.goodFeaturesToTrack.length,
       divSpectrums: cv.divSpectrums.length,
       HoughLines: cv.HoughLines.length,
+      HoughLinesP: cv.HoughLinesP.length,
+      fitEllipseDirect: cv.fitEllipseDirect.length,
+      fitEllipseAMS: cv.fitEllipseAMS.length,
     },
   }));
 

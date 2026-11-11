@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-One hundred twenty-five families meet the full-family definition. Current full parity is 125 of 488, or 25.61%.
+Two hundred three families meet the full-family definition. Current full parity is 203 of 488, or 41.60%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -133,6 +133,7 @@ Fifty-four families have useful original Rust/WASM slices but do not meet the fu
 | `convexityDefects`, `blendLinear`, `rotatedRectangleIntersection`, `distanceTransformWithLabels` | Matching `cv` geometry/blend/distance                     | Hull defects, weighted blend, rotated-rect clip, labelled chamfer distance |
 | `intersectConvexConvex`, `minEnclosingTriangle`                                                  | Matching `cv` convex geometry                             | Upstream binding errors on the exercised call forms                        |
 | `divSpectrums`, `HoughLines`                                                                     | Matching `cv` spectral/Hough APIs                         | Complex spectral division, standard Hough accumulator                      |
+| `HoughLinesP`, `fitEllipseDirect`, `fitEllipseAMS`                                               | Matching `cv` Hough/ellipse variants                      | Probabilistic segments, Fitzgibbon and AMS ellipse fits                    |
 | `drawContours`, `approxPolyN`, `findContoursLinkRuns`, `goodFeaturesToTrack`                     | Matching `cv` contour/corner APIs                         | Chain outline draw, n-vertex D–P, link-runs variant, Shi–Tomasi NMS        |
 | `fillConvexPoly`, `arrowedLine`                                                                  | Matching `cv` convex fill and arrows                      | Scanline convex fill; arrowhead fan differs by a pixel                     |
 | `circle`, `ellipse`                                                                              | Matching `cv` curve primitives                            | Upstream uses a different ellipse-arc raster path                          |

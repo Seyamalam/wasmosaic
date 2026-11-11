@@ -457,6 +457,8 @@ export interface OpenCvBackend {
   matMinAreaRect(points: WasmMatHandle): Float64Array;
   matMinEnclosingCircle(points: WasmMatHandle): Float64Array;
   matFitEllipse(points: WasmMatHandle): Float64Array;
+  matFitEllipseDirect(points: WasmMatHandle): Float64Array;
+  matFitEllipseAMS(points: WasmMatHandle): Float64Array;
   matFitLineInto(
     points: WasmMatHandle,
     destination: WasmMatHandle,
@@ -733,6 +735,15 @@ export interface OpenCvBackend {
     rhoStep: number,
     thetaStep: number,
     threshold: number,
+  ): void;
+  matHoughLinesPInto(
+    source: WasmMatHandle,
+    lines: WasmMatHandle,
+    rhoStep: number,
+    thetaStep: number,
+    threshold: number,
+    minLineLength: number,
+    maxLineGap: number,
   ): void;
   matIntegralInto(
     source: WasmMatHandle,
@@ -1758,6 +1769,17 @@ export interface OpenCv {
     min_theta?: number,
     max_theta?: number,
   ): void;
+  HoughLinesP(
+    image: Mat,
+    lines: Mat,
+    rho: number,
+    theta: number,
+    threshold: number,
+    minLineLength?: number,
+    maxLineGap?: number,
+  ): void;
+  fitEllipseDirect(points: Mat): RotatedRect;
+  fitEllipseAMS(points: Mat): RotatedRect;
   integral(source: Mat, sum: Mat, sumDepth?: number, squaredSumDepth?: number): void;
   integral2(
     source: Mat,

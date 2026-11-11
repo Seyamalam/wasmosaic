@@ -2600,6 +2600,39 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "HoughLinesP",
+      "module": "imgproc",
+      "notes": "Probabilistic Hough segment extraction",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "HoughLinesP",
+      "upstreamId": "imgproc.function.hough-lines-p",
+      "wasmExport": "matHoughLinesPInto"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "fitEllipseDirect",
+      "module": "imgproc",
+      "notes": "Fitzgibbon direct conic fit under the 4ac-b^2=1 ellipse constraint via a Schur-reduced 3x3 generalized eigenproblem.",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "fitEllipseDirect",
+      "upstreamId": "imgproc.function.fit-ellipse-direct",
+      "wasmExport": "matFitEllipseDirect"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "fitEllipseAMS",
+      "module": "imgproc",
+      "notes": "Approximate mean-square ellipse fit via a 6x6 generalized eigenproblem over the data-gradient scatter; degenerate scatter falls back to the direct fit.",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "implemented",
+      "upstream": "fitEllipseAMS",
+      "upstreamId": "imgproc.function.fit-ellipse-ams",
+      "wasmExport": "matFitEllipseAMS"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "integral",
       "module": "imgproc",
       "notes": "Sum-only integral images with pinned source-depth gates, per-depth allowed sum depths, and multi-channel output.",
