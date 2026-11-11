@@ -267,6 +267,13 @@ declare module "#wasm" {
     jacobian: WasmMatHandle,
     withJacobian: number,
   ): void;
+  export function matDefaultNewCameraMatrix(
+    cameraMatrix: WasmMatHandle,
+    destination: WasmMatHandle,
+    imageWidth: number,
+    imageHeight: number,
+    centerPrincipalPoint: number,
+  ): void;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

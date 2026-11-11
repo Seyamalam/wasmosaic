@@ -2173,6 +2173,15 @@ class CopyingBackend implements OpenCvBackend {
   ): void {
     throw new OpenCvInputError("mock Rodrigues is not implemented");
   }
+  matDefaultNewCameraMatrix(
+    _cameraMatrix: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _imageWidth: number,
+    _imageHeight: number,
+    _centerPrincipalPoint: number,
+  ): void {
+    throw new OpenCvInputError("mock getDefaultNewCameraMatrix is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6251,6 +6260,31 @@ describe("OpenCv client", () => {
     expect(kaze.getNOctaves()).toBe(1);
     expect(kaze.getThreshold()).toBe(Number.POSITIVE_INFINITY);
     kaze.dispose();
+  });
+});
+
+describe("getDefaultNewCameraMatrix binding", () => {
+  test("returns a new matrix and forwards size and centering", () => {
+    const backend = new CopyingBackend();
+    const calls: number[][] = [];
+    backend.matDefaultNewCameraMatrix = (_c, _d, width, height, center) => {
+      calls.push([width, height, center]);
+    };
+    const cv = createOpenCv(backend);
+    const camera = cv.matFromF64(3, 3, 1, new Float64Array([1000, 0, 320, 0, 1000, 240, 0, 0, 1]));
+    const copied = cv.getDefaultNewCameraMatrix(camera);
+    const centered = cv.getDefaultNewCameraMatrix(camera, { width: 640, height: 480 }, true);
+    expect(calls).toEqual([
+      [0, 0, 0],
+      [640, 480, 1],
+    ]);
+    expect(cv.getDefaultNewCameraMatrix.length).toBe(0);
+    // @ts-expect-error exercise pinned binding arity rejection
+    expect(() => cv.getDefaultNewCameraMatrix()).toThrow(BindingError);
+    camera.dispose();
+    expect(() => cv.getDefaultNewCameraMatrix(camera)).toThrow();
+    copied.dispose();
+    centered.dispose();
   });
 });
 

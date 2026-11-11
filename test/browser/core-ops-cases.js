@@ -2012,6 +2012,38 @@ export function runCoreOpsCases(cv, reference) {
     return { destination: api.summary(rotation) };
   });
 
+  // ---- getDefaultNewCameraMatrix: copy, centering, depth promotion
+  const nkSize = (w, h) => (reference ? new cv.Size(w, h) : { width: w, height: h });
+  const nkK = [1000, 0, 320, 0, 1000, 240, 0, 0, 1];
+  run("newCameraMatrix/copy", (handles) => {
+    const camera = track(handles, api.mat(3, 3, 1, 6, nkK));
+    return { destination: api.summary(cv.getDefaultNewCameraMatrix(camera)) };
+  });
+  run("newCameraMatrix/size-no-center", (handles) => {
+    const camera = track(handles, api.mat(3, 3, 1, 6, nkK));
+    return {
+      destination: api.summary(cv.getDefaultNewCameraMatrix(camera, nkSize(640, 480))),
+    };
+  });
+  run("newCameraMatrix/center", (handles) => {
+    const camera = track(handles, api.mat(3, 3, 1, 6, nkK));
+    return {
+      destination: api.summary(cv.getDefaultNewCameraMatrix(camera, nkSize(640, 480), true)),
+    };
+  });
+  run("newCameraMatrix/center-f32", (handles) => {
+    const camera = track(handles, api.mat(3, 3, 1, 5, [500, 0, 100.5, 0, 500, 50.25, 0, 0, 1]));
+    return {
+      destination: api.summary(cv.getDefaultNewCameraMatrix(camera, nkSize(200, 100), true)),
+    };
+  });
+  run("newCameraMatrix/no-center-flag", (handles) => {
+    const camera = track(handles, api.mat(3, 3, 1, 6, nkK));
+    return {
+      destination: api.summary(cv.getDefaultNewCameraMatrix(camera, nkSize(640, 480), false)),
+    };
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference

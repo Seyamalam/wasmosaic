@@ -43,6 +43,18 @@ export const PARITY_MANIFEST = {
   entries: [
     {
       implementationOrigin: "original",
+      method: "getDefaultNewCameraMatrix",
+      module: "calib3d",
+      notes:
+        "F64 camera-matrix copy with optional principal-point recentering at (w-1)/2, (h-1)/2.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "getDefaultNewCameraMatrix",
+      upstreamId: "calib3d.function.get-default-new-camera-matrix",
+      wasmExport: "matDefaultNewCameraMatrix",
+    },
+    {
+      implementationOrigin: "original",
       method: "Rodrigues",
       module: "calib3d",
       notes:

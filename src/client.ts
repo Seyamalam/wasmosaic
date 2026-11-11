@@ -2701,6 +2701,22 @@ class WasmOpenCv implements OpenCv {
     this.#backend.matWatershedInto(matHandleForBinding(image), matHandleForBinding(markers));
   }
 
+  getDefaultNewCameraMatrix(
+    ...arguments_: [cameraMatrix: Mat, imageSize?: Size, centerPrincipalPoint?: boolean]
+  ): Mat {
+    requireArityRange(arguments_.length, 1, 3, "getDefaultNewCameraMatrix");
+    const [cameraMatrix, imageSize, centerPrincipalPoint] = arguments_;
+    const destination = this.emptyMat();
+    this.#backend.matDefaultNewCameraMatrix(
+      matHandleForBinding(cameraMatrix),
+      matHandleForBinding(destination),
+      imageSize === undefined ? 0 : Math.round(imageSize.width),
+      imageSize === undefined ? 0 : Math.round(imageSize.height),
+      centerPrincipalPoint === true ? 1 : 0,
+    );
+    return destination;
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;

@@ -4,6 +4,8 @@ use std::{error::Error, fmt};
 
 use wasm_bindgen::prelude::*;
 
+mod calib3d_camera;
+mod calib3d_camera_wasm;
 mod calib3d_rodrigues;
 mod calib3d_rodrigues_wasm;
 mod core_algebra;

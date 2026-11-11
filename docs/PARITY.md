@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-Two hundred ten families meet the full-family definition. Current full parity is 210 of 488, or 43.03%.
+Two hundred eleven families meet the full-family definition. Current full parity is 211 of 488, or 43.24%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -91,6 +91,7 @@ Two hundred ten families meet the full-family definition. Current full parity is
 | `TonemapReinhard.getColorAdaptation`, `TonemapReinhard.getIntensity`, `TonemapReinhard.getLightAdaptation`           | Matching `cv.TonemapReinhard` getters           | Exact defaults, float32 state, arity, and lifecycle                                  |
 | `TonemapReinhard.setColorAdaptation`, `TonemapReinhard.setIntensity`, `TonemapReinhard.setLightAdaptation`           | Matching `cv.TonemapReinhard` setters           | Exact float conversion, arity, returns, and lifecycle                                |
 | `Rodrigues`                                                                                                          | Matching `cv.Rodrigues`                         | Vector/matrix conversion both directions plus analytic Jacobians                     |
+| `getDefaultNewCameraMatrix`                                                                                          | Matching `cv.getDefaultNewCameraMatrix`         | F64 copy with optional principal-point recentering                                   |
 
 ## Working partial families
 

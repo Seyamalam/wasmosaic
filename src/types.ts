@@ -506,6 +506,13 @@ export interface OpenCvBackend {
     jacobian: WasmMatHandle,
     withJacobian: number,
   ): void;
+  matDefaultNewCameraMatrix(
+    cameraMatrix: WasmMatHandle,
+    destination: WasmMatHandle,
+    imageWidth: number,
+    imageHeight: number,
+    centerPrincipalPoint: number,
+  ): void;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1560,6 +1567,12 @@ export interface OpenCv {
   watershed(image: Mat, markers: Mat): void;
 
   Rodrigues(source: Mat, destination: Mat, jacobian?: Mat): void;
+
+  getDefaultNewCameraMatrix(
+    cameraMatrix: Mat,
+    imageSize?: Size,
+    centerPrincipalPoint?: boolean,
+  ): Mat;
 
   floodFill(
     image: Mat,

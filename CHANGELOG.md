@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `getDefaultNewCameraMatrix`: F64 camera-matrix copy with optional principal-point recentering at (width-1)/2, (height-1)/2; all pinned browser cases match exactly. **Full parity is now 211 of 488 families.**
+
+### Added
+
 - `Rodrigues` rotation-vector conversion in the new calib3d module: bidirectional axis-angle mapping between 3x1/1x3 vectors and 3x3 matrices for F32/F64, analytic 3x9 and 9x3 Jacobians, second-order small-angle handling, and near-pi symmetric-part axis extraction. All pinned browser vectors match exactly. **Full parity is now 210 of 488 families.**
 
 ### Added
