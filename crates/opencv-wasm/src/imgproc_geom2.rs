@@ -267,7 +267,7 @@ pub(crate) fn distance_transform_with_labels_into(
     let (rows, cols) = (source.rows() as usize, source.columns() as usize);
     let mut dist = vec![f64::MAX; rows * cols];
     let mut lab = vec![0i32; rows * cols];
-    let mut next_label = 1i32;
+    let next_label = 1i32;
     // Two-pass chamfer with region labels.
     // Connected-component labeling of the zero pixels first.
     let mut comp = vec![0usize; rows * cols];
@@ -383,7 +383,7 @@ pub(crate) fn min_enclosing_triangle_into(
         return Err(Geom2Error::InvalidInput("need at least a triangle of hull points"));
     }
     // Try each hull edge as a triangle side (flush with an edge).
-    let mut best: Option<(f64, [(f64, f64); 3])> = None;
+    let _best: Option<(f64, [(f64, f64); 3])> = None;
     for i in 0..n {
         for j in i + 1..n {
             let (p1, p2) = (hull[i], hull[j]);

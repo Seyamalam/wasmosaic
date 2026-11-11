@@ -297,7 +297,9 @@ fn finish_moments(m: [f64; 10]) -> Moments {
             return 0.0;
         }
         let power = -(f64::from(order) / 2.0 + 1.0);
-        mu * m00.abs().powf(power)
+        // Upstream's libm evaluates pow via the exp/log path, producing
+        // next-after values for exact integer powers — mirror that.
+        mu * (power * m00.abs().ln()).exp()
     };
     Moments {
         values: [

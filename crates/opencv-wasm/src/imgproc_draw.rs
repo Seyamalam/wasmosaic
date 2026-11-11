@@ -2,7 +2,7 @@
 use std::{error::Error, fmt};
 
 use crate::{
-    core_norm::{ScalarDepth, read_scalar, write_scalar},
+    core_norm::{ScalarDepth, write_scalar},
     imgproc_window::scalar_depth,
     mat::Mat,
 };

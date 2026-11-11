@@ -223,12 +223,12 @@ pub(crate) fn demosaicing_into(
             // pixel at green_parity is green, the diagonal neighbors are the
             // "other" color, and orthogonal are the second color.
             let v = at(y, x);
-            let (mut b, mut g, mut r) = (0.0, 0.0, 0.0);
+            let (b, g, r);
             if is_green {
                 g = v;
                 // green site: same-row neighbors = one color, same-col = other.
                 // For BG2BGR: green rows have B on even cols and R on odd cols.
-                let (h_color, v_color) = if green_parity.1 == 1 {
+                let (h_color, _v_color) = if green_parity.1 == 1 {
                     // green at odd column in row 0 → rows alternate B-then-R
                     if py == 0 { ("b", "r") } else { ("r", "b") }
                 } else if py == 0 {

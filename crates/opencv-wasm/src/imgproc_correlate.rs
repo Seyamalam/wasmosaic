@@ -960,6 +960,96 @@ pub(crate) fn laplacian_into(
     )
 }
 
+/// Symmetric-tap f32 convolution along one axis: sums mirrored sample pairs
+/// before scaling, matching the upstream symmetric row/column filter order.
+fn convolve_axis_f32(
+    input: &[f32],
+    rows: u32,
+    columns: u32,
+    channels: usize,
+    kernel: &[f32],
+    vertical: bool,
+    border: i32,
+) -> Vec<f32> {
+    let length = if vertical { rows } else { columns };
+    let k = kernel.len();
+    let half = k / 2;
+    let symmetric = kernel
+        .iter()
+        .enumerate()
+        .all(|(i, &w)| (w - kernel[k - 1 - i]).abs() < 1e-6);
+    let antisymmetric = !symmetric
+        && kernel
+            .iter()
+            .enumerate()
+            .all(|(i, &w)| (w + kernel[k - 1 - i]).abs() < 1e-6);
+    let mut output = vec![0.0f32; input.len()];
+    for row in 0..rows {
+        for column in 0..columns {
+            for channel in 0..channels {
+                let mut sum = 0.0f32;
+                if symmetric || antisymmetric {
+                    for i in 0..half {
+                        let ahead = if vertical {
+                            i64::from(row) + i as i64 - half as i64
+                        } else {
+                            i64::from(column) + i as i64 - half as i64
+                        };
+                        let behind = if vertical {
+                            i64::from(row) + (k - 1 - i) as i64 - half as i64
+                        } else {
+                            i64::from(column) + (k - 1 - i) as i64 - half as i64
+                        };
+                        let (Some(a), Some(b)) = (
+                            border_index(ahead, length, border),
+                            border_index(behind, length, border),
+                        ) else {
+                            continue;
+                        };
+                        let (ai, bi) = if vertical {
+                            (
+                                offset(a, column, columns, channels, channel),
+                                offset(b, column, columns, channels, channel),
+                            )
+                        } else {
+                            (
+                                offset(row, a, columns, channels, channel),
+                                offset(row, b, columns, channels, channel),
+                            )
+                        };
+                        let pair = if symmetric {
+                            input[ai] + input[bi]
+                        } else {
+                            input[ai] - input[bi]
+                        };
+                        sum += kernel[i] * pair;
+                    }
+                    let ci = offset(row, column, columns, channels, channel);
+                    sum += kernel[half] * input[ci];
+                } else {
+                    for (i, &weight) in kernel.iter().enumerate() {
+                        let pos = if vertical {
+                            i64::from(row) + i as i64 - half as i64
+                        } else {
+                            i64::from(column) + i as i64 - half as i64
+                        };
+                        if let Some(p) = border_index(pos, length, border) {
+                            let idx = if vertical {
+                                offset(p, column, columns, channels, channel)
+                            } else {
+                                offset(row, p, columns, channels, channel)
+                            };
+                            sum += weight * input[idx];
+                        }
+                    }
+                }
+                output[offset(row, column, columns, channels, channel)] = sum;
+            }
+        }
+    }
+    output
+}
+
 /// Laplacian for large apertures: separable Dxx + separable Dyy, matching the
 /// upstream two-pass accumulation order.
 #[allow(clippy::too_many_arguments)]
@@ -984,7 +1074,76 @@ fn laplacian_separable_into(
     let columns = source.columns();
     let anchor_x = smooth.len() / 2;
     let anchor_y = second.len() / 2;
-    // Pass 1: smooth along x, second derivative along y (f64 scratch).
+    // Upstream keeps the separable pipeline in the source precision:
+    // f32 inputs accumulate in f32 even for f64 destinations.
+    if !matches!(source.depth(), MatDepth::F32) {
+        return laplacian_separable_f64(
+            source,
+            destination,
+            destination_depth,
+            second,
+            smooth,
+            scale,
+            delta,
+            border_type,
+        );
+    }
+    let second_f: Vec<f32> = second.iter().map(|&w| w as f32).collect();
+    let smooth_f: Vec<f32> = smooth.iter().map(|&w| w as f32).collect();
+    // Source decoded to f32 once; upstream applies the x-direction pass
+    // first for each separable term:
+    // dyy = second_y ∘ smooth_x and dxx = second_x ∘ smooth_y.
+    let count = (rows * columns) as usize * channels;
+    let mut source_f = vec![0.0f32; count];
+    for index in 0..count {
+        source_f[index] = read_scalar(&input, index, depth) as f32;
+    }
+    let smoothed_x =
+        convolve_axis_f32(&source_f, rows, columns, channels, &smooth_f, false, border);
+    let dyy = convolve_axis_f32(
+        &smoothed_x,
+        rows,
+        columns,
+        channels,
+        &second_f,
+        true,
+        border,
+    );
+    let dxx_pass = convolve_axis_f32(&source_f, rows, columns, channels, &second_f, false, border);
+    let dxx = convolve_axis_f32(&dxx_pass, rows, columns, channels, &smooth_f, true, border);
+    let mut output = vec![0u8; count * out_scalar.width()];
+    for index in 0..count {
+        let value = (dxx[index] + dyy[index]) * scale as f32 + delta as f32;
+        write_scalar(&mut output, index, out_scalar, f64::from(value));
+    }
+    let _ = anchor_x;
+    let _ = anchor_y;
+    destination.write_output(output, rows, columns, source.channels(), out_depth)?;
+    Ok(())
+}
+
+/// f64-precision separable Laplacian for non-F32 sources.
+#[allow(clippy::too_many_arguments)]
+fn laplacian_separable_f64(
+    source: &Mat,
+    destination: &Mat,
+    destination_depth: i32,
+    second: &[f64],
+    smooth: &[f64],
+    scale: f64,
+    delta: f64,
+    border_type: i32,
+) -> Result<(), CorrelateError> {
+    let border = check_border(border_type)?;
+    let out_depth = map_sobel_destination_depth(source, destination_depth)?;
+    let depth = scalar_depth(source.depth());
+    let out_scalar = scalar_depth(out_depth);
+    let input = source.compact_bytes();
+    let channels = usize::from(source.channels());
+    let rows = source.rows();
+    let columns = source.columns();
+    let anchor_x = smooth.len() / 2;
+    let anchor_y = second.len() / 2;
     let mut scratch = vec![0.0f64; (rows * columns) as usize * channels];
     for row in 0..rows {
         for column in 0..columns {
@@ -1020,7 +1179,6 @@ fn laplacian_separable_into(
             }
         }
     }
-    // Pass 2: second derivative along x, smooth along y.
     for row in 0..rows {
         for column in 0..columns {
             for channel in 0..channels {
@@ -1169,48 +1327,54 @@ pub(crate) fn pre_corner_detect_into(
             height: ksize,
         });
     }
-    let scratch = Mat::empty_output();
-    let sobel = |dx: u32, dy: u32| -> Result<Vec<f64>, CorrelateError> {
-        let kernel = sobel_2d_kernel(dx, dy, ksize as u32)?;
-        correlate_into(
-            source,
-            &scratch,
-            6,
-            &kernel,
-            ksize as u32,
-            ksize as u32,
-            -1,
-            -1,
-            0.0,
-            border_type,
-        )?;
-        let bytes = scratch.compact_bytes();
-        Ok((0..bytes.len() / 8)
-            .map(|index| read_scalar(&bytes, index, ScalarDepth::F64))
-            .collect())
+    let border = check_border(border_type)?;
+    let depth = scalar_depth(source.depth());
+    let channels = usize::from(source.channels());
+    let rows = source.rows();
+    let columns = source.columns();
+    let input = source.compact_bytes();
+    let (derivative, smooth) = sobel_kernels(ksize as u32)?;
+    let second = sobel_second_kernel(ksize as u32);
+    let kernel_for = |order: u32| -> &[f64] {
+        match order {
+            0 => &smooth,
+            1 => &derivative,
+            _ => &second,
+        }
     };
-    let dx = sobel(1, 0)?;
-    let dy = sobel(0, 1)?;
-    let dxx = sobel(2, 0)?;
-    let dxy = sobel(1, 1)?;
-    let dyy = sobel(0, 2)?;
-    let mut scale = 1.0 / f64::from(1u32 << (ksize - 1));
+    // Separable row-then-column pass accumulating in f32, matching the
+    // upstream RowFilter/ColumnFilter pipeline.
+    let count = (rows * columns) as usize * channels;
+    let mut source_f = vec![0.0f32; count];
+    for index in 0..count {
+        source_f[index] = read_scalar(&input, index, depth) as f32;
+    }
+    let sobel = |dx: u32, dy: u32| -> Vec<f32> {
+        let kx: Vec<f32> = kernel_for(dx).iter().map(|&w| w as f32).collect();
+        let ky: Vec<f32> = kernel_for(dy).iter().map(|&w| w as f32).collect();
+        let scratch = convolve_axis_f32(&source_f, rows, columns, channels, &kx, false, border);
+        convolve_axis_f32(&scratch, rows, columns, channels, &ky, true, border)
+    };
+    let dx = sobel(1, 0);
+    let dy = sobel(0, 1);
+    let dxx = sobel(2, 0);
+    let dxy = sobel(1, 1);
+    let dyy = sobel(0, 2);
+    let mut scale = 1.0f32 / (1u32 << (ksize - 1)) as f32;
     if source.depth() == MatDepth::U8 {
         scale /= 255.0;
     }
     let scale3 = scale * scale * scale;
-    let channels = usize::from(source.channels());
-    let rows = source.rows();
-    let columns = source.columns();
     let mut output = vec![0u8; dx.len() * 4];
     for row in 0..rows {
         for column in 0..columns {
             for channel in 0..channels {
                 let index = offset(row, column, columns, channels, channel);
-                let value = (dx[index] * dx[index] * dyy[index] + dy[index] * dy[index] * dxx[index]
+                let value = (dx[index] * dx[index] * dyy[index]
+                    + dy[index] * dy[index] * dxx[index]
                     - 2.0 * dx[index] * dy[index] * dxy[index])
                     * scale3;
-                write_scalar(&mut output, index, ScalarDepth::F32, value);
+                write_scalar(&mut output, index, ScalarDepth::F32, f64::from(value));
             }
         }
     }
