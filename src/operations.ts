@@ -196,6 +196,7 @@ export const OPENCV_OPERATIONS = [
   { method: "watershed", wasmExport: "matWatershedInto" },
   { method: "Rodrigues", wasmExport: "matRodriguesInto" },
   { method: "getDefaultNewCameraMatrix", wasmExport: "matDefaultNewCameraMatrix" },
+  { method: "projectPoints", wasmExport: "matProjectPointsInto" },
   { method: "gemm", wasmExport: "matGemmInto" },
   { method: "eigen", wasmExport: "matEigenInto" },
   { method: "solvePoly", wasmExport: "matSolvePolyInto" },

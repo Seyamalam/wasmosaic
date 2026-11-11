@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-Two hundred eleven families meet the full-family definition. Current full parity is 211 of 488, or 43.24%.
+Two hundred twelve families meet the full-family definition. Current full parity is 212 of 488, or 43.44%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -92,10 +92,11 @@ Two hundred eleven families meet the full-family definition. Current full parity
 | `TonemapReinhard.setColorAdaptation`, `TonemapReinhard.setIntensity`, `TonemapReinhard.setLightAdaptation`           | Matching `cv.TonemapReinhard` setters           | Exact float conversion, arity, returns, and lifecycle                                |
 | `Rodrigues`                                                                                                          | Matching `cv.Rodrigues`                         | Vector/matrix conversion both directions plus analytic Jacobians                     |
 | `getDefaultNewCameraMatrix`                                                                                          | Matching `cv.getDefaultNewCameraMatrix`         | F64 copy with optional principal-point recentering                                   |
+| `projectPoints`                                                                                                      | Matching `cv.projectPoints`                     | Pinhole projection, full distortion model, analytic Jacobian                         |
 
 ## Working partial families
 
-Fifty-one families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 261 families in total.
+Fifty-two families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 264 families in total.
 
 | Package methods                                                                                  | OpenCV.js families                                        | Current limit                                                              |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------- |

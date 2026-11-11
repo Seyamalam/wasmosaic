@@ -26,6 +26,17 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "projectPoints",
+      "module": "calib3d",
+      "notes": "Pinhole projection of Nx1 3-channel or Nx3/3xN 1-channel F32/F64 object points with radial, tangential, rational, thin-prism, and tilted-sensor distortion terms, Nx1 2-channel depth-matched output, and the analytic 2N x 15 F64 Jacobian over rvec, tvec, intrinsics, and five distortion coefficients; the pinned browser binding rejects a nonzero aspectRatio.",
+      "sources": ["https://docs.opencv.org/4.13.0/d9/d0c/group__calib3d.html"],
+      "status": "implemented",
+      "upstream": "projectPoints",
+      "upstreamId": "calib3d.function.project-points",
+      "wasmExport": "matProjectPointsInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "createAKAZE",
       "module": "features2d",
       "notes": "Creates a Rust-owned AKAZE configuration handle with the OpenCV 4.13 defaults and optional descriptor, threshold, octave, diffusivity, and maximum-point settings; the official 4.13.0 artifact omits the config-listed static AKAZE.create binding, so direct factory comparison is unavailable, and feature detection, descriptor extraction, and broader lifetime audits remain.",

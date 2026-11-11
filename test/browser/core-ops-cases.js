@@ -2044,6 +2044,119 @@ export function runCoreOpsCases(cv, reference) {
     };
   });
 
+  // ---- projectPoints: identity, distortion, rotation, layouts, jacobian
+  const ppK = (depth) => api.mat(3, 3, 1, depth, [500, 0, 320, 0, 500, 240, 0, 0, 1]);
+  const ppVec = (values) => api.mat(3, 1, 1, 6, values);
+  const ppInputs = (handles, source, dist, rvecValues = [0, 0, 0], tvecValues = [0, 0, 0]) => ({
+    source: track(handles, source),
+    rvec: track(handles, ppVec(rvecValues)),
+    tvec: track(handles, ppVec(tvecValues)),
+    camera: track(handles, ppK(6)),
+    dist: track(handles, dist),
+  });
+  run("projectPoints/identity", (handles) => {
+    const input = ppInputs(
+      handles,
+      api.mat(3, 1, 3, 6, [0, 0, 10, 1, 0, 10, 0, 1, 10]),
+      api.mat(1, 5, 1, 6, [0, 0, 0, 0, 0]),
+    );
+    const image = track(handles, api.empty());
+    cv.projectPoints(input.source, input.rvec, input.tvec, input.camera, input.dist, image);
+    return { imagePoints: api.summary(image) };
+  });
+  run("projectPoints/distortion", (handles) => {
+    const input = ppInputs(
+      handles,
+      api.mat(3, 1, 3, 6, [0, 0, 10, 1, 0, 10, 0, 1, 10]),
+      api.mat(1, 5, 1, 6, [0.1, 0.01, 0.001, 0.002, 0]),
+    );
+    const image = track(handles, api.empty());
+    cv.projectPoints(input.source, input.rvec, input.tvec, input.camera, input.dist, image);
+    return { imagePoints: api.summary(image) };
+  });
+  run("projectPoints/rotz", (handles) => {
+    const source = track(handles, api.mat(3, 1, 3, 6, [0, 0, 10, 1, 0, 10, 0, 1, 10]));
+    const rvec = track(handles, ppVec([0, 0, Math.PI / 2]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0, 0, 0, 0, 0]));
+    const image = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image);
+    return { imagePoints: api.summary(image) };
+  });
+  run("projectPoints/translate", (handles) => {
+    const source = track(handles, api.mat(2, 1, 3, 6, [1, 0, 10, 0, 1, 10]));
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([1, -1, 2]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 4, 1, 6, [0.05, -0.02, 0.001, 0]));
+    const image = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image);
+    return { imagePoints: api.summary(image) };
+  });
+  run("projectPoints/nx3", (handles) => {
+    const source = track(handles, api.mat(2, 3, 1, 6, [1, 0, 10, 0, 1, 10]));
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0, 0, 0, 0, 0]));
+    const image = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image);
+    return { imagePoints: api.summary(image) };
+  });
+  run("projectPoints/f32", (handles) => {
+    const source = track(handles, api.mat(3, 1, 3, 5, [0, 0, 10, 1, 0, 10, 0, 1, 10]));
+    const rvec = track(handles, ppVec([0.1, -0.2, 0.3]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(5));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0.1, 0.01, 0.001, 0.002, 0]));
+    const image = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image);
+    return { imagePoints: api.summary(image) };
+  });
+  run("projectPoints/jacobian", (handles) => {
+    const source = track(handles, api.mat(1, 1, 3, 6, [1, 2, 10]));
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0, 0, 0, 0, 0]));
+    const image = track(handles, api.empty());
+    const jacobian = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image, jacobian);
+    return { imagePoints: api.summary(image), jacobian: api.summary(jacobian) };
+  });
+  run("projectPoints/jacobian-dist", (handles) => {
+    const source = track(handles, api.mat(2, 1, 3, 6, [1, 2, 10, -1, 0.5, 8]));
+    const rvec = track(handles, ppVec([0.2, -0.1, 0.3]));
+    const tvec = track(handles, ppVec([0.5, -0.3, 1]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0.1, 0.01, 0.001, 0.002, 0.005]));
+    const image = track(handles, api.empty());
+    const jacobian = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image, jacobian);
+    return { imagePoints: api.summary(image), jacobian: api.summary(jacobian) };
+  });
+  run("projectPoints/aspect", (handles) => {
+    const source = track(handles, api.mat(2, 1, 3, 6, [1, 0, 10, 0, 1, 10]));
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0, 0, 0, 0, 0]));
+    const image = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image, undefined, 2);
+    return { imagePoints: api.summary(image) };
+  });
+  run("projectPoints/empty-dist", (handles) => {
+    const source = track(handles, api.mat(1, 1, 3, 6, [1, 1, 10]));
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.empty());
+    const image = track(handles, api.empty());
+    cv.projectPoints(source, rvec, tvec, camera, dist, image);
+    return { imagePoints: api.summary(image) };
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference

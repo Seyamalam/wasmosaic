@@ -2717,6 +2717,45 @@ class WasmOpenCv implements OpenCv {
     return destination;
   }
 
+  projectPoints(
+    ...arguments_: [
+      objectPoints: Mat,
+      rvec: Mat,
+      tvec: Mat,
+      cameraMatrix: Mat,
+      distCoeffs: Mat,
+      imagePoints: Mat,
+      jacobian?: Mat,
+      aspectRatio?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 6, 8, "projectPoints");
+    const [
+      objectPoints,
+      rvec,
+      tvec,
+      cameraMatrix,
+      distCoeffs,
+      imagePoints,
+      jacobian,
+      aspectRatio = 0,
+    ] = arguments_;
+    if (aspectRatio !== 0) {
+      throw new OpenCvInputError("projectPoints requires aspectRatio 0 in the browser binding");
+    }
+    this.#backend.matProjectPointsInto(
+      matHandleForBinding(objectPoints),
+      matHandleForBinding(rvec),
+      matHandleForBinding(tvec),
+      matHandleForBinding(cameraMatrix),
+      matHandleForBinding(distCoeffs),
+      matHandleForBinding(imagePoints),
+      jacobian === undefined ? matHandleForBinding(this.emptyMat()) : matHandleForBinding(jacobian),
+      jacobian === undefined ? 0 : 1,
+      aspectRatio,
+    );
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;

@@ -59,6 +59,49 @@ fn skew_square(a: f64, b: f64, c: f64) -> [f64; 9] {
     ]
 }
 
+/// Computes `dR/dr` for the rotation-vector to rotation-matrix map: a 3x9
+/// Jacobian whose row `p` holds `d(flattened R)/d(r_p)` in row-major order.
+pub(crate) fn rotation_jacobian(x: f64, y: f64, z: f64) -> [f64; 27] {
+    let theta = (x * x + y * y + z * z).sqrt();
+    let t2 = theta * theta;
+    let s = skew(x, y, z);
+    let s2 = skew_square(x, y, z);
+    let (a, b, ca, cb) = if theta > 1e-14 {
+        (
+            theta.sin() / theta,
+            (1.0 - theta.cos()) / t2,
+            (theta * theta.cos() - theta.sin()) / (t2 * theta),
+            (theta * theta.sin() - 2.0 * (1.0 - theta.cos())) / (t2 * t2),
+        )
+    } else {
+        (1.0, 0.5, -1.0 / 3.0, -1.0 / 12.0)
+    };
+    let r = [x, y, z];
+    let mut jac = [0.0f64; 27];
+    for p in 0..3 {
+        let mut e = [0.0f64; 3];
+        e[p] = 1.0;
+        let es = skew(e[0], e[1], e[2]);
+        // d(S^2)/dr_p = [e_p]x S + S [e_p]x
+        let mut ds2 = [0.0f64; 9];
+        for row in 0..3 {
+            for col in 0..3 {
+                let mut acc = 0.0;
+                for k in 0..3 {
+                    acc += es[row * 3 + k] * s[k * 3 + col] + s[row * 3 + k] * es[k * 3 + col];
+                }
+                ds2[row * 3 + col] = acc;
+            }
+        }
+        let da = ca * r[p];
+        let db = cb * r[p];
+        for i in 0..9 {
+            jac[p * 9 + i] = da * s[i] + a * es[i] + db * s2[i] + b * ds2[i];
+        }
+    }
+    jac
+}
+
 /// Converts between a 3x1/1x3 rotation vector and a 3x3 rotation matrix,
 /// optionally writing the 3x9 or 9x3 Jacobian. Implements the classical
 /// axis-angle map: `R = I cos t + [k]x sin t + kk' (1 - cos t)` for unit
@@ -129,41 +172,7 @@ pub(crate) fn rodrigues_into(
         destination.write_output(write(&rotation), 3, 3, 1, depth)?;
 
         if with_jacobian {
-            let t2 = theta * theta;
-            let (a, b, ca, cb) = if theta > 1e-14 {
-                (
-                    theta.sin() / theta,
-                    (1.0 - theta.cos()) / t2,
-                    (theta * theta.cos() - theta.sin()) / (t2 * theta),
-                    (theta * theta.sin() - 2.0 * (1.0 - theta.cos())) / (t2 * t2),
-                )
-            } else {
-                (1.0, 0.5, -1.0 / 3.0, -1.0 / 12.0)
-            };
-            let r = [x, y, z];
-            let mut jac = [0.0f64; 27];
-            for p in 0..3 {
-                let mut e = [0.0f64; 3];
-                e[p] = 1.0;
-                let es = skew(e[0], e[1], e[2]);
-                // d(S^2)/dr_p = [e_p]x S + S [e_p]x
-                let mut ds2 = [0.0f64; 9];
-                for row in 0..3 {
-                    for col in 0..3 {
-                        let mut acc = 0.0;
-                        for k in 0..3 {
-                            acc += es[row * 3 + k] * s[k * 3 + col]
-                                + s[row * 3 + k] * es[k * 3 + col];
-                        }
-                        ds2[row * 3 + col] = acc;
-                    }
-                }
-                let da = ca * r[p];
-                let db = cb * r[p];
-                for i in 0..9 {
-                    jac[p * 9 + i] = da * s[i] + a * es[i] + db * s2[i] + b * ds2[i];
-                }
-            }
+            let jac = rotation_jacobian(x, y, z);
             jacobian.write_output(write(&jac), 3, 9, 1, depth)?;
         }
         return Ok(());

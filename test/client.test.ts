@@ -2182,6 +2182,19 @@ class CopyingBackend implements OpenCvBackend {
   ): void {
     throw new OpenCvInputError("mock getDefaultNewCameraMatrix is not implemented");
   }
+  matProjectPointsInto(
+    _objectPoints: WasmMatHandle,
+    _rvec: WasmMatHandle,
+    _tvec: WasmMatHandle,
+    _cameraMatrix: WasmMatHandle,
+    _distCoeffs: WasmMatHandle,
+    _imagePoints: WasmMatHandle,
+    _jacobian: WasmMatHandle,
+    _withJacobian: number,
+    _aspectRatio: number,
+  ): void {
+    throw new OpenCvInputError("mock projectPoints is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6308,6 +6321,45 @@ describe("Rodrigues binding", () => {
     rvec.dispose();
     expect(() => cv.Rodrigues(rvec, rotation)).toThrow();
     rotation.dispose();
+    jacobian.dispose();
+  });
+});
+
+describe("projectPoints binding", () => {
+  test("forwards all handles with optional jacobian and aspect ratio", () => {
+    const backend = new CopyingBackend();
+    const calls: number[][] = [];
+    backend.matProjectPointsInto = (_o, _r, _t, _k, _d, _ip, _j, withJacobian, aspectRatio) => {
+      calls.push([withJacobian, aspectRatio]);
+    };
+    const cv = createOpenCv(backend);
+    const points = cv.matFromF64(2, 1, 3, new Float64Array([1, 0, 10, 0, 1, 10]));
+    const rvec = cv.matFromF64(3, 1, 1, new Float64Array([0, 0, 0]));
+    const tvec = cv.matFromF64(3, 1, 1, new Float64Array([0, 0, 0]));
+    const camera = cv.matFromF64(3, 3, 1, new Float64Array([500, 0, 320, 0, 500, 240, 0, 0, 1]));
+    const dist = cv.matFromF64(1, 5, 1, new Float64Array([0, 0, 0, 0, 0]));
+    const imagePoints = cv.emptyMat();
+    const jacobian = cv.emptyMat();
+    cv.projectPoints(points, rvec, tvec, camera, dist, imagePoints);
+    cv.projectPoints(points, rvec, tvec, camera, dist, imagePoints, jacobian);
+    expect(calls).toEqual([
+      [0, 0],
+      [1, 0],
+    ]);
+    expect(cv.projectPoints.length).toBe(0);
+    // @ts-expect-error exercise pinned binding arity rejection
+    expect(() => cv.projectPoints(points, rvec, tvec, camera, dist)).toThrow(BindingError);
+    // The pinned browser binding rejects a nonzero aspectRatio.
+    expect(() =>
+      cv.projectPoints(points, rvec, tvec, camera, dist, imagePoints, jacobian, 2),
+    ).toThrow(OpenCvInputError);
+    points.dispose();
+    expect(() => cv.projectPoints(points, rvec, tvec, camera, dist, imagePoints)).toThrow();
+    rvec.dispose();
+    tvec.dispose();
+    camera.dispose();
+    dist.dispose();
+    imagePoints.dispose();
     jacobian.dispose();
   });
 });

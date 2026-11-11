@@ -67,6 +67,18 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "projectPoints",
+      module: "calib3d",
+      notes:
+        "Pinhole projection of Nx1 3-channel or Nx3/3xN 1-channel F32/F64 object points with radial, tangential, rational, thin-prism, and tilted-sensor distortion terms, Nx1 2-channel depth-matched output, and the analytic 2N x 15 F64 Jacobian over rvec, tvec, intrinsics, and five distortion coefficients; the pinned browser binding rejects a nonzero aspectRatio.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "projectPoints",
+      upstreamId: "calib3d.function.project-points",
+      wasmExport: "matProjectPointsInto",
+    },
+    {
+      implementationOrigin: "original",
       method: "createAKAZE",
       module: "features2d",
       notes:

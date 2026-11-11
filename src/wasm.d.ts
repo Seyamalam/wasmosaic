@@ -274,6 +274,17 @@ declare module "#wasm" {
     imageHeight: number,
     centerPrincipalPoint: number,
   ): void;
+  export function matProjectPointsInto(
+    objectPoints: WasmMatHandle,
+    rvec: WasmMatHandle,
+    tvec: WasmMatHandle,
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    imagePoints: WasmMatHandle,
+    jacobian: WasmMatHandle,
+    withJacobian: number,
+    aspectRatio: number,
+  ): void;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,
