@@ -260,6 +260,7 @@ declare module "#wasm" {
     l2Gradient: boolean,
   ): void;
   export function matEqualizeHistInto(source: WasmMatHandle, destination: WasmMatHandle): void;
+  export function matWatershedInto(image: WasmMatHandle, markers: WasmMatHandle): void;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

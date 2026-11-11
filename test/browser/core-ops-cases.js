@@ -1871,6 +1871,88 @@ export function runCoreOpsCases(cv, reference) {
     return { rect };
   });
 
+  // ---- watershed: marker flooding, boundaries, errors
+  const wsImage = (rows, columns, fill) => api.mat(rows, columns, 3, 0, fill);
+  run("watershed/two-seeds", (handles) => {
+    const image = track(
+      handles,
+      wsImage(
+        4,
+        4,
+        Array.from({ length: 48 }, (_, i) => (((i / 3) | 0) % 2 ? 200 : 10)),
+      ),
+    );
+    const markers = track(
+      handles,
+      api.mat(4, 4, 1, 4, [0, 0, 0, 0, 0, 1, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0]),
+    );
+    cv.watershed(image, markers);
+    return { markers: api.summary(markers) };
+  });
+  run("watershed/uniform", (handles) => {
+    const image = track(handles, wsImage(4, 4, Array.from({ length: 48 }).fill(128)));
+    const markers = track(
+      handles,
+      api.mat(4, 4, 1, 4, [0, 0, 0, 0, 0, 1, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0]),
+    );
+    cv.watershed(image, markers);
+    return { markers: api.summary(markers) };
+  });
+  run("watershed/wide", (handles) => {
+    const image = track(handles, wsImage(5, 5, Array.from({ length: 75 }).fill(100)));
+    const markers = track(
+      handles,
+      api.mat(
+        5,
+        5,
+        1,
+        4,
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0],
+      ),
+    );
+    cv.watershed(image, markers);
+    return { markers: api.summary(markers) };
+  });
+  run("watershed/no-seeds", (handles) => {
+    const image = track(handles, wsImage(4, 4, Array.from({ length: 48 }).fill(128)));
+    const markers = track(handles, api.mat(4, 4, 1, 4, Array.from({ length: 16 }).fill(0)));
+    cv.watershed(image, markers);
+    return { markers: api.summary(markers) };
+  });
+  run("watershed/channel-order", (handles) => {
+    const pixels = [];
+    for (let i = 0; i < 25; i += 1) {
+      if (i === 6 || i === 18) pixels.push(50, 50, 50);
+      else if (i === 13) pixels.push(150, 0, 0);
+      else pixels.push(100, 100, 100);
+    }
+    const image = track(handles, wsImage(5, 5, pixels));
+    const markers = track(
+      handles,
+      api.mat(
+        5,
+        5,
+        1,
+        4,
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0],
+      ),
+    );
+    cv.watershed(image, markers);
+    return { markers: api.summary(markers) };
+  });
+  run("watershed/error/1ch", (handles) => {
+    const image = track(handles, api.mat(4, 4, 1, 0, Array.from({ length: 16 }).fill(0)));
+    const markers = track(handles, api.mat(4, 4, 1, 4, Array.from({ length: 16 }).fill(0)));
+    cv.watershed(image, markers);
+    return { markers: api.summary(markers) };
+  });
+  run("watershed/error/u8markers", (handles) => {
+    const image = track(handles, wsImage(4, 4, Array.from({ length: 48 }).fill(0)));
+    const markers = track(handles, api.mat(4, 4, 1, 0, Array.from({ length: 16 }).fill(0)));
+    cv.watershed(image, markers);
+    return { markers: api.summary(markers) };
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference
@@ -2035,6 +2117,7 @@ export function runCoreOpsCases(cv, reference) {
       HoughLinesP: cv.HoughLinesP.length,
       fitEllipseDirect: cv.fitEllipseDirect.length,
       fitEllipseAMS: cv.fitEllipseAMS.length,
+      watershed: cv.watershed.length,
     },
   }));
 

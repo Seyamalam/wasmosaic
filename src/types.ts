@@ -499,6 +499,7 @@ export interface OpenCvBackend {
     upDiff: number,
     flags: number,
   ): number;
+  matWatershedInto(image: WasmMatHandle, markers: WasmMatHandle): void;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1550,6 +1551,8 @@ export interface OpenCv {
     labelType?: number,
   ): number;
   distanceTransform(source: Mat, destination: Mat, distanceType: number, maskSize: number): void;
+  watershed(image: Mat, markers: Mat): void;
+
   floodFill(
     image: Mat,
     mask: Mat,

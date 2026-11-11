@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- Marker-controlled `watershed` segmentation: in-place I32 marker flood that groups interior pixels by first-channel intensity, processes levels ascending, assigns unlabeled pixels the single visible label or marks them watershed on contested fronts, and collapses seeds activated beside two established regions. The one-pixel frame is always watershed. The binding is verified against pinned browser vectors and stays partial because one contested-front tie-break ordering still differs. **Full parity remains 209 of 488 families; supported surface grows to 261.**
+
+### Added
+
 - Contrast-limited adaptive histogram equalization: `createCLAHE` plus the full `CLAHE` object (`apply`, `collectGarbage`, `getClipLimit`, `setClipLimit`, `getTilesGridSize`, `setTilesGridSize`). `apply` implements tile histograms, clip-and-redistribute, CDF-scaled lookup tables, and bilinear tile interpolation for U8 and U16 single-channel matrices; oversized grids collapse to the image dimensions. The factory stays partial because the pinned artifact omits the `createCLAHE` binding. **Full parity is now 209 of 488 families.**
 
 ### Added

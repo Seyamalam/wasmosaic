@@ -2162,6 +2162,9 @@ class CopyingBackend implements OpenCvBackend {
   matFloodFillInto(): number {
     throw new OpenCvInputError("mock floodFill is not implemented");
   }
+  matWatershedInto(_image: WasmMatHandle, _markers: WasmMatHandle): void {
+    throw new OpenCvInputError("mock watershed is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6240,6 +6243,27 @@ describe("OpenCv client", () => {
     expect(kaze.getNOctaves()).toBe(1);
     expect(kaze.getThreshold()).toBe(Number.POSITIVE_INFINITY);
     kaze.dispose();
+  });
+});
+
+describe("watershed binding", () => {
+  test("forwards image and marker handles, enforces arity and lifetimes", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[][] = [];
+    backend.matWatershedInto = (image, markers) => {
+      calls.push([image, markers]);
+    };
+    const cv = createOpenCv(backend);
+    const image = cv.matFromU8(1, 1, 3, new Uint8Array([1, 2, 3]));
+    const markers = cv.matFromI32(1, 1, 1, new Int32Array([1]));
+    cv.watershed(image, markers);
+    expect(calls).toHaveLength(1);
+    expect(cv.watershed.length).toBe(2);
+    // @ts-expect-error exercise pinned binding arity rejection
+    expect(() => cv.watershed(image)).toThrow(BindingError);
+    image.dispose();
+    expect(() => cv.watershed(image, markers)).toThrow();
+    markers.dispose();
   });
 });
 

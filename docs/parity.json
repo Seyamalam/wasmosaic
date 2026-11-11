@@ -2523,6 +2523,17 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "watershed",
+      "module": "imgproc",
+      "notes": "Level-ordered marker flood; one contested-front tie-break case differs",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
+      "status": "partial",
+      "upstream": "watershed",
+      "upstreamId": "imgproc.function.watershed",
+      "wasmExport": "matWatershedInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "minEnclosingTriangle",
       "module": "imgproc",
       "notes": "Hull-triple min triangle; upstream errors on Mat input",

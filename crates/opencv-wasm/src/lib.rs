@@ -93,6 +93,8 @@ mod imgproc_transform_matrices;
 mod imgproc_transform_matrices_wasm;
 mod imgproc_warp;
 mod imgproc_warp_wasm;
+mod imgproc_watershed;
+mod imgproc_watershed_wasm;
 mod imgproc_window;
 mod imgproc_window_wasm;
 mod mat;

@@ -2721,6 +2721,17 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "watershed",
+      module: "imgproc",
+      notes: "Level-ordered marker flood; one contested-front tie-break case differs",
+      sources: [IMGPROC_SOURCE],
+      status: "partial",
+      upstream: "watershed",
+      upstreamId: "imgproc.function.watershed",
+      wasmExport: "matWatershedInto",
+    },
+    {
+      implementationOrigin: "original",
       method: "minEnclosingTriangle",
       module: "imgproc",
       notes: "Hull-triple min triangle; upstream errors on Mat input",

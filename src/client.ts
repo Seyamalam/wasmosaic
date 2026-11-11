@@ -2696,6 +2696,11 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  watershed(image: Mat, markers: Mat): void {
+    requireExactArity(arguments.length, 2, "watershed");
+    this.#backend.matWatershedInto(matHandleForBinding(image), matHandleForBinding(markers));
+  }
+
   floodFill(
     ...arguments_: [
       image: Mat,

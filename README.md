@@ -67,270 +67,271 @@ Read [the API reference](docs/API.md) for input contracts and conversion helpers
 
 The independent browser inventory contains 488 callable families, so the 25% milestone is 122 fully compatible families. A family earns full credit only after every selected browser overload, supported matrix form, output mutation, error case, and differential fixture passes. A useful U8 specialization is recorded as partial and earns no full-parity credit.
 
-| Module     | Package method                              | OpenCV.js family                               | Status  | Current scope                                        |
-| ---------- | ------------------------------------------- | ---------------------------------------------- | ------- | ---------------------------------------------------- |
-| core       | `absdiff`                                   | `cv.absdiff`                                   | Partial | Matching U8 matrices                                 |
-| core       | `add`                                       | `cv.add`                                       | Partial | Saturating U8 matrix operands                        |
-| core       | `addWeighted`                               | `cv.addWeighted`                               | Full    | Exact all-depth mutable-output contract              |
-| core       | `bitwiseAnd`                                | `cv.bitwise_and`                               | Partial | U8 matrix operands, no mask                          |
-| core       | `bitwiseNot`                                | `cv.bitwise_not`                               | Full    | All-depth destination/mask contract                  |
-| core       | `bitwiseOr`                                 | `cv.bitwise_or`                                | Partial | U8 matrix operands, no mask                          |
-| core       | `bitwiseXor`                                | `cv.bitwise_xor`                               | Partial | U8 matrix operands, no mask                          |
-| core       | `compare`                                   | `cv.compare`                                   | Full    | All-depth six-operator contract                      |
-| core       | `countNonZero`                              | `cv.countNonZero`                              | Full    | Exact all-depth single-channel reduction             |
-| core       | `convertScaleAbs`                           | `cv.convertScaleAbs`                           | Full    | Exact all-depth mutable-output contract              |
-| core       | `copyMakeBorder`                            | `cv.copyMakeBorder`                            | Full    | All depths, five modes, dst form                     |
-| core       | `determinant`                               | `cv.determinant`                               | Full    | Exact F32/F64 square-matrix contract                 |
-| core       | `divide`                                    | `cv.divide`                                    | Full    | Exact all-depth mutable-output contract              |
-| core       | `cartToPolar`                               | `cv.cartToPolar`                               | Full    | Exact paired F32/F64 output contract                 |
-| core       | `exp`                                       | `cv.exp`                                       | Full    | Exact F32/F64 mutable-output contract                |
-| core       | `flip`                                      | `cv.flip`                                      | Full    | Exact all-depth mutable-output contract              |
-| core       | `getLogLevel`                               | `cv.getLogLevel`                               | Partial | Package-owned log level 0 through 6                  |
-| core       | `getOptimalDFTSize`                         | `cv.getOptimalDFTSize`                         | Full    | Exact i32 contract and smooth result                 |
-| core       | `hconcat`                                   | `cv.hconcat`                                   | Full    | MatVector input, all depths                          |
-| core       | `inRange`                                   | `cv.inRange`                                   | Partial | U8 matrix bounds                                     |
-| core       | `invert`                                    | `cv.invert`                                    | Partial | Square matrices and three methods                    |
-| core       | `log`                                       | `cv.log`                                       | Full    | Exact F32/F64 mutable-output contract                |
-| core       | `lut`                                       | `cv.LUT`                                       | Partial | Byte sources and every table depth                   |
-| core       | `magnitude`                                 | `cv.magnitude`                                 | Full    | Exact matching F32/F64 mutable output                |
-| core       | `max`                                       | `cv.max`                                       | Partial | U8 matrix operands                                   |
-| core       | `mean`                                      | `cv.mean`                                      | Full    | Exact all-depth optional-mask contract               |
-| core       | `meanStdDev`                                | `cv.meanStdDev`                                | Partial | All depths, masks, and F64 outputs                   |
-| core       | `merge`                                     | `cv.merge`                                     | Full    | MatVector input with mixed channels                  |
-| core       | `min`                                       | `cv.min`                                       | Partial | U8 matrix operands                                   |
-| core       | `minMaxLoc`                                 | `cv.minMaxLoc`                                 | Full    | Exact all-depth optional-mask contract               |
-| core       | `mixChannels`                               | `cv.mixChannels`                               | Full    | Vector-to-vector channel routing                     |
-| core       | `multiply`                                  | `cv.multiply`                                  | Full    | Exact all-depth mutable-output contract              |
-| core       | `norm`                                      | `cv.norm`                                      | Partial | All depths, masks, and norm modes                    |
-| core       | `normalize`                                 | `cv.normalize`                                 | Partial | All depths and mutable destinations                  |
-| core       | `polarToCart`                               | `cv.polarToCart`                               | Full    | Exact paired F32/F64 output contract                 |
-| core       | `perspectiveTransform`                      | `cv.perspectiveTransform`                      | Partial | F32/F64 2D and 3D vectors                            |
-| core       | `pow`                                       | `cv.pow`                                       | Full    | Exact all-depth valid-power contract                 |
-| core       | `randn`                                     | `cv.randn`                                     | Partial | All depths and diagonal deviations                   |
-| core       | `randu`                                     | `cv.randu`                                     | Partial | All depths and per-channel ranges                    |
-| core       | `repeat`                                    | `cv.repeat`                                    | Full    | Exact all-depth mutable-output contract              |
-| core       | `reduce`                                    | `cv.reduce`                                    | Partial | Both axes, four modes, all depths                    |
-| core       | `rotate`                                    | `cv.rotate`                                    | Full    | Exact all-depth mutable-output contract              |
-| core       | `setIdentity`                               | `cv.setIdentity`                               | Full    | Exact Scalar conversion and in-place ROI             |
-| core       | `setLogLevel`                               | `cv.setLogLevel`                               | Partial | Previous-level return and state update               |
-| core       | `setRNGSeed`                                | `cv.setRNGSeed`                                | Partial | Deterministic package-owned RNG                      |
-| core       | `solve`                                     | `cv.solve`                                     | Partial | LU, Cholesky, and QR methods                         |
-| core       | `subtract`                                  | `cv.subtract`                                  | Partial | Saturating U8 matrix operands                        |
-| core       | `split`                                     | `cv.split`                                     | Full    | MatVector output, all depths                         |
-| core       | `sqrt`                                      | `cv.sqrt`                                      | Full    | Exact F32/F64 mutable-output contract                |
-| core       | `transpose`                                 | `cv.transpose`                                 | Full    | Exact all-depth mutable-output contract              |
-| core       | `trace`                                     | `cv.trace`                                     | Full    | Exact all-depth four-lane Scalar                     |
-| core       | `transform`                                 | `cv.transform`                                 | Partial | All depths and F32/F64 coefficients                  |
-| core       | `vconcat`                                   | `cv.vconcat`                                   | Full    | MatVector input, all depths                          |
-| features2d | `createAKAZE`                               | `cv.AKAZE.create`                              | Partial | Configuration handle only; no detection              |
-| features2d | `AKAZE.getDefaultName`                      | `cv.AKAZE.getDefaultName`                      | Full    | Exact name, arity, and lifecycle                     |
-| features2d | `AKAZE.getDescriptorChannels`               | `cv.AKAZE.getDescriptorChannels`               | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `AKAZE.getDescriptorSize`                   | `cv.AKAZE.getDescriptorSize`                   | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `AKAZE.getDescriptorType`                   | `cv.AKAZE.getDescriptorType`                   | Full    | Canonical enum identity and lifecycle                |
-| features2d | `AKAZE.getDiffusivity`                      | `cv.AKAZE.getDiffusivity`                      | Full    | Shared enum identity and lifecycle                   |
-| features2d | `AKAZE.getNOctaveLayers`                    | `cv.AKAZE.getNOctaveLayers`                    | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `AKAZE.getNOctaves`                         | `cv.AKAZE.getNOctaves`                         | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `AKAZE.getThreshold`                        | `cv.AKAZE.getThreshold`                        | Full    | Exact F64 state and lifecycle                        |
-| features2d | `AKAZE.setDescriptorChannels`               | `cv.AKAZE.setDescriptorChannels`               | Full    | Exact i32 coercion and call contract                 |
-| features2d | `AKAZE.setDescriptorSize`                   | `cv.AKAZE.setDescriptorSize`                   | Full    | Exact i32 coercion and call contract                 |
-| features2d | `AKAZE.setDescriptorType`                   | `cv.AKAZE.setDescriptorType`                   | Full    | Exact structural enum-object coercion                |
-| features2d | `AKAZE.setDiffusivity`                      | `cv.AKAZE.setDiffusivity`                      | Full    | Exact structural enum-object coercion                |
-| features2d | `AKAZE.setNOctaveLayers`                    | `cv.AKAZE.setNOctaveLayers`                    | Full    | Exact i32 coercion and call contract                 |
-| features2d | `AKAZE.setNOctaves`                         | `cv.AKAZE.setNOctaves`                         | Full    | Exact i32 coercion and call contract                 |
-| features2d | `AKAZE.setThreshold`                        | `cv.AKAZE.setThreshold`                        | Full    | Exact number coercion and call contract              |
-| features2d | `createKAZE`                                | `cv.KAZE.create`                               | Partial | Configuration handle only; no detection              |
-| features2d | `KAZE.getDefaultName`                       | `cv.KAZE.getDefaultName`                       | Full    | Exact name, arity, and lifecycle                     |
-| features2d | `KAZE.getDiffusivity`                       | `cv.KAZE.getDiffusivity`                       | Full    | Shared enum identity and lifecycle                   |
-| features2d | `KAZE.getExtended`                          | `cv.KAZE.getExtended`                          | Full    | Exact boolean state and lifecycle                    |
-| features2d | `KAZE.getNOctaveLayers`                     | `cv.KAZE.getNOctaveLayers`                     | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `KAZE.getNOctaves`                          | `cv.KAZE.getNOctaves`                          | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `KAZE.getThreshold`                         | `cv.KAZE.getThreshold`                         | Full    | Exact F64 state and lifecycle                        |
-| features2d | `KAZE.getUpright`                           | `cv.KAZE.getUpright`                           | Full    | Exact boolean state and lifecycle                    |
-| features2d | `KAZE.setDiffusivity`                       | `cv.KAZE.setDiffusivity`                       | Full    | Exact structural enum-object coercion                |
-| features2d | `KAZE.setExtended`                          | `cv.KAZE.setExtended`                          | Full    | Exact boolean coercion and call contract             |
-| features2d | `KAZE.setNOctaveLayers`                     | `cv.KAZE.setNOctaveLayers`                     | Full    | Exact i32 coercion and call contract                 |
-| features2d | `KAZE.setNOctaves`                          | `cv.KAZE.setNOctaves`                          | Full    | Exact i32 coercion and call contract                 |
-| features2d | `KAZE.setThreshold`                         | `cv.KAZE.setThreshold`                         | Full    | Exact number coercion and call contract              |
-| features2d | `KAZE.setUpright`                           | `cv.KAZE.setUpright`                           | Full    | Exact boolean coercion and call contract             |
-| features2d | `createMSER`                                | `cv.MSER.create`                               | Partial | Static factory absent; no region detection           |
-| features2d | `MSER.getDefaultName`                       | `cv.MSER.getDefaultName`                       | Full    | Exact name, arity, and lifecycle                     |
-| features2d | `MSER.getDelta`                             | `cv.MSER.getDelta`                             | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `MSER.getMaxArea`                           | `cv.MSER.getMaxArea`                           | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `MSER.getMinArea`                           | `cv.MSER.getMinArea`                           | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `MSER.getPass2Only`                         | `cv.MSER.getPass2Only`                         | Full    | Exact boolean state and lifecycle                    |
-| features2d | `MSER.setDelta`                             | `cv.MSER.setDelta`                             | Full    | Exact i32 coercion and call contract                 |
-| features2d | `MSER.setMaxArea`                           | `cv.MSER.setMaxArea`                           | Full    | Exact i32 coercion and call contract                 |
-| features2d | `MSER.setMinArea`                           | `cv.MSER.setMinArea`                           | Full    | Exact i32 coercion and call contract                 |
-| features2d | `MSER.setPass2Only`                         | `cv.MSER.setPass2Only`                         | Full    | Exact boolean coercion and call contract             |
-| features2d | `createORB`                                 | `cv.ORB.create`                                | Partial | Static factory absent; no detection                  |
-| features2d | `ORB.getDefaultName`                        | `cv.ORB.getDefaultName`                        | Full    | Exact name, arity, and lifecycle                     |
-| features2d | `ORB.getFastThreshold`                      | `cv.ORB.getFastThreshold`                      | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `ORB.setEdgeThreshold`                      | `cv.ORB.setEdgeThreshold`                      | Full    | Exact i32 coercion and call contract                 |
-| features2d | `ORB.setFastThreshold`                      | `cv.ORB.setFastThreshold`                      | Full    | Exact i32 coercion and call contract                 |
-| features2d | `ORB.setFirstLevel`                         | `cv.ORB.setFirstLevel`                         | Full    | Exact i32 conversion and validation                  |
-| features2d | `ORB.setMaxFeatures`                        | `cv.ORB.setMaxFeatures`                        | Full    | Exact i32 coercion and call contract                 |
-| features2d | `ORB.setNLevels`                            | `cv.ORB.setNLevels`                            | Full    | Exact i32 coercion and call contract                 |
-| features2d | `ORB.setPatchSize`                          | `cv.ORB.setPatchSize`                          | Full    | Exact i32 coercion and call contract                 |
-| features2d | `ORB.setScaleFactor`                        | `cv.ORB.setScaleFactor`                        | Full    | Exact F64 input and F32 stored state                 |
-| features2d | `ORB.setScoreType`                          | `cv.ORB.setScoreType`                          | Full    | Exact structural enum-object coercion                |
-| features2d | `ORB.setWTA_K`                              | `cv.ORB.setWTA_K`                              | Full    | Exact i32 coercion and call contract                 |
-| features2d | `createAgastFeatureDetector`                | `cv.AgastFeatureDetector.create`               | Partial | Configuration handle only; no detection              |
-| features2d | `AgastFeatureDetector.getDefaultName`       | `cv.AgastFeatureDetector.getDefaultName`       | Full    | Exact name, arity, and lifecycle                     |
-| features2d | `AgastFeatureDetector.getNonmaxSuppression` | `cv.AgastFeatureDetector.getNonmaxSuppression` | Full    | Exact boolean state and lifecycle                    |
-| features2d | `AgastFeatureDetector.getThreshold`         | `cv.AgastFeatureDetector.getThreshold`         | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `AgastFeatureDetector.getType`              | `cv.AgastFeatureDetector.getType`              | Full    | Canonical enum identity and lifecycle                |
-| features2d | `AgastFeatureDetector.setNonmaxSuppression` | `cv.AgastFeatureDetector.setNonmaxSuppression` | Full    | Exact boolean coercion and call contract             |
-| features2d | `AgastFeatureDetector.setThreshold`         | `cv.AgastFeatureDetector.setThreshold`         | Full    | Exact i32 coercion and call contract                 |
-| features2d | `AgastFeatureDetector.setType`              | `cv.AgastFeatureDetector.setType`              | Full    | Exact structural enum-object coercion                |
-| features2d | `createFastFeatureDetector`                 | `cv.FastFeatureDetector.create`                | Partial | Configuration handle only; no detection              |
-| features2d | `FastFeatureDetector.getDefaultName`        | `cv.FastFeatureDetector.getDefaultName`        | Full    | Exact name, arity, and lifecycle                     |
-| features2d | `FastFeatureDetector.getNonmaxSuppression`  | `cv.FastFeatureDetector.getNonmaxSuppression`  | Full    | Exact boolean state and lifecycle                    |
-| features2d | `FastFeatureDetector.getThreshold`          | `cv.FastFeatureDetector.getThreshold`          | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `FastFeatureDetector.getType`               | `cv.FastFeatureDetector.getType`               | Full    | Canonical enum identity and lifecycle                |
-| features2d | `FastFeatureDetector.setNonmaxSuppression`  | `cv.FastFeatureDetector.setNonmaxSuppression`  | Full    | Exact boolean coercion and call contract             |
-| features2d | `FastFeatureDetector.setThreshold`          | `cv.FastFeatureDetector.setThreshold`          | Full    | Exact i32 coercion and call contract                 |
-| features2d | `FastFeatureDetector.setType`               | `cv.FastFeatureDetector.setType`               | Full    | Exact structural enum-object coercion                |
-| features2d | `createGFTTDetector`                        | `cv.GFTTDetector.create`                       | Partial | Selected six-argument configuration                  |
-| features2d | `GFTTDetector.getBlockSize`                 | `cv.GFTTDetector.getBlockSize`                 | Full    | Exact arity, state, and lifecycle                    |
-| features2d | `GFTTDetector.getDefaultName`               | `cv.GFTTDetector.getDefaultName`               | Full    | Exact name, arity, and lifecycle                     |
-| features2d | `GFTTDetector.getHarrisDetector`            | `cv.GFTTDetector.getHarrisDetector`            | Full    | Exact boolean state and lifecycle                    |
-| features2d | `GFTTDetector.getK`                         | `cv.GFTTDetector.getK`                         | Full    | Exact F64 state and lifecycle                        |
-| features2d | `GFTTDetector.getMaxFeatures`               | `cv.GFTTDetector.getMaxFeatures`               | Full    | Exact signed i32 state and lifecycle                 |
-| features2d | `GFTTDetector.getMinDistance`               | `cv.GFTTDetector.getMinDistance`               | Full    | Exact F64 state and lifecycle                        |
-| features2d | `GFTTDetector.getQualityLevel`              | `cv.GFTTDetector.getQualityLevel`              | Full    | Exact F64 state and lifecycle                        |
-| features2d | `GFTTDetector.setBlockSize`                 | `cv.GFTTDetector.setBlockSize`                 | Full    | Exact i32 coercion and call contract                 |
-| features2d | `GFTTDetector.setHarrisDetector`            | `cv.GFTTDetector.setHarrisDetector`            | Full    | Exact boolean coercion and call contract             |
-| features2d | `GFTTDetector.setK`                         | `cv.GFTTDetector.setK`                         | Full    | Exact number coercion and call contract              |
-| features2d | `GFTTDetector.setMaxFeatures`               | `cv.GFTTDetector.setMaxFeatures`               | Full    | Exact i32 coercion and call contract                 |
-| features2d | `GFTTDetector.setMinDistance`               | `cv.GFTTDetector.setMinDistance`               | Full    | Exact number coercion and call contract              |
-| features2d | `GFTTDetector.setQualityLevel`              | `cv.GFTTDetector.setQualityLevel`              | Full    | Exact number coercion and call contract              |
-| imgproc    | `arcLength`                                 | `cv.arcLength`                                 | Full    | Exact I32/F32 contour contract                       |
-| imgproc    | `boundingRect`                              | `cv.boundingRect`                              | Full    | Exact I32/F32 contour bounds                         |
-| imgproc    | `clipLine`                                  | `cv.clipLine`                                  | Full    | Boolean 3-arg contract                               |
-| imgproc    | `contourArea`                               | `cv.contourArea`                               | Full    | Exact I32/F32 contour area                           |
-| imgproc    | `createHanningWindow`                       | `cv.createHanningWindow`                       | Full    | Exact F32/F64 mutable window contract                |
-| imgproc    | `ellipse2Poly`                              | `cv.ellipse2Poly`                              | Partial | Ordered integer ellipse arcs                         |
-| imgproc    | `getAffineTransform`                        | `cv.getAffineTransform`                        | Full    | Exact continuous F32 points and F64 map              |
-| imgproc    | `getPerspectiveTransform`                   | `cv.getPerspectiveTransform`                   | Partial | Continuous F32 points; LU/QR to F64                  |
-| imgproc    | `getRotationMatrix2D`                       | `cv.getRotationMatrix2D`                       | Full    | Exact Point2f and F64 matrix contract                |
-| imgproc    | `getStructuringElement`                     | `cv.getStructuringElement`                     | Full    | Exact rectangle, cross, ellipse, diamond             |
-| imgproc    | `cvtColor`                                  | `cv.cvtColor`                                  | Partial | U8 RGB/BGR/alpha/gray codes 0 through 11             |
-| imgproc    | `invertAffineTransform`                     | `cv.invertAffineTransform`                     | Full    | Exact F32/F64 mutable inverse contract               |
-| imgproc    | `isContourConvex`                           | `cv.isContourConvex`                           | Full    | Exact strict-convexity contract                      |
-| imgproc    | `pointPolygonTest`                          | `cv.pointPolygonTest`                          | Full    | Exact classification and signed distance             |
-| imgproc    | `resize`                                    | `cv.resize`                                    | Full    | All seven interpolation modes                        |
-| imgproc    | `threshold`                                 | `cv.threshold`                                 | Partial | Five U8 modes plus Otsu selection                    |
-| imgproc    | `GaussianBlur`                              | `cv.GaussianBlur`                              | Partial | Separable odd U8 kernels and borders                 |
-| imgproc    | `morphologyEx`                              | `cv.morphologyEx`                              | Partial | Seven U8 morphology operations                       |
-| imgproc    | `Sobel`                                     | `cv.Sobel`                                     | Partial | 3x3 U8 gradients to signed/float outputs             |
-| imgproc    | `Canny`                                     | `cv.Canny`                                     | Partial | U8 3x3 gradients, suppression, hysteresis            |
-| imgproc    | `approxPolyDP`                              | `cv.approxPolyDP`                              | Partial | I32/F32 open/closed simplification                   |
-| imgproc    | `findContours`                              | `cv.findContours`                              | Partial | U8 holes, trees, chains and MatVector                |
-| imgproc    | `warpAffine`                                | `cv.warpAffine`                                | Partial | U8 nearest/linear affine image warps                 |
-| imgproc    | `equalizeHist`                              | `cv.equalizeHist`                              | Full    | U8 single-channel, dst form                          |
-| imgproc    | `erode`                                     | `cv.erode`                                     | Full    | Depth-gated mask erosion and borders                 |
-| imgproc    | `dilate`                                    | `cv.dilate`                                    | Full    | Depth-gated mask dilation and borders                |
-| imgproc    | `blur`                                      | `cv.blur`                                      | Full    | Depth-gated normalized box blur                      |
-| imgproc    | `boxFilter`                                 | `cv.boxFilter`                                 | Full    | ddepth/normalize box filtering                       |
-| imgproc    | `medianBlur`                                | `cv.medianBlur`                                | Full    | Depth-gated median filtering                         |
-| imgproc    | `integral`                                  | `cv.integral`                                  | Full    | Sum-only integral images                             |
-| imgproc    | `integral2`                                 | `cv.integral2`                                 | Full    | Integral plus squared-sum images                     |
-| imgproc    | `moments`                                   | `cv.moments`                                   | Partial | Raster moments; residual ulp diffs                   |
-| imgproc    | `HuMoments`                                 | `cv.HuMoments`                                 | Full    | Seven raw Hu invariants                              |
-| imgproc    | `matchShapes`                               | `cv.matchShapes`                               | Partial | I1/I2/I3; residual accumulation diffs                |
-| imgproc    | `getFontScaleFromHeight`                    | `cv.getFontScaleFromHeight`                    | Full    | Hershey scale from pixel height                      |
-| imgproc    | `filter2D`                                  | `cv.filter2D`                                  | Full    | Depth-gated correlation, dst-depth table             |
-| imgproc    | `sepFilter2D`                               | `cv.sepFilter2D`                               | Full    | Separable two-pass correlation                       |
-| imgproc    | `stackBlur`                                 | `cv.stackBlur`                                 | Full    | Triangular-weight separable stack blur               |
-| imgproc    | `pyrDown`                                   | `cv.pyrDown`                                   | Full    | Gaussian pyramid downsampling                        |
-| imgproc    | `spatialGradient`                           | `cv.spatialGradient`                           | Full    | 3x3 Sobel I16 gradients                              |
-| imgproc    | `Scharr`                                    | `cv.Scharr`                                    | Full    | 3x3 Scharr derivatives                               |
-| imgproc    | `sqrBoxFilter`                              | `cv.sqrBoxFilter`                              | Partial | Sq-sum box; residual float ulp diffs                 |
-| imgproc    | `bilateralFilter`                           | `cv.bilateralFilter`                           | Partial | Range/space weights; residual diffs                  |
-| imgproc    | `pyrUp`                                     | `cv.pyrUp`                                     | Partial | Gaussian upsampling; residual f32 ulps               |
-| imgproc    | `Laplacian`                                 | `cv.Laplacian`                                 | Partial | k1/3/5/7; one residual f32/f64 k5 ulp                |
-| imgproc    | `adaptiveThreshold`                         | `cv.adaptiveThreshold`                         | Full    | U8 mean/Gaussian windowed threshold                  |
-| imgproc    | `applyColorMap`                             | `cv.applyColorMap`                             | Full    | All 22 pinned colormaps                              |
-| imgproc    | `convexHull`                                | `cv.convexHull`                                | Full    | Monotone-chain hull, points or indices               |
-| imgproc    | `minAreaRect`                               | `cv.minAreaRect`                               | Full    | Rotating-calipers RotatedRect                        |
-| imgproc    | `minEnclosingCircle`                        | `cv.minEnclosingCircle`                        | Partial | Approximate circle radius differs                    |
-| imgproc    | `fitEllipse`                                | `cv.fitEllipse`                                | Partial | Least-squares conic; degenerate cases differ         |
-| imgproc    | `fitLine`                                   | `cv.fitLine`                                   | Full    | DIST_L2 principal-axis fit                           |
-| imgproc    | `line`                                      | `cv.line`                                      | Full    | Bresenham 8-connected line rasterization             |
-| imgproc    | `rectangle`                                 | `cv.rectangle`                                 | Full    | Outline and filled axis-aligned rects                |
-| imgproc    | `drawMarker`                                | `cv.drawMarker`                                | Full    | Cross and tilted-cross marker glyphs                 |
-| imgproc    | `polylines`                                 | `cv.polylines`                                 | Full    | Connected vertex chains                              |
-| imgproc    | `fillPoly`                                  | `cv.fillPoly`                                  | Full    | Scanline polygon fill                                |
-| imgproc    | `divSpectrums`                              | `cv.divSpectrums`                              | Full    | Element-wise complex spectral division               |
-| imgproc    | `HoughLines`                                | `cv.HoughLines`                                | Full    | Standard Hough accumulator + peak extraction         |
-| imgproc    | `HoughLinesP`                               | `cv.HoughLinesP`                               | Full    | Probabilistic segment extraction; scan-order ends    |
-| imgproc    | `fitEllipseDirect`                          | `cv.fitEllipseDirect`                          | Full    | Fitzgibbon 4ac−b²=1 generalized eigen fit            |
-| imgproc    | `fitEllipseAMS`                             | `cv.fitEllipseAMS`                             | Full    | Gradient-scatter generalized eigen fit               |
-| imgproc    | `drawContours`                              | `cv.drawContours`                              | Full    | Contour chain outline/fill raster                    |
-| imgproc    | `approxPolyN`                               | `cv.approxPolyN`                               | Full    | Douglas–Peucker to exactly n vertices                |
-| imgproc    | `findContoursLinkRuns`                      | `cv.findContoursLinkRuns`                      | Full    | Link-runs contour extraction variant                 |
-| imgproc    | `goodFeaturesToTrack`                       | `cv.goodFeaturesToTrack`                       | Full    | Shi–Tomasi corners with min-distance NMS             |
-| imgproc    | `convexityDefects`                          | `cv.convexityDefects`                          | Full    | Hull-vertex defect measurement                       |
-| core       | `blendLinear`                               | `cv.blendLinear`                               | Full    | Element-wise src1·w1+src2·w2 blend                   |
-| imgproc    | `rotatedRectangleIntersection`              | `cv.rotatedRectangleIntersection`              | Full    | Rotated-rect clip to F32 polygon                     |
-| imgproc    | `distanceTransformWithLabels`               | `cv.distanceTransformWithLabels`               | Full    | Euclidean distance + owning-component labels         |
-| imgproc    | `intersectConvexConvex`                     | `cv.intersectConvexConvex`                     | Partial | Upstream binding rejects the call form               |
-| imgproc    | `minEnclosingTriangle`                      | `cv.minEnclosingTriangle`                      | Partial | Upstream errors on Mat input                         |
-| imgproc    | `fillConvexPoly`                            | `cv.fillConvexPoly`                            | Full    | Scanline fill for convex vertex sets                 |
-| imgproc    | `arrowedLine`                               | `cv.arrowedLine`                               | Partial | Arrowhead fan raster differs by a pixel              |
-| imgproc    | `circle`                                    | `cv.circle`                                    | Partial | Upstream ellipse-arc raster differs                  |
-| imgproc    | `ellipse`                                   | `cv.ellipse`                                   | Partial | Upstream ellipse-arc raster differs                  |
-| core       | `dft`                                       | `cv.dft`                                       | Full    | 2-D F32 DFT with complex/scale flags                 |
-| core       | `kmeans`                                    | `cv.kmeans`                                    | Partial | Compactness ulp differs                              |
-| imgproc    | `calcBackProject`                           | `cv.calcBackProject`                           | Partial | Upstream binding rejects JS arg forms                |
-| imgproc    | `warpPolar`                                 | `cv.warpPolar`                                 | Partial | Upstream output is nondeterministic                  |
-| imgproc    | `groupRectangles`                           | `cv.groupRectangles`                           | Partial | Upstream requires RectVector                         |
-| imgproc    | `remap`                                     | `cv.remap`                                     | Full    | F32 map nearest/bilinear resampling                  |
-| imgproc    | `convertMaps`                               | `cv.convertMaps`                               | Full    | CV_16SC2 + CV_16UC1 fixed-point packing              |
-| imgproc    | `getRectSubPix`                             | `cv.getRectSubPix`                             | Full    | Bilinear sub-pixel patch extraction                  |
-| imgproc    | `demosaicing`                               | `cv.demosaicing`                               | Partial | Bayer decode pattern differs                         |
-| imgproc    | `calcHist`                                  | `cv.calcHist`                                  | Full    | F32 histogram bin counting                           |
-| imgproc    | `compareHist`                               | `cv.compareHist`                               | Full    | Correlation, chi-square, intersection, Bhattacharyya |
-| core       | `gemm`                                      | `cv.gemm`                                      | Full    | F64 matmul with transpose flags                      |
-| core       | `eigen`                                     | `cv.eigen`                                     | Full    | Cyclic-Jacobi symmetric eigensolver                  |
-| core       | `solvePoly`                                 | `cv.solvePoly`                                 | Partial | Root order/convergence differs                       |
-| imgproc    | `connectedComponents`                       | `cv.connectedComponents`                       | Full    | Scan-order labels, I32/U16                           |
-| imgproc    | `connectedComponentsWithStats`              | `cv.connectedComponentsWithStats`              | Full    | Labels, stats, centroids                             |
-| imgproc    | `distanceTransform`                         | `cv.distanceTransform`                         | Full    | L1/L2/C chamfer and exact masks                      |
-| imgproc    | `floodFill`                                 | `cv.floodFill`                                 | Full    | Region grow, mask contract                           |
-| imgproc    | `preCornerDetect`                           | `cv.preCornerDetect`                           | Partial | Corner metric; derivative scaling pending            |
-| imgproc    | `cornerHarris`                              | `cv.cornerHarris`                              | Full    | Normalized-covariance Harris response                |
-| imgproc    | `cornerMinEigenVal`                         | `cv.cornerMinEigenVal`                         | Full    | Normalized min-eigenvalue corner map                 |
-| imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks           |
-| imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Partial | Nearest/linear projective sampling                   |
-| imgproc    | `createCLAHE`                               | `cv.CLAHE` constructor                         | Partial | Static factory absent from pinned artifact           |
-| imgproc    | `CLAHE.apply`                               | `cv.CLAHE.apply`                               | Full    | U8/U16 tiles, clip/redistribute, bilinear LUT        |
-| imgproc    | `CLAHE.collectGarbage`                      | `cv.CLAHE.collectGarbage`                      | Full    | Exact arity and no-op behavior                       |
-| imgproc    | `CLAHE.getClipLimit`                        | `cv.CLAHE.getClipLimit`                        | Full    | Exact F64 state and lifecycle                        |
-| imgproc    | `CLAHE.getTilesGridSize`                    | `cv.CLAHE.getTilesGridSize`                    | Full    | Exact size state and lifecycle                       |
-| imgproc    | `CLAHE.setClipLimit`                        | `cv.CLAHE.setClipLimit`                        | Full    | Exact number coercion and call contract              |
-| imgproc    | `CLAHE.setTilesGridSize`                    | `cv.CLAHE.setTilesGridSize`                    | Full    | Exact size coercion and call contract                |
-| photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process              |
-| photo      | `createTonemapMantiuk`                      | `cv.createTonemapMantiuk`                      | Partial | Global factory absent; no pixel process              |
-| photo      | `createTonemapReinhard`                     | `cv.createTonemapReinhard`                     | Partial | Global factory absent; no pixel process              |
-| photo      | `Tonemap.getGamma`                          | `cv.Tonemap.getGamma`                          | Full    | Exact inherited F32 state and lifecycle              |
-| photo      | `Tonemap.setGamma`                          | `cv.Tonemap.setGamma`                          | Full    | Exact float coercion and call contract               |
-| photo      | `TonemapDrago.getBias`                      | `cv.TonemapDrago.getBias`                      | Full    | Exact F32 state and lifecycle                        |
-| photo      | `TonemapDrago.getSaturation`                | `cv.TonemapDrago.getSaturation`                | Full    | Exact F32 state and lifecycle                        |
-| photo      | `TonemapDrago.setBias`                      | `cv.TonemapDrago.setBias`                      | Full    | Exact float coercion and call contract               |
-| photo      | `TonemapDrago.setSaturation`                | `cv.TonemapDrago.setSaturation`                | Full    | Exact float coercion and call contract               |
-| photo      | `TonemapMantiuk.getSaturation`              | `cv.TonemapMantiuk.getSaturation`              | Full    | Exact F32 state and lifecycle                        |
-| photo      | `TonemapMantiuk.getScale`                   | `cv.TonemapMantiuk.getScale`                   | Full    | Exact F32 state and lifecycle                        |
-| photo      | `TonemapMantiuk.setSaturation`              | `cv.TonemapMantiuk.setSaturation`              | Full    | Exact float coercion and call contract               |
-| photo      | `TonemapMantiuk.setScale`                   | `cv.TonemapMantiuk.setScale`                   | Full    | Exact float coercion and call contract               |
-| photo      | `TonemapReinhard.getColorAdaptation`        | `cv.TonemapReinhard.getColorAdaptation`        | Full    | Exact F32 state and lifecycle                        |
-| photo      | `TonemapReinhard.getIntensity`              | `cv.TonemapReinhard.getIntensity`              | Full    | Exact F32 state and lifecycle                        |
-| photo      | `TonemapReinhard.getLightAdaptation`        | `cv.TonemapReinhard.getLightAdaptation`        | Full    | Exact F32 state and lifecycle                        |
-| photo      | `TonemapReinhard.setColorAdaptation`        | `cv.TonemapReinhard.setColorAdaptation`        | Full    | Exact float coercion and call contract               |
-| photo      | `TonemapReinhard.setIntensity`              | `cv.TonemapReinhard.setIntensity`              | Full    | Exact float coercion and call contract               |
-| photo      | `TonemapReinhard.setLightAdaptation`        | `cv.TonemapReinhard.setLightAdaptation`        | Full    | Exact float coercion and call contract               |
+| Module     | Package method                              | OpenCV.js family                               | Status  | Current scope                                                     |
+| ---------- | ------------------------------------------- | ---------------------------------------------- | ------- | ----------------------------------------------------------------- |
+| core       | `absdiff`                                   | `cv.absdiff`                                   | Partial | Matching U8 matrices                                              |
+| core       | `add`                                       | `cv.add`                                       | Partial | Saturating U8 matrix operands                                     |
+| core       | `addWeighted`                               | `cv.addWeighted`                               | Full    | Exact all-depth mutable-output contract                           |
+| core       | `bitwiseAnd`                                | `cv.bitwise_and`                               | Partial | U8 matrix operands, no mask                                       |
+| core       | `bitwiseNot`                                | `cv.bitwise_not`                               | Full    | All-depth destination/mask contract                               |
+| core       | `bitwiseOr`                                 | `cv.bitwise_or`                                | Partial | U8 matrix operands, no mask                                       |
+| core       | `bitwiseXor`                                | `cv.bitwise_xor`                               | Partial | U8 matrix operands, no mask                                       |
+| core       | `compare`                                   | `cv.compare`                                   | Full    | All-depth six-operator contract                                   |
+| core       | `countNonZero`                              | `cv.countNonZero`                              | Full    | Exact all-depth single-channel reduction                          |
+| core       | `convertScaleAbs`                           | `cv.convertScaleAbs`                           | Full    | Exact all-depth mutable-output contract                           |
+| core       | `copyMakeBorder`                            | `cv.copyMakeBorder`                            | Full    | All depths, five modes, dst form                                  |
+| core       | `determinant`                               | `cv.determinant`                               | Full    | Exact F32/F64 square-matrix contract                              |
+| core       | `divide`                                    | `cv.divide`                                    | Full    | Exact all-depth mutable-output contract                           |
+| core       | `cartToPolar`                               | `cv.cartToPolar`                               | Full    | Exact paired F32/F64 output contract                              |
+| core       | `exp`                                       | `cv.exp`                                       | Full    | Exact F32/F64 mutable-output contract                             |
+| core       | `flip`                                      | `cv.flip`                                      | Full    | Exact all-depth mutable-output contract                           |
+| core       | `getLogLevel`                               | `cv.getLogLevel`                               | Partial | Package-owned log level 0 through 6                               |
+| core       | `getOptimalDFTSize`                         | `cv.getOptimalDFTSize`                         | Full    | Exact i32 contract and smooth result                              |
+| core       | `hconcat`                                   | `cv.hconcat`                                   | Full    | MatVector input, all depths                                       |
+| core       | `inRange`                                   | `cv.inRange`                                   | Partial | U8 matrix bounds                                                  |
+| core       | `invert`                                    | `cv.invert`                                    | Partial | Square matrices and three methods                                 |
+| core       | `log`                                       | `cv.log`                                       | Full    | Exact F32/F64 mutable-output contract                             |
+| core       | `lut`                                       | `cv.LUT`                                       | Partial | Byte sources and every table depth                                |
+| core       | `magnitude`                                 | `cv.magnitude`                                 | Full    | Exact matching F32/F64 mutable output                             |
+| core       | `max`                                       | `cv.max`                                       | Partial | U8 matrix operands                                                |
+| core       | `mean`                                      | `cv.mean`                                      | Full    | Exact all-depth optional-mask contract                            |
+| core       | `meanStdDev`                                | `cv.meanStdDev`                                | Partial | All depths, masks, and F64 outputs                                |
+| core       | `merge`                                     | `cv.merge`                                     | Full    | MatVector input with mixed channels                               |
+| core       | `min`                                       | `cv.min`                                       | Partial | U8 matrix operands                                                |
+| core       | `minMaxLoc`                                 | `cv.minMaxLoc`                                 | Full    | Exact all-depth optional-mask contract                            |
+| core       | `mixChannels`                               | `cv.mixChannels`                               | Full    | Vector-to-vector channel routing                                  |
+| core       | `multiply`                                  | `cv.multiply`                                  | Full    | Exact all-depth mutable-output contract                           |
+| core       | `norm`                                      | `cv.norm`                                      | Partial | All depths, masks, and norm modes                                 |
+| core       | `normalize`                                 | `cv.normalize`                                 | Partial | All depths and mutable destinations                               |
+| core       | `polarToCart`                               | `cv.polarToCart`                               | Full    | Exact paired F32/F64 output contract                              |
+| core       | `perspectiveTransform`                      | `cv.perspectiveTransform`                      | Partial | F32/F64 2D and 3D vectors                                         |
+| core       | `pow`                                       | `cv.pow`                                       | Full    | Exact all-depth valid-power contract                              |
+| core       | `randn`                                     | `cv.randn`                                     | Partial | All depths and diagonal deviations                                |
+| core       | `randu`                                     | `cv.randu`                                     | Partial | All depths and per-channel ranges                                 |
+| core       | `repeat`                                    | `cv.repeat`                                    | Full    | Exact all-depth mutable-output contract                           |
+| core       | `reduce`                                    | `cv.reduce`                                    | Partial | Both axes, four modes, all depths                                 |
+| core       | `rotate`                                    | `cv.rotate`                                    | Full    | Exact all-depth mutable-output contract                           |
+| core       | `setIdentity`                               | `cv.setIdentity`                               | Full    | Exact Scalar conversion and in-place ROI                          |
+| core       | `setLogLevel`                               | `cv.setLogLevel`                               | Partial | Previous-level return and state update                            |
+| core       | `setRNGSeed`                                | `cv.setRNGSeed`                                | Partial | Deterministic package-owned RNG                                   |
+| core       | `solve`                                     | `cv.solve`                                     | Partial | LU, Cholesky, and QR methods                                      |
+| core       | `subtract`                                  | `cv.subtract`                                  | Partial | Saturating U8 matrix operands                                     |
+| core       | `split`                                     | `cv.split`                                     | Full    | MatVector output, all depths                                      |
+| core       | `sqrt`                                      | `cv.sqrt`                                      | Full    | Exact F32/F64 mutable-output contract                             |
+| core       | `transpose`                                 | `cv.transpose`                                 | Full    | Exact all-depth mutable-output contract                           |
+| core       | `trace`                                     | `cv.trace`                                     | Full    | Exact all-depth four-lane Scalar                                  |
+| core       | `transform`                                 | `cv.transform`                                 | Partial | All depths and F32/F64 coefficients                               |
+| core       | `vconcat`                                   | `cv.vconcat`                                   | Full    | MatVector input, all depths                                       |
+| features2d | `createAKAZE`                               | `cv.AKAZE.create`                              | Partial | Configuration handle only; no detection                           |
+| features2d | `AKAZE.getDefaultName`                      | `cv.AKAZE.getDefaultName`                      | Full    | Exact name, arity, and lifecycle                                  |
+| features2d | `AKAZE.getDescriptorChannels`               | `cv.AKAZE.getDescriptorChannels`               | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `AKAZE.getDescriptorSize`                   | `cv.AKAZE.getDescriptorSize`                   | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `AKAZE.getDescriptorType`                   | `cv.AKAZE.getDescriptorType`                   | Full    | Canonical enum identity and lifecycle                             |
+| features2d | `AKAZE.getDiffusivity`                      | `cv.AKAZE.getDiffusivity`                      | Full    | Shared enum identity and lifecycle                                |
+| features2d | `AKAZE.getNOctaveLayers`                    | `cv.AKAZE.getNOctaveLayers`                    | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `AKAZE.getNOctaves`                         | `cv.AKAZE.getNOctaves`                         | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `AKAZE.getThreshold`                        | `cv.AKAZE.getThreshold`                        | Full    | Exact F64 state and lifecycle                                     |
+| features2d | `AKAZE.setDescriptorChannels`               | `cv.AKAZE.setDescriptorChannels`               | Full    | Exact i32 coercion and call contract                              |
+| features2d | `AKAZE.setDescriptorSize`                   | `cv.AKAZE.setDescriptorSize`                   | Full    | Exact i32 coercion and call contract                              |
+| features2d | `AKAZE.setDescriptorType`                   | `cv.AKAZE.setDescriptorType`                   | Full    | Exact structural enum-object coercion                             |
+| features2d | `AKAZE.setDiffusivity`                      | `cv.AKAZE.setDiffusivity`                      | Full    | Exact structural enum-object coercion                             |
+| features2d | `AKAZE.setNOctaveLayers`                    | `cv.AKAZE.setNOctaveLayers`                    | Full    | Exact i32 coercion and call contract                              |
+| features2d | `AKAZE.setNOctaves`                         | `cv.AKAZE.setNOctaves`                         | Full    | Exact i32 coercion and call contract                              |
+| features2d | `AKAZE.setThreshold`                        | `cv.AKAZE.setThreshold`                        | Full    | Exact number coercion and call contract                           |
+| features2d | `createKAZE`                                | `cv.KAZE.create`                               | Partial | Configuration handle only; no detection                           |
+| features2d | `KAZE.getDefaultName`                       | `cv.KAZE.getDefaultName`                       | Full    | Exact name, arity, and lifecycle                                  |
+| features2d | `KAZE.getDiffusivity`                       | `cv.KAZE.getDiffusivity`                       | Full    | Shared enum identity and lifecycle                                |
+| features2d | `KAZE.getExtended`                          | `cv.KAZE.getExtended`                          | Full    | Exact boolean state and lifecycle                                 |
+| features2d | `KAZE.getNOctaveLayers`                     | `cv.KAZE.getNOctaveLayers`                     | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `KAZE.getNOctaves`                          | `cv.KAZE.getNOctaves`                          | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `KAZE.getThreshold`                         | `cv.KAZE.getThreshold`                         | Full    | Exact F64 state and lifecycle                                     |
+| features2d | `KAZE.getUpright`                           | `cv.KAZE.getUpright`                           | Full    | Exact boolean state and lifecycle                                 |
+| features2d | `KAZE.setDiffusivity`                       | `cv.KAZE.setDiffusivity`                       | Full    | Exact structural enum-object coercion                             |
+| features2d | `KAZE.setExtended`                          | `cv.KAZE.setExtended`                          | Full    | Exact boolean coercion and call contract                          |
+| features2d | `KAZE.setNOctaveLayers`                     | `cv.KAZE.setNOctaveLayers`                     | Full    | Exact i32 coercion and call contract                              |
+| features2d | `KAZE.setNOctaves`                          | `cv.KAZE.setNOctaves`                          | Full    | Exact i32 coercion and call contract                              |
+| features2d | `KAZE.setThreshold`                         | `cv.KAZE.setThreshold`                         | Full    | Exact number coercion and call contract                           |
+| features2d | `KAZE.setUpright`                           | `cv.KAZE.setUpright`                           | Full    | Exact boolean coercion and call contract                          |
+| features2d | `createMSER`                                | `cv.MSER.create`                               | Partial | Static factory absent; no region detection                        |
+| features2d | `MSER.getDefaultName`                       | `cv.MSER.getDefaultName`                       | Full    | Exact name, arity, and lifecycle                                  |
+| features2d | `MSER.getDelta`                             | `cv.MSER.getDelta`                             | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `MSER.getMaxArea`                           | `cv.MSER.getMaxArea`                           | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `MSER.getMinArea`                           | `cv.MSER.getMinArea`                           | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `MSER.getPass2Only`                         | `cv.MSER.getPass2Only`                         | Full    | Exact boolean state and lifecycle                                 |
+| features2d | `MSER.setDelta`                             | `cv.MSER.setDelta`                             | Full    | Exact i32 coercion and call contract                              |
+| features2d | `MSER.setMaxArea`                           | `cv.MSER.setMaxArea`                           | Full    | Exact i32 coercion and call contract                              |
+| features2d | `MSER.setMinArea`                           | `cv.MSER.setMinArea`                           | Full    | Exact i32 coercion and call contract                              |
+| features2d | `MSER.setPass2Only`                         | `cv.MSER.setPass2Only`                         | Full    | Exact boolean coercion and call contract                          |
+| features2d | `createORB`                                 | `cv.ORB.create`                                | Partial | Static factory absent; no detection                               |
+| features2d | `ORB.getDefaultName`                        | `cv.ORB.getDefaultName`                        | Full    | Exact name, arity, and lifecycle                                  |
+| features2d | `ORB.getFastThreshold`                      | `cv.ORB.getFastThreshold`                      | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `ORB.setEdgeThreshold`                      | `cv.ORB.setEdgeThreshold`                      | Full    | Exact i32 coercion and call contract                              |
+| features2d | `ORB.setFastThreshold`                      | `cv.ORB.setFastThreshold`                      | Full    | Exact i32 coercion and call contract                              |
+| features2d | `ORB.setFirstLevel`                         | `cv.ORB.setFirstLevel`                         | Full    | Exact i32 conversion and validation                               |
+| features2d | `ORB.setMaxFeatures`                        | `cv.ORB.setMaxFeatures`                        | Full    | Exact i32 coercion and call contract                              |
+| features2d | `ORB.setNLevels`                            | `cv.ORB.setNLevels`                            | Full    | Exact i32 coercion and call contract                              |
+| features2d | `ORB.setPatchSize`                          | `cv.ORB.setPatchSize`                          | Full    | Exact i32 coercion and call contract                              |
+| features2d | `ORB.setScaleFactor`                        | `cv.ORB.setScaleFactor`                        | Full    | Exact F64 input and F32 stored state                              |
+| features2d | `ORB.setScoreType`                          | `cv.ORB.setScoreType`                          | Full    | Exact structural enum-object coercion                             |
+| features2d | `ORB.setWTA_K`                              | `cv.ORB.setWTA_K`                              | Full    | Exact i32 coercion and call contract                              |
+| features2d | `createAgastFeatureDetector`                | `cv.AgastFeatureDetector.create`               | Partial | Configuration handle only; no detection                           |
+| features2d | `AgastFeatureDetector.getDefaultName`       | `cv.AgastFeatureDetector.getDefaultName`       | Full    | Exact name, arity, and lifecycle                                  |
+| features2d | `AgastFeatureDetector.getNonmaxSuppression` | `cv.AgastFeatureDetector.getNonmaxSuppression` | Full    | Exact boolean state and lifecycle                                 |
+| features2d | `AgastFeatureDetector.getThreshold`         | `cv.AgastFeatureDetector.getThreshold`         | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `AgastFeatureDetector.getType`              | `cv.AgastFeatureDetector.getType`              | Full    | Canonical enum identity and lifecycle                             |
+| features2d | `AgastFeatureDetector.setNonmaxSuppression` | `cv.AgastFeatureDetector.setNonmaxSuppression` | Full    | Exact boolean coercion and call contract                          |
+| features2d | `AgastFeatureDetector.setThreshold`         | `cv.AgastFeatureDetector.setThreshold`         | Full    | Exact i32 coercion and call contract                              |
+| features2d | `AgastFeatureDetector.setType`              | `cv.AgastFeatureDetector.setType`              | Full    | Exact structural enum-object coercion                             |
+| features2d | `createFastFeatureDetector`                 | `cv.FastFeatureDetector.create`                | Partial | Configuration handle only; no detection                           |
+| features2d | `FastFeatureDetector.getDefaultName`        | `cv.FastFeatureDetector.getDefaultName`        | Full    | Exact name, arity, and lifecycle                                  |
+| features2d | `FastFeatureDetector.getNonmaxSuppression`  | `cv.FastFeatureDetector.getNonmaxSuppression`  | Full    | Exact boolean state and lifecycle                                 |
+| features2d | `FastFeatureDetector.getThreshold`          | `cv.FastFeatureDetector.getThreshold`          | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `FastFeatureDetector.getType`               | `cv.FastFeatureDetector.getType`               | Full    | Canonical enum identity and lifecycle                             |
+| features2d | `FastFeatureDetector.setNonmaxSuppression`  | `cv.FastFeatureDetector.setNonmaxSuppression`  | Full    | Exact boolean coercion and call contract                          |
+| features2d | `FastFeatureDetector.setThreshold`          | `cv.FastFeatureDetector.setThreshold`          | Full    | Exact i32 coercion and call contract                              |
+| features2d | `FastFeatureDetector.setType`               | `cv.FastFeatureDetector.setType`               | Full    | Exact structural enum-object coercion                             |
+| features2d | `createGFTTDetector`                        | `cv.GFTTDetector.create`                       | Partial | Selected six-argument configuration                               |
+| features2d | `GFTTDetector.getBlockSize`                 | `cv.GFTTDetector.getBlockSize`                 | Full    | Exact arity, state, and lifecycle                                 |
+| features2d | `GFTTDetector.getDefaultName`               | `cv.GFTTDetector.getDefaultName`               | Full    | Exact name, arity, and lifecycle                                  |
+| features2d | `GFTTDetector.getHarrisDetector`            | `cv.GFTTDetector.getHarrisDetector`            | Full    | Exact boolean state and lifecycle                                 |
+| features2d | `GFTTDetector.getK`                         | `cv.GFTTDetector.getK`                         | Full    | Exact F64 state and lifecycle                                     |
+| features2d | `GFTTDetector.getMaxFeatures`               | `cv.GFTTDetector.getMaxFeatures`               | Full    | Exact signed i32 state and lifecycle                              |
+| features2d | `GFTTDetector.getMinDistance`               | `cv.GFTTDetector.getMinDistance`               | Full    | Exact F64 state and lifecycle                                     |
+| features2d | `GFTTDetector.getQualityLevel`              | `cv.GFTTDetector.getQualityLevel`              | Full    | Exact F64 state and lifecycle                                     |
+| features2d | `GFTTDetector.setBlockSize`                 | `cv.GFTTDetector.setBlockSize`                 | Full    | Exact i32 coercion and call contract                              |
+| features2d | `GFTTDetector.setHarrisDetector`            | `cv.GFTTDetector.setHarrisDetector`            | Full    | Exact boolean coercion and call contract                          |
+| features2d | `GFTTDetector.setK`                         | `cv.GFTTDetector.setK`                         | Full    | Exact number coercion and call contract                           |
+| features2d | `GFTTDetector.setMaxFeatures`               | `cv.GFTTDetector.setMaxFeatures`               | Full    | Exact i32 coercion and call contract                              |
+| features2d | `GFTTDetector.setMinDistance`               | `cv.GFTTDetector.setMinDistance`               | Full    | Exact number coercion and call contract                           |
+| features2d | `GFTTDetector.setQualityLevel`              | `cv.GFTTDetector.setQualityLevel`              | Full    | Exact number coercion and call contract                           |
+| imgproc    | `arcLength`                                 | `cv.arcLength`                                 | Full    | Exact I32/F32 contour contract                                    |
+| imgproc    | `boundingRect`                              | `cv.boundingRect`                              | Full    | Exact I32/F32 contour bounds                                      |
+| imgproc    | `clipLine`                                  | `cv.clipLine`                                  | Full    | Boolean 3-arg contract                                            |
+| imgproc    | `contourArea`                               | `cv.contourArea`                               | Full    | Exact I32/F32 contour area                                        |
+| imgproc    | `createHanningWindow`                       | `cv.createHanningWindow`                       | Full    | Exact F32/F64 mutable window contract                             |
+| imgproc    | `ellipse2Poly`                              | `cv.ellipse2Poly`                              | Partial | Ordered integer ellipse arcs                                      |
+| imgproc    | `getAffineTransform`                        | `cv.getAffineTransform`                        | Full    | Exact continuous F32 points and F64 map                           |
+| imgproc    | `getPerspectiveTransform`                   | `cv.getPerspectiveTransform`                   | Partial | Continuous F32 points; LU/QR to F64                               |
+| imgproc    | `getRotationMatrix2D`                       | `cv.getRotationMatrix2D`                       | Full    | Exact Point2f and F64 matrix contract                             |
+| imgproc    | `getStructuringElement`                     | `cv.getStructuringElement`                     | Full    | Exact rectangle, cross, ellipse, diamond                          |
+| imgproc    | `cvtColor`                                  | `cv.cvtColor`                                  | Partial | U8 RGB/BGR/alpha/gray codes 0 through 11                          |
+| imgproc    | `invertAffineTransform`                     | `cv.invertAffineTransform`                     | Full    | Exact F32/F64 mutable inverse contract                            |
+| imgproc    | `isContourConvex`                           | `cv.isContourConvex`                           | Full    | Exact strict-convexity contract                                   |
+| imgproc    | `pointPolygonTest`                          | `cv.pointPolygonTest`                          | Full    | Exact classification and signed distance                          |
+| imgproc    | `resize`                                    | `cv.resize`                                    | Full    | All seven interpolation modes                                     |
+| imgproc    | `threshold`                                 | `cv.threshold`                                 | Partial | Five U8 modes plus Otsu selection                                 |
+| imgproc    | `GaussianBlur`                              | `cv.GaussianBlur`                              | Partial | Separable odd U8 kernels and borders                              |
+| imgproc    | `morphologyEx`                              | `cv.morphologyEx`                              | Partial | Seven U8 morphology operations                                    |
+| imgproc    | `Sobel`                                     | `cv.Sobel`                                     | Partial | 3x3 U8 gradients to signed/float outputs                          |
+| imgproc    | `Canny`                                     | `cv.Canny`                                     | Partial | U8 3x3 gradients, suppression, hysteresis                         |
+| imgproc    | `approxPolyDP`                              | `cv.approxPolyDP`                              | Partial | I32/F32 open/closed simplification                                |
+| imgproc    | `findContours`                              | `cv.findContours`                              | Partial | U8 holes, trees, chains and MatVector                             |
+| imgproc    | `warpAffine`                                | `cv.warpAffine`                                | Partial | U8 nearest/linear affine image warps                              |
+| imgproc    | `equalizeHist`                              | `cv.equalizeHist`                              | Full    | U8 single-channel, dst form                                       |
+| imgproc    | `erode`                                     | `cv.erode`                                     | Full    | Depth-gated mask erosion and borders                              |
+| imgproc    | `dilate`                                    | `cv.dilate`                                    | Full    | Depth-gated mask dilation and borders                             |
+| imgproc    | `blur`                                      | `cv.blur`                                      | Full    | Depth-gated normalized box blur                                   |
+| imgproc    | `boxFilter`                                 | `cv.boxFilter`                                 | Full    | ddepth/normalize box filtering                                    |
+| imgproc    | `medianBlur`                                | `cv.medianBlur`                                | Full    | Depth-gated median filtering                                      |
+| imgproc    | `integral`                                  | `cv.integral`                                  | Full    | Sum-only integral images                                          |
+| imgproc    | `integral2`                                 | `cv.integral2`                                 | Full    | Integral plus squared-sum images                                  |
+| imgproc    | `moments`                                   | `cv.moments`                                   | Partial | Raster moments; residual ulp diffs                                |
+| imgproc    | `HuMoments`                                 | `cv.HuMoments`                                 | Full    | Seven raw Hu invariants                                           |
+| imgproc    | `matchShapes`                               | `cv.matchShapes`                               | Partial | I1/I2/I3; residual accumulation diffs                             |
+| imgproc    | `getFontScaleFromHeight`                    | `cv.getFontScaleFromHeight`                    | Full    | Hershey scale from pixel height                                   |
+| imgproc    | `filter2D`                                  | `cv.filter2D`                                  | Full    | Depth-gated correlation, dst-depth table                          |
+| imgproc    | `sepFilter2D`                               | `cv.sepFilter2D`                               | Full    | Separable two-pass correlation                                    |
+| imgproc    | `stackBlur`                                 | `cv.stackBlur`                                 | Full    | Triangular-weight separable stack blur                            |
+| imgproc    | `pyrDown`                                   | `cv.pyrDown`                                   | Full    | Gaussian pyramid downsampling                                     |
+| imgproc    | `spatialGradient`                           | `cv.spatialGradient`                           | Full    | 3x3 Sobel I16 gradients                                           |
+| imgproc    | `Scharr`                                    | `cv.Scharr`                                    | Full    | 3x3 Scharr derivatives                                            |
+| imgproc    | `sqrBoxFilter`                              | `cv.sqrBoxFilter`                              | Partial | Sq-sum box; residual float ulp diffs                              |
+| imgproc    | `bilateralFilter`                           | `cv.bilateralFilter`                           | Partial | Range/space weights; residual diffs                               |
+| imgproc    | `pyrUp`                                     | `cv.pyrUp`                                     | Partial | Gaussian upsampling; residual f32 ulps                            |
+| imgproc    | `Laplacian`                                 | `cv.Laplacian`                                 | Partial | k1/3/5/7; one residual f32/f64 k5 ulp                             |
+| imgproc    | `adaptiveThreshold`                         | `cv.adaptiveThreshold`                         | Full    | U8 mean/Gaussian windowed threshold                               |
+| imgproc    | `applyColorMap`                             | `cv.applyColorMap`                             | Full    | All 22 pinned colormaps                                           |
+| imgproc    | `convexHull`                                | `cv.convexHull`                                | Full    | Monotone-chain hull, points or indices                            |
+| imgproc    | `minAreaRect`                               | `cv.minAreaRect`                               | Full    | Rotating-calipers RotatedRect                                     |
+| imgproc    | `minEnclosingCircle`                        | `cv.minEnclosingCircle`                        | Partial | Approximate circle radius differs                                 |
+| imgproc    | `fitEllipse`                                | `cv.fitEllipse`                                | Partial | Least-squares conic; degenerate cases differ                      |
+| imgproc    | `fitLine`                                   | `cv.fitLine`                                   | Full    | DIST_L2 principal-axis fit                                        |
+| imgproc    | `line`                                      | `cv.line`                                      | Full    | Bresenham 8-connected line rasterization                          |
+| imgproc    | `rectangle`                                 | `cv.rectangle`                                 | Full    | Outline and filled axis-aligned rects                             |
+| imgproc    | `drawMarker`                                | `cv.drawMarker`                                | Full    | Cross and tilted-cross marker glyphs                              |
+| imgproc    | `polylines`                                 | `cv.polylines`                                 | Full    | Connected vertex chains                                           |
+| imgproc    | `fillPoly`                                  | `cv.fillPoly`                                  | Full    | Scanline polygon fill                                             |
+| imgproc    | `divSpectrums`                              | `cv.divSpectrums`                              | Full    | Element-wise complex spectral division                            |
+| imgproc    | `HoughLines`                                | `cv.HoughLines`                                | Full    | Standard Hough accumulator + peak extraction                      |
+| imgproc    | `HoughLinesP`                               | `cv.HoughLinesP`                               | Full    | Probabilistic segment extraction; scan-order ends                 |
+| imgproc    | `fitEllipseDirect`                          | `cv.fitEllipseDirect`                          | Full    | Fitzgibbon 4ac−b²=1 generalized eigen fit                         |
+| imgproc    | `fitEllipseAMS`                             | `cv.fitEllipseAMS`                             | Full    | Gradient-scatter generalized eigen fit                            |
+| imgproc    | `drawContours`                              | `cv.drawContours`                              | Full    | Contour chain outline/fill raster                                 |
+| imgproc    | `approxPolyN`                               | `cv.approxPolyN`                               | Full    | Douglas–Peucker to exactly n vertices                             |
+| imgproc    | `findContoursLinkRuns`                      | `cv.findContoursLinkRuns`                      | Full    | Link-runs contour extraction variant                              |
+| imgproc    | `goodFeaturesToTrack`                       | `cv.goodFeaturesToTrack`                       | Full    | Shi–Tomasi corners with min-distance NMS                          |
+| imgproc    | `convexityDefects`                          | `cv.convexityDefects`                          | Full    | Hull-vertex defect measurement                                    |
+| core       | `blendLinear`                               | `cv.blendLinear`                               | Full    | Element-wise src1·w1+src2·w2 blend                                |
+| imgproc    | `rotatedRectangleIntersection`              | `cv.rotatedRectangleIntersection`              | Full    | Rotated-rect clip to F32 polygon                                  |
+| imgproc    | `distanceTransformWithLabels`               | `cv.distanceTransformWithLabels`               | Full    | Euclidean distance + owning-component labels                      |
+| imgproc    | `intersectConvexConvex`                     | `cv.intersectConvexConvex`                     | Partial | Upstream binding rejects the call form                            |
+| imgproc    | `minEnclosingTriangle`                      | `cv.minEnclosingTriangle`                      | Partial | Upstream errors on Mat input                                      |
+| imgproc    | `fillConvexPoly`                            | `cv.fillConvexPoly`                            | Full    | Scanline fill for convex vertex sets                              |
+| imgproc    | `arrowedLine`                               | `cv.arrowedLine`                               | Partial | Arrowhead fan raster differs by a pixel                           |
+| imgproc    | `circle`                                    | `cv.circle`                                    | Partial | Upstream ellipse-arc raster differs                               |
+| imgproc    | `ellipse`                                   | `cv.ellipse`                                   | Partial | Upstream ellipse-arc raster differs                               |
+| core       | `dft`                                       | `cv.dft`                                       | Full    | 2-D F32 DFT with complex/scale flags                              |
+| core       | `kmeans`                                    | `cv.kmeans`                                    | Partial | Compactness ulp differs                                           |
+| imgproc    | `calcBackProject`                           | `cv.calcBackProject`                           | Partial | Upstream binding rejects JS arg forms                             |
+| imgproc    | `warpPolar`                                 | `cv.warpPolar`                                 | Partial | Upstream output is nondeterministic                               |
+| imgproc    | `groupRectangles`                           | `cv.groupRectangles`                           | Partial | Upstream requires RectVector                                      |
+| imgproc    | `remap`                                     | `cv.remap`                                     | Full    | F32 map nearest/bilinear resampling                               |
+| imgproc    | `convertMaps`                               | `cv.convertMaps`                               | Full    | CV_16SC2 + CV_16UC1 fixed-point packing                           |
+| imgproc    | `getRectSubPix`                             | `cv.getRectSubPix`                             | Full    | Bilinear sub-pixel patch extraction                               |
+| imgproc    | `demosaicing`                               | `cv.demosaicing`                               | Partial | Bayer decode pattern differs                                      |
+| imgproc    | `calcHist`                                  | `cv.calcHist`                                  | Full    | F32 histogram bin counting                                        |
+| imgproc    | `compareHist`                               | `cv.compareHist`                               | Full    | Correlation, chi-square, intersection, Bhattacharyya              |
+| core       | `gemm`                                      | `cv.gemm`                                      | Full    | F64 matmul with transpose flags                                   |
+| core       | `eigen`                                     | `cv.eigen`                                     | Full    | Cyclic-Jacobi symmetric eigensolver                               |
+| core       | `solvePoly`                                 | `cv.solvePoly`                                 | Partial | Root order/convergence differs                                    |
+| imgproc    | `connectedComponents`                       | `cv.connectedComponents`                       | Full    | Scan-order labels, I32/U16                                        |
+| imgproc    | `connectedComponentsWithStats`              | `cv.connectedComponentsWithStats`              | Full    | Labels, stats, centroids                                          |
+| imgproc    | `distanceTransform`                         | `cv.distanceTransform`                         | Full    | L1/L2/C chamfer and exact masks                                   |
+| imgproc    | `floodFill`                                 | `cv.floodFill`                                 | Full    | Region grow, mask contract                                        |
+| imgproc    | `watershed`                                 | `cv.watershed`                                 | Partial | Level-ordered marker flood; one contested-front tie-break differs |
+| imgproc    | `preCornerDetect`                           | `cv.preCornerDetect`                           | Partial | Corner metric; derivative scaling pending                         |
+| imgproc    | `cornerHarris`                              | `cv.cornerHarris`                              | Full    | Normalized-covariance Harris response                             |
+| imgproc    | `cornerMinEigenVal`                         | `cv.cornerMinEigenVal`                         | Full    | Normalized min-eigenvalue corner map                              |
+| imgproc    | `matchTemplate`                             | `cv.matchTemplate`                             | Partial | Six U8/F32 methods with binary/float masks                        |
+| imgproc    | `warpPerspective`                           | `cv.warpPerspective`                           | Partial | Nearest/linear projective sampling                                |
+| imgproc    | `createCLAHE`                               | `cv.CLAHE` constructor                         | Partial | Static factory absent from pinned artifact                        |
+| imgproc    | `CLAHE.apply`                               | `cv.CLAHE.apply`                               | Full    | U8/U16 tiles, clip/redistribute, bilinear LUT                     |
+| imgproc    | `CLAHE.collectGarbage`                      | `cv.CLAHE.collectGarbage`                      | Full    | Exact arity and no-op behavior                                    |
+| imgproc    | `CLAHE.getClipLimit`                        | `cv.CLAHE.getClipLimit`                        | Full    | Exact F64 state and lifecycle                                     |
+| imgproc    | `CLAHE.getTilesGridSize`                    | `cv.CLAHE.getTilesGridSize`                    | Full    | Exact size state and lifecycle                                    |
+| imgproc    | `CLAHE.setClipLimit`                        | `cv.CLAHE.setClipLimit`                        | Full    | Exact number coercion and call contract                           |
+| imgproc    | `CLAHE.setTilesGridSize`                    | `cv.CLAHE.setTilesGridSize`                    | Full    | Exact size coercion and call contract                             |
+| photo      | `createTonemapDrago`                        | `cv.createTonemapDrago`                        | Partial | Global factory absent; no pixel process                           |
+| photo      | `createTonemapMantiuk`                      | `cv.createTonemapMantiuk`                      | Partial | Global factory absent; no pixel process                           |
+| photo      | `createTonemapReinhard`                     | `cv.createTonemapReinhard`                     | Partial | Global factory absent; no pixel process                           |
+| photo      | `Tonemap.getGamma`                          | `cv.Tonemap.getGamma`                          | Full    | Exact inherited F32 state and lifecycle                           |
+| photo      | `Tonemap.setGamma`                          | `cv.Tonemap.setGamma`                          | Full    | Exact float coercion and call contract                            |
+| photo      | `TonemapDrago.getBias`                      | `cv.TonemapDrago.getBias`                      | Full    | Exact F32 state and lifecycle                                     |
+| photo      | `TonemapDrago.getSaturation`                | `cv.TonemapDrago.getSaturation`                | Full    | Exact F32 state and lifecycle                                     |
+| photo      | `TonemapDrago.setBias`                      | `cv.TonemapDrago.setBias`                      | Full    | Exact float coercion and call contract                            |
+| photo      | `TonemapDrago.setSaturation`                | `cv.TonemapDrago.setSaturation`                | Full    | Exact float coercion and call contract                            |
+| photo      | `TonemapMantiuk.getSaturation`              | `cv.TonemapMantiuk.getSaturation`              | Full    | Exact F32 state and lifecycle                                     |
+| photo      | `TonemapMantiuk.getScale`                   | `cv.TonemapMantiuk.getScale`                   | Full    | Exact F32 state and lifecycle                                     |
+| photo      | `TonemapMantiuk.setSaturation`              | `cv.TonemapMantiuk.setSaturation`              | Full    | Exact float coercion and call contract                            |
+| photo      | `TonemapMantiuk.setScale`                   | `cv.TonemapMantiuk.setScale`                   | Full    | Exact float coercion and call contract                            |
+| photo      | `TonemapReinhard.getColorAdaptation`        | `cv.TonemapReinhard.getColorAdaptation`        | Full    | Exact F32 state and lifecycle                                     |
+| photo      | `TonemapReinhard.getIntensity`              | `cv.TonemapReinhard.getIntensity`              | Full    | Exact F32 state and lifecycle                                     |
+| photo      | `TonemapReinhard.getLightAdaptation`        | `cv.TonemapReinhard.getLightAdaptation`        | Full    | Exact F32 state and lifecycle                                     |
+| photo      | `TonemapReinhard.setColorAdaptation`        | `cv.TonemapReinhard.setColorAdaptation`        | Full    | Exact float coercion and call contract                            |
+| photo      | `TonemapReinhard.setIntensity`              | `cv.TonemapReinhard.setIntensity`              | Full    | Exact float coercion and call contract                            |
+| photo      | `TonemapReinhard.setLightAdaptation`        | `cv.TonemapReinhard.setLightAdaptation`        | Full    | Exact float coercion and call contract                            |
 
-Current full parity is **209 of 488 (42.83%)**. There are **51 partial families**, for **260 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
+Current full parity is **209 of 488 (42.83%)**. There are **52 partial families**, for **261 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
 
 The fixture passes the complete pinned browser contract for `determinant`. The function requires exactly one live `Mat` and accepts only nonempty square single-channel F32 or F64 matrices, including non-contiguous regions. It preserves the input, matches the direct 1x1, 2x2, and 3x3 paths with signed-zero and non-finite propagation, and keeps F32 and F64 arithmetic distinct during elimination for larger matrices. The audit locks the absolute pivot cutoffs, exact cutoff acceptance, row-swap signs, singular positive zero, stored-F32 widening in the small formulas, and Hilbert precision. Integer, multichannel, nonsquare, empty, deleted, and non-Mat inputs reject before computation.
 
