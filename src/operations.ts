@@ -207,6 +207,7 @@ export const OPENCV_OPERATIONS = [
     method: "fisheye_initUndistortRectifyMap",
     wasmExport: "matFisheyeInitUndistortRectifyMap",
   },
+  { method: "drawFrameAxes", wasmExport: "matDrawFrameAxesInto" },
   { method: "gemm", wasmExport: "matGemmInto" },
   { method: "eigen", wasmExport: "matEigenInto" },
   { method: "solvePoly", wasmExport: "matSolvePolyInto" },

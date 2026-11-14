@@ -2243,6 +2243,17 @@ class CopyingBackend implements OpenCvBackend {
   ): void {
     throw new OpenCvInputError("mock fisheye_initUndistortRectifyMap is not implemented");
   }
+  matDrawFrameAxesInto(
+    _image: WasmMatHandle,
+    _cameraMatrix: WasmMatHandle,
+    _distCoeffs: WasmMatHandle,
+    _rvec: WasmMatHandle,
+    _tvec: WasmMatHandle,
+    _length: number,
+    _thickness: number,
+  ): void {
+    throw new OpenCvInputError("mock drawFrameAxes is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6678,5 +6689,38 @@ describe("resize binding", () => {
     expect(() => cv.resize(source, destination, size)).toThrow(BindingError);
     expect(reads).toEqual([]);
     destination.dispose();
+  });
+});
+
+describe("drawFrameAxes binding", () => {
+  test("forwards handles with default thickness 3", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[][] = [];
+    backend.matDrawFrameAxesInto = (_i, _k, _d, _r, _t, length, thickness) => {
+      calls.push([length, thickness]);
+    };
+    const cv = createOpenCv(backend);
+    const image = cv.matFromU8(9, 9, 3, new Uint8Array(9 * 9 * 3));
+    const camera = cv.matFromF64(3, 3, 1, new Float64Array([2, 0, 4, 0, 2, 4, 0, 0, 1]));
+    const dist = cv.matFromF64(1, 5, 1, new Float64Array([0, 0, 0, 0, 0]));
+    const rvec = cv.matFromF64(3, 1, 1, new Float64Array([0, 0, 0]));
+    const tvec = cv.matFromF64(3, 1, 1, new Float64Array([0, 0, 0]));
+    cv.drawFrameAxes(image, camera, dist, rvec, tvec, 1);
+    cv.drawFrameAxes(image, camera, dist, rvec, tvec, 0.5, 1);
+    expect(calls).toEqual([
+      [1, 3],
+      [0.5, 1],
+    ]);
+    expect(cv.drawFrameAxes.length).toBe(0);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.drawFrameAxes(image, camera, dist, rvec, tvec),
+    ).toThrow(BindingError);
+    image.dispose();
+    expect(() => cv.drawFrameAxes(image, camera, dist, rvec, tvec, 1)).toThrow();
+    camera.dispose();
+    dist.dispose();
+    rvec.dispose();
+    tvec.dispose();
   });
 });

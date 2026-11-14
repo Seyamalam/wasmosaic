@@ -38,6 +38,9 @@ fn put_pixel(buf: &mut [u8], cols: u32, ch: usize, depth: ScalarDepth, x: i64, y
 }
 
 /// Bresenham line rasterization (8-connected, inclusive endpoints).
+/// Pinned behavior: the segment is normalized so x increases — when
+/// `x1 < x0` the endpoints are walked in reverse, which changes the
+/// minor-axis tie-break positions.
 fn draw_line_pixels(
     buf: &mut [u8],
     cols: u32,
@@ -49,6 +52,7 @@ fn draw_line_pixels(
     y1: i64,
     color: &[f64],
 ) {
+    let (x0, y0, x1, y1) = if x1 < x0 { (x1, y1, x0, y0) } else { (x0, y0, x1, y1) };
     let (mut x, mut y) = (x0, y0);
     let dx = (x1 - x0).abs();
     let dy = (y1 - y0).abs();
@@ -79,7 +83,9 @@ fn draw_line_pixels(
     }
 }
 
-/// Thick line: the segment widened into a filled axis-bounded strip.
+/// Thick line: a Euclidean disk stamped at every centerline pixel. The
+/// pinned raster matches disk radius `(thickness + 1) / 2` covered when
+/// `dx*dx + dy*dy <= radius*radius`, so a degenerate segment draws a disk.
 #[allow(clippy::too_many_arguments)]
 fn draw_thick_line(
     buf: &mut [u8],
@@ -93,34 +99,100 @@ fn draw_thick_line(
     color: &[f64],
     thickness: i32,
 ) {
-    // Pinned behavior: thick segments fill a centered perpendicular band with
-    // rounded caps. For axis-aligned lines the band is exact.
-    let t = thickness.max(1);
-    let half = (t - 1) / 2;
-    if x0 == x1 || y0 == y1 {
-        for yy in (y0.min(y1) - i64::from(half))..=(y0.max(y1) + i64::from(t - 1 - half)) {
-            for xx in (x0.min(x1) - i64::from(half))..=(x0.max(x1) + i64::from(t - 1 - half)) {
-                if x0 == x1 && (yy < y0.min(y1) || yy > y0.max(y1)) {
-                    continue;
+    let radius = i64::from((thickness + 1) / 2);
+    let radius_squared = radius * radius;
+    let (x0, y0, x1, y1) = if x1 < x0 { (x1, y1, x0, y0) } else { (x0, y0, x1, y1) };
+    let (mut x, mut y) = (x0, y0);
+    let dx = (x1 - x0).abs();
+    let dy = (y1 - y0).abs();
+    let (sx, sy) = ((x1 - x0).signum(), (y1 - y0).signum());
+    let mut err = if dx > dy { dx / 2 } else { dy / 2 };
+    loop {
+        for oy in -radius..=radius {
+            for ox in -radius..=radius {
+                if ox * ox + oy * oy <= radius_squared {
+                    put_pixel(buf, cols, ch, depth, x + ox, y + oy, color);
                 }
-                if y0 == y1 && (xx < x0.min(x1) || xx > x0.max(x1)) {
-                    continue;
-                }
-                put_pixel(buf, cols, ch, depth, xx, yy, color);
             }
         }
-    } else {
-        // Oblique thick lines: rasterize the centerline plus perpendicular offsets.
-        let dx = (x1 - x0) as f64;
-        let dy = (y1 - y0) as f64;
-        let len = (dx * dx + dy * dy).sqrt().max(1e-9);
-        let (nx, ny) = (-dy / len, dx / len);
-        let half_f = t as f64 / 2.0;
-        for offset_i in 0..t {
-            let off = f64::from(offset_i) - (half_f - 0.5);
-            let ox = (nx * off).round() as i64;
-            let oy = (ny * off).round() as i64;
-            draw_line_pixels(buf, cols, ch, depth, x0 + ox, y0 + oy, x1 + ox, y1 + oy, color);
+        if x == x1 && y == y1 {
+            break;
+        }
+        if dx > dy {
+            x += sx;
+            err -= dy;
+            if err < 0 {
+                y += sy;
+                err += dx;
+            }
+        } else {
+            y += sy;
+            err -= dx;
+            if err < 0 {
+                x += sx;
+                err += dy;
+            }
+        }
+    }
+}
+
+/// Integer segment-to-rect clip matching the pinned `clipLine` behavior:
+/// an out-of-range endpoint is moved to the boundary while the other
+/// coordinate is recomputed toward the far endpoint with truncated
+/// integer division. Returns `None` when the segment is trivially
+/// outside the rect (both endpoints share an out-side).
+fn clip_segment(
+    mut x0: i64,
+    mut y0: i64,
+    mut x1: i64,
+    mut y1: i64,
+    width: i64,
+    height: i64,
+) -> Option<(i64, i64, i64, i64)> {
+    const LEFT: u8 = 1;
+    const RIGHT: u8 = 2;
+    const TOP: u8 = 4;
+    const BOTTOM: u8 = 8;
+    let code = |x: i64, y: i64| -> u8 {
+        let mut c = 0u8;
+        if x < 0 {
+            c |= LEFT;
+        } else if x >= width {
+            c |= RIGHT;
+        }
+        if y < 0 {
+            c |= TOP;
+        } else if y >= height {
+            c |= BOTTOM;
+        }
+        c
+    };
+    loop {
+        let c0 = code(x0, y0);
+        let c1 = code(x1, y1);
+        if c0 & c1 != 0 {
+            return None;
+        }
+        if c0 | c1 == 0 {
+            return Some((x0, y0, x1, y1));
+        }
+        let (x, y, ox, oy, c) = if c0 != 0 {
+            (&mut x0, &mut y0, x1, y1, c0)
+        } else {
+            (&mut x1, &mut y1, x0, y0, c1)
+        };
+        if c & LEFT != 0 {
+            *y += (0 - *x) * (oy - *y) / (ox - *x);
+            *x = 0;
+        } else if c & RIGHT != 0 {
+            *y += (width - 1 - *x) * (oy - *y) / (ox - *x);
+            *x = width - 1;
+        } else if c & TOP != 0 {
+            *x += (0 - *y) * (ox - *x) / (oy - *y);
+            *y = 0;
+        } else {
+            *x += (height - 1 - *y) * (ox - *x) / (oy - *y);
+            *y = height - 1;
         }
     }
 }
@@ -137,9 +209,22 @@ pub(crate) fn line_into(
     _line_type: i32,
     _shift: i32,
 ) -> Result<(), DrawError> {
+    if thickness <= 0 {
+        return Err(DrawError::InvalidInput("line thickness must be positive"));
+    }
     let depth = scalar_depth(image.depth());
     let mut buf = image.compact_bytes();
-    if thickness <= 1 {
+    let Some((x0, y0, x1, y1)) = clip_segment(
+        x0,
+        y0,
+        x1,
+        y1,
+        i64::from(image.columns()),
+        i64::from(image.rows()),
+    ) else {
+        return Ok(());
+    };
+    if thickness == 1 {
         draw_line_pixels(&mut buf, image.columns(), image.channels() as usize, depth, x0, y0, x1, y1, color);
     } else {
         draw_thick_line(&mut buf, image.columns(), image.channels() as usize, depth, x0, y0, x1, y1, color, thickness);

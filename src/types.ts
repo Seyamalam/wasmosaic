@@ -564,6 +564,15 @@ export interface OpenCvBackend {
     map1: WasmMatHandle,
     map2: WasmMatHandle,
   ): void;
+  matDrawFrameAxesInto(
+    image: WasmMatHandle,
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    rvec: WasmMatHandle,
+    tvec: WasmMatHandle,
+    length: number,
+    thickness: number,
+  ): void;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1675,6 +1684,16 @@ export interface OpenCv {
     m1type: number,
     map1: Mat,
     map2: Mat,
+  ): void;
+
+  drawFrameAxes(
+    image: Mat,
+    cameraMatrix: Mat,
+    distCoeffs: Mat,
+    rvec: Mat,
+    tvec: Mat,
+    length: number,
+    thickness?: number,
   ): void;
 
   floodFill(

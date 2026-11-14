@@ -127,6 +127,18 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "drawFrameAxes",
+      module: "calib3d",
+      notes:
+        "Pinhole-projected coordinate-frame axes on 1/3/4-channel images for F32/F64 inputs, accepting a 3-vector or 3x3 rotation matrix, BGR axis colors (0,0,255)/(0,255,0)/(255,0,0) drawn x then y then z, half-even endpoint rounding, integer clip-to-rect rasterization, and positive length/thickness validation.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "drawFrameAxes",
+      upstreamId: "calib3d.function.draw-frame-axes",
+      wasmExport: "matDrawFrameAxesInto",
+    },
+    {
+      implementationOrigin: "original",
       method: "createAKAZE",
       module: "features2d",
       notes:

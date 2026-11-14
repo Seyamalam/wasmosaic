@@ -2354,6 +2354,65 @@ export function runCoreOpsCases(cv, reference) {
     m1type: 5,
   });
 
+  // ---- line: thick-line disk-stamp raster
+  for (const [name, x1, y1, thickness] of [
+    ["thick-h", 8, 4, 3],
+    ["thick-diag", 8, 8, 3],
+    ["thick-deg", 4, 4, 3],
+    ["thick-even", 8, 4, 4],
+  ]) {
+    run(`line/${name}`, (handles) => {
+      const image = track(handles, api.mat(10, 10, 1, 0, Array.from({ length: 100 }).fill(0)));
+      cv.line(image, { x: 4, y: 4 }, { x: x1, y: y1 }, [255, 0, 0, 0], thickness, 8, 0);
+      return { image: api.summary(image) };
+    });
+  }
+
+  // ---- drawFrameAxes
+  const faK = [2, 0, 4, 0, 2, 4, 0, 0, 1];
+  const faRun = (name, options = {}) => {
+    const {
+      ch = 3,
+      depth = 0,
+      rvec = [0, 0, 0],
+      tvec = [0, 0, 0],
+      dist = [0, 0, 0, 0, 0],
+      length = 1,
+      thickness,
+      size = 9,
+      K = faK,
+      rmat,
+    } = options;
+    run(`frameaxes/${name}`, (handles) => {
+      const image = track(
+        handles,
+        api.mat(size, size, ch, depth, Array.from({ length: size * size * ch }).fill(0)),
+      );
+      const camera = track(handles, api.mat(3, 3, 1, 6, K));
+      const distm = track(handles, api.mat(1, dist.length, 1, 6, dist));
+      const r = track(handles, rmat === undefined ? ppVec(rvec) : api.mat(3, 3, 1, 6, rmat));
+      const t = track(handles, ppVec(tvec));
+      if (thickness === undefined) {
+        cv.drawFrameAxes(image, camera, distm, r, t, length);
+      } else {
+        cv.drawFrameAxes(image, camera, distm, r, t, length, thickness);
+      }
+      return { image: api.summary(image) };
+    });
+  };
+  faRun("basic", { thickness: 1 });
+  faRun("thick-default");
+  faRun("thick5", { thickness: 5 });
+  faRun("rot", { rvec: [0.3, -0.2, 0.1], thickness: 1 });
+  faRun("trans", { tvec: [1, -0.5, 2], thickness: 1 });
+  faRun("dist", { dist: [0.5, 0.1, 0, 0, 0], length: 0.1, thickness: 1 });
+  faRun("gray", { ch: 1 });
+  faRun("rgba", { ch: 4 });
+  faRun("rmat", { rmat: [0, -1, 0, 1, 0, 0, 0, 0, 1], thickness: 1 });
+  faRun("f32", { depth: 5 });
+  faRun("len2", { length: 2, thickness: 1 });
+  faRun("long-clip", { length: 10, thickness: 1 });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference

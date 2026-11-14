@@ -205,8 +205,10 @@ pub(crate) fn project_points(
             + translation[1];
         let zc = rotation[6] * point[0] + rotation[7] * point[1] + rotation[8] * point[2]
             + translation[2];
-        let x = xc / zc;
-        let y = yc / zc;
+        // Pinned behavior: z == 0 uses an inverse depth of 1, not infinity.
+        let inv_z = if zc != 0.0 { 1.0 / zc } else { 1.0 };
+        let x = xc * inv_z;
+        let y = yc * inv_z;
         let r2 = x * x + y * y;
         let r4 = r2 * r2;
         let r6 = r4 * r2;
@@ -256,7 +258,7 @@ pub(crate) fn project_points(
 
             // d(normalized x, y)/d(rvec_p) through the full dR/dr chain:
             // dX'/dr_p = (dR/dr_p) * point, then through perspective division.
-            let inv_z = 1.0 / zc;
+            let inv_z = if zc != 0.0 { 1.0 / zc } else { 1.0 };
             let nt = [
                 [inv_z, 0.0, -x * inv_z],
                 [0.0, inv_z, -y * inv_z],

@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `drawFrameAxes`: pinhole-projected coordinate-frame axes for 1/3/4-channel images with F32/F64 inputs, accepting a 3-vector or 3x3 rotation matrix, drawing BGR axes (0,0,255)/(0,255,0)/(255,0,0) in x/y/z order with default thickness 3, half-even endpoint rounding, and positive length/thickness validation. The shared line rasterizer now matches the pinned integer clip-to-rect behavior (endpoints are moved to the image boundary with truncated-division recomputation) and normalizes segments so x increases, which fixes oblique-axis tie-breaking; thick lines stamp a Euclidean disk of radius ceil(thickness/2) along the centerline. All pinned browser cases match exactly. **Full parity is now 217 of 488 families.**
+
+### Added
+
 - `fisheye_projectPoints` and `fisheye_initUndistortRectifyMap`: equidistant fisheye projection for Nx1/1xN 3-channel F32/F64 points with four-coefficient distortion, alpha skew, and the analytic 2N x 15 Jacobian over intrinsics, distortion, rotation, translation, and alpha, plus undistortion maps in CV_32FC1 and CV_16SC2 plus CV_16UC1 fixed-point layouts. An empty P resolves to identity unlike the pinhole variant, exactly four distortion coefficients are required, and fixed-point fraction rollovers carry into the integer map part. All pinned browser cases match exactly. **Full parity is now 216 of 488 families.**
 
 ### Added

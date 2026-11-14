@@ -2862,6 +2862,30 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  drawFrameAxes(
+    ...arguments_: [
+      image: Mat,
+      cameraMatrix: Mat,
+      distCoeffs: Mat,
+      rvec: Mat,
+      tvec: Mat,
+      length: number,
+      thickness?: number,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 6, 7, "drawFrameAxes");
+    const [image, cameraMatrix, distCoeffs, rvec, tvec, length, thickness = 3] = arguments_;
+    this.#backend.matDrawFrameAxesInto(
+      matHandleForBinding(image),
+      matHandleForBinding(cameraMatrix),
+      matHandleForBinding(distCoeffs),
+      matHandleForBinding(rvec),
+      matHandleForBinding(tvec),
+      length,
+      toWasmI32(thickness),
+    );
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;

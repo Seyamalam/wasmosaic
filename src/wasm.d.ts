@@ -325,6 +325,15 @@ declare module "#wasm" {
     map1: WasmMatHandle,
     map2: WasmMatHandle,
   ): void;
+  export function matDrawFrameAxesInto(
+    image: WasmMatHandle,
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    rvec: WasmMatHandle,
+    tvec: WasmMatHandle,
+    length: number,
+    thickness: number,
+  ): void;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,
