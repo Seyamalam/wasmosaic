@@ -2806,6 +2806,62 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  fisheye_projectPoints(
+    ...arguments_: [
+      objectPoints: Mat,
+      imagePoints: Mat,
+      rvec: Mat,
+      tvec: Mat,
+      cameraMatrix: Mat,
+      distCoeffs: Mat,
+      alpha?: number,
+      jacobian?: Mat,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 6, 8, "fisheye_projectPoints");
+    const [objectPoints, imagePoints, rvec, tvec, cameraMatrix, distCoeffs, alpha = 0, jacobian] =
+      arguments_;
+    this.#backend.matFisheyeProjectPointsInto(
+      matHandleForBinding(objectPoints),
+      matHandleForBinding(imagePoints),
+      matHandleForBinding(rvec),
+      matHandleForBinding(tvec),
+      matHandleForBinding(cameraMatrix),
+      matHandleForBinding(distCoeffs),
+      alpha,
+      jacobian === undefined ? matHandleForBinding(this.emptyMat()) : matHandleForBinding(jacobian),
+      jacobian === undefined ? 0 : 1,
+    );
+  }
+
+  fisheye_initUndistortRectifyMap(
+    ...arguments_: [
+      cameraMatrix: Mat,
+      distCoeffs: Mat,
+      R: Mat,
+      P: Mat,
+      size: Size,
+      m1type: number,
+      map1: Mat,
+      map2: Mat,
+    ]
+  ): void {
+    requireExactArity(arguments_.length, 8, "fisheye_initUndistortRectifyMap");
+    const [cameraMatrix, distCoeffs, rotation, newCameraMatrix, size, m1type, map1, map2] =
+      arguments_;
+    this.#backend.matFisheyeInitUndistortRectifyMap(
+      matHandleForBinding(cameraMatrix),
+      matHandleForBinding(distCoeffs),
+      matHandleForBinding(rotation),
+      matHandleForBinding(newCameraMatrix),
+      toWasmI32(size.width),
+      toWasmI32(size.height),
+      toWasmI32(m1type),
+      matHandleForBinding(map1),
+      matHandleForBinding(map2),
+    );
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;

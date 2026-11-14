@@ -303,6 +303,28 @@ declare module "#wasm" {
     distCoeffs: WasmMatHandle,
     newCameraMatrix: WasmMatHandle,
   ): void;
+  export function matFisheyeProjectPointsInto(
+    objectPoints: WasmMatHandle,
+    imagePoints: WasmMatHandle,
+    rvec: WasmMatHandle,
+    tvec: WasmMatHandle,
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    alpha: number,
+    jacobian: WasmMatHandle,
+    withJacobian: number,
+  ): void;
+  export function matFisheyeInitUndistortRectifyMap(
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    rotation: WasmMatHandle,
+    newCameraMatrix: WasmMatHandle,
+    width: number,
+    height: number,
+    m1type: number,
+    map1: WasmMatHandle,
+    map2: WasmMatHandle,
+  ): void;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

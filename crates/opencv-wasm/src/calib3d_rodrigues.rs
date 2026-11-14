@@ -59,6 +59,33 @@ fn skew_square(a: f64, b: f64, c: f64) -> [f64; 9] {
     ]
 }
 
+/// Builds the 3x3 rotation matrix for a rotation vector via the axis-angle
+/// exponential map, with a first-order small-angle fallback.
+pub(crate) fn rotation_from_vector(rvec: [f64; 3]) -> [f64; 9] {
+    let [x, y, z] = rvec;
+    let theta = (x * x + y * y + z * z).sqrt();
+    let (a, b) = if theta > 1e-14 {
+        (theta.sin() / theta, (1.0 - theta.cos()) / (theta * theta))
+    } else {
+        (1.0, 0.5)
+    };
+    let skew = [0.0, -z, y, z, 0.0, -x, -y, x, 0.0];
+    let mut rotation = [0.0f64; 9];
+    for row in 0..3 {
+        for column in 0..3 {
+            let mut s2 = 0.0;
+            for k in 0..3 {
+                s2 += skew[row * 3 + k] * skew[k * 3 + column];
+            }
+            rotation[row * 3 + column] = a * skew[row * 3 + column] + b * s2;
+        }
+    }
+    rotation[0] += 1.0;
+    rotation[4] += 1.0;
+    rotation[8] += 1.0;
+    rotation
+}
+
 /// Computes `dR/dr` for the rotation-vector to rotation-matrix map: a 3x9
 /// Jacobian whose row `p` holds `d(flattened R)/d(r_p)` in row-major order.
 pub(crate) fn rotation_jacobian(x: f64, y: f64, z: f64) -> [f64; 27] {

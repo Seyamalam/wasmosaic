@@ -113,13 +113,22 @@ pub(crate) fn convert_maps_into(
         let fx = read_scalar(&m1, i, ScalarDepth::F32);
         let fy = read_scalar(&m2, i, ScalarDepth::F32);
         // Fixed-point: integer part + 5-bit fraction of the interpolation weight.
-        let ix = fx.floor() as i64;
-        let iy = fy.floor() as i64;
+        let mut ix = fx.floor() as i64;
+        let mut iy = fy.floor() as i64;
         let fx_frac = fx - ix as f64;
         let fy_frac = fy - iy as f64;
         // cv converts map1->CV_16SC2(x,y) and map2->CV_16UC1(fixed weights).
-        let xw = (fx_frac * 32.0 + 0.5) as i64;
-        let yw = (fy_frac * 32.0 + 0.5) as i64;
+        let mut xw = (fx_frac * 32.0 + 0.5) as i64;
+        let mut yw = (fy_frac * 32.0 + 0.5) as i64;
+        // A fraction rounding to 32 carries into the integer part.
+        if xw == 32 {
+            ix += 1;
+            xw = 0;
+        }
+        if yw == 32 {
+            iy += 1;
+            yw = 0;
+        }
         let bilinear_bits = xw + yw * 32; // pinned 5-bit fraction pair packing
         write_scalar(&mut out1, i * 2, ScalarDepth::I16, ix as f64);
         write_scalar(&mut out1, i * 2 + 1, ScalarDepth::I16, iy as f64);

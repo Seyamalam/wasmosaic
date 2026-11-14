@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `fisheye_projectPoints` and `fisheye_initUndistortRectifyMap`: equidistant fisheye projection for Nx1/1xN 3-channel F32/F64 points with four-coefficient distortion, alpha skew, and the analytic 2N x 15 Jacobian over intrinsics, distortion, rotation, translation, and alpha, plus undistortion maps in CV_32FC1 and CV_16SC2 plus CV_16UC1 fixed-point layouts. An empty P resolves to identity unlike the pinhole variant, exactly four distortion coefficients are required, and fixed-point fraction rollovers carry into the integer map part. All pinned browser cases match exactly. **Full parity is now 216 of 488 families.**
+
+### Added
+
 - `initUndistortRectifyMap` and `undistort`: inverse-rectified undistortion map generation in CV_32FC1 separate, CV_32FC2 combined, and CV_16SC2 plus CV_16UC1 fixed-point layouts, plus whole-image undistortion for U8/U16/S16 fixed-point and F32/F64 floating-point resampling across one and three channels. Empty rotations rectify as identity, empty distortion passes coordinates through, empty new camera matrices recenter the principal point at (width-1)/2, (height-1)/2 for map generation and fall back to the camera matrix for undistortion, and 4/5/8/12/14-coefficient distortion models are supported. All pinned browser cases match exactly. **Full parity is now 214 of 488 families.**
 
 ### Added

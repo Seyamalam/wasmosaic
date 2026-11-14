@@ -542,6 +542,28 @@ export interface OpenCvBackend {
     distCoeffs: WasmMatHandle,
     newCameraMatrix: WasmMatHandle,
   ): void;
+  matFisheyeProjectPointsInto(
+    objectPoints: WasmMatHandle,
+    imagePoints: WasmMatHandle,
+    rvec: WasmMatHandle,
+    tvec: WasmMatHandle,
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    alpha: number,
+    jacobian: WasmMatHandle,
+    withJacobian: number,
+  ): void;
+  matFisheyeInitUndistortRectifyMap(
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    rotation: WasmMatHandle,
+    newCameraMatrix: WasmMatHandle,
+    width: number,
+    height: number,
+    m1type: number,
+    map1: WasmMatHandle,
+    map2: WasmMatHandle,
+  ): void;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1631,6 +1653,28 @@ export interface OpenCv {
     cameraMatrix: Mat,
     distCoeffs: Mat,
     newCameraMatrix?: Mat,
+  ): void;
+
+  fisheye_projectPoints(
+    objectPoints: Mat,
+    imagePoints: Mat,
+    rvec: Mat,
+    tvec: Mat,
+    cameraMatrix: Mat,
+    distCoeffs: Mat,
+    alpha?: number,
+    jacobian?: Mat,
+  ): void;
+
+  fisheye_initUndistortRectifyMap(
+    cameraMatrix: Mat,
+    distCoeffs: Mat,
+    R: Mat,
+    P: Mat,
+    size: Size,
+    m1type: number,
+    map1: Mat,
+    map2: Mat,
   ): void;
 
   floodFill(

@@ -2217,6 +2217,32 @@ class CopyingBackend implements OpenCvBackend {
   ): void {
     throw new OpenCvInputError("mock undistort is not implemented");
   }
+  matFisheyeProjectPointsInto(
+    _objectPoints: WasmMatHandle,
+    _imagePoints: WasmMatHandle,
+    _rvec: WasmMatHandle,
+    _tvec: WasmMatHandle,
+    _cameraMatrix: WasmMatHandle,
+    _distCoeffs: WasmMatHandle,
+    _alpha: number,
+    _jacobian: WasmMatHandle,
+    _withJacobian: number,
+  ): void {
+    throw new OpenCvInputError("mock fisheye_projectPoints is not implemented");
+  }
+  matFisheyeInitUndistortRectifyMap(
+    _cameraMatrix: WasmMatHandle,
+    _distCoeffs: WasmMatHandle,
+    _rotation: WasmMatHandle,
+    _newCameraMatrix: WasmMatHandle,
+    _width: number,
+    _height: number,
+    _m1type: number,
+    _map1: WasmMatHandle,
+    _map2: WasmMatHandle,
+  ): void {
+    throw new OpenCvInputError("mock fisheye_initUndistortRectifyMap is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6451,6 +6477,92 @@ describe("undistort binding", () => {
     camera.dispose();
     dist.dispose();
     newCamera.dispose();
+  });
+});
+
+describe("fisheye_projectPoints binding", () => {
+  test("forwards alpha and optional jacobian", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[][] = [];
+    backend.matFisheyeProjectPointsInto = (_o, _ip, _r, _t, _k, _d, alpha, _j, withJacobian) => {
+      calls.push([alpha, withJacobian]);
+    };
+    const cv = createOpenCv(backend);
+    const object = cv.matFromF64(1, 2, 3, new Float64Array([0.1, 0.2, 1, -0.3, 0.05, 1.5]));
+    const image = cv.emptyMat();
+    const rvec = cv.matFromF64(3, 1, 1, new Float64Array([0, 0, 0]));
+    const tvec = cv.matFromF64(3, 1, 1, new Float64Array([0, 0, 0]));
+    const camera = cv.matFromF64(3, 3, 1, new Float64Array([500, 0, 320, 0, 500, 240, 0, 0, 1]));
+    const dist = cv.matFromF64(1, 4, 1, new Float64Array([0.01, 0.03, -0.02, 0.005]));
+    const jacobian = cv.emptyMat();
+    cv.fisheye_projectPoints(object, image, rvec, tvec, camera, dist);
+    cv.fisheye_projectPoints(object, image, rvec, tvec, camera, dist, 0.5, jacobian);
+    expect(calls).toEqual([
+      [0, 0],
+      [0.5, 1],
+    ]);
+    expect(cv.fisheye_projectPoints.length).toBe(0);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.fisheye_projectPoints(object, image, rvec, tvec, camera),
+    ).toThrow(BindingError);
+    object.dispose();
+    expect(() => cv.fisheye_projectPoints(object, image, rvec, tvec, camera, dist)).toThrow();
+    image.dispose();
+    jacobian.dispose();
+    rvec.dispose();
+    tvec.dispose();
+    camera.dispose();
+    dist.dispose();
+  });
+});
+
+describe("fisheye_initUndistortRectifyMap binding", () => {
+  test("forwards all handles with size and map type", () => {
+    const backend = new CopyingBackend();
+    const calls: number[][] = [];
+    backend.matFisheyeInitUndistortRectifyMap = (_k, _d, _r, _p, w, h, m1type, _m1, _m2) => {
+      calls.push([w, h, m1type]);
+    };
+    const cv = createOpenCv(backend);
+    const camera = cv.matFromF64(3, 3, 1, new Float64Array([500, 0, 320, 0, 500, 240, 0, 0, 1]));
+    const dist = cv.matFromF64(1, 4, 1, new Float64Array([0.01, 0.03, -0.02, 0.005]));
+    const empty = cv.emptyMat();
+    const map1 = cv.emptyMat();
+    const map2 = cv.emptyMat();
+    cv.fisheye_initUndistortRectifyMap(
+      camera,
+      dist,
+      empty,
+      empty,
+      { width: 6, height: 4 },
+      5,
+      map1,
+      map2,
+    );
+    expect(calls).toEqual([[6, 4, 5]]);
+    expect(cv.fisheye_initUndistortRectifyMap.length).toBe(0);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.fisheye_initUndistortRectifyMap(camera, dist, empty, empty, { width: 6, height: 4 }, 5),
+    ).toThrow(BindingError);
+    camera.dispose();
+    expect(() =>
+      cv.fisheye_initUndistortRectifyMap(
+        camera,
+        dist,
+        empty,
+        empty,
+        { width: 6, height: 4 },
+        5,
+        map1,
+        map2,
+      ),
+    ).toThrow();
+    dist.dispose();
+    empty.dispose();
+    map1.dispose();
+    map2.dispose();
   });
 });
 

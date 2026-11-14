@@ -103,6 +103,30 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "fisheye_projectPoints",
+      module: "calib3d",
+      notes:
+        "Equidistant projection of Nx1/1xN 3-channel F32/F64 object points with the four-coefficient fisheye model, alpha skew on u, depth-matched 2-channel output, and the analytic 2N x 15 F64 Jacobian over intrinsics, distortion, rvec, tvec, and alpha; the pinned binding rejects 3x3 rotation matrices and non-four distortion lengths.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "fisheye_projectPoints",
+      upstreamId: "calib3d.function.fisheye-project-points",
+      wasmExport: "matFisheyeProjectPointsInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "fisheye_initUndistortRectifyMap",
+      module: "calib3d",
+      notes:
+        "Equidistant undistortion maps in CV_32FC1 separate and CV_16SC2 plus CV_16UC1 fixed-point layouts; R applies through its inverse, an empty P resolves to identity unlike the pinhole variant, exactly four distortion coefficients are required, and the pinned binding rejects the combined CV_32FC2 layout.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "fisheye_initUndistortRectifyMap",
+      upstreamId: "calib3d.function.fisheye-init-undistort-rectify-map",
+      wasmExport: "matFisheyeInitUndistortRectifyMap",
+    },
+    {
+      implementationOrigin: "original",
       method: "createAKAZE",
       module: "features2d",
       notes:

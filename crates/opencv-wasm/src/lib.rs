@@ -7,6 +7,8 @@ use wasm_bindgen::prelude::*;
 mod calib3d_camera;
 mod calib3d_camera_wasm;
 mod calib3d_distort;
+mod calib3d_fisheye;
+mod calib3d_fisheye_wasm;
 mod calib3d_project;
 mod calib3d_project_wasm;
 mod calib3d_rodrigues;

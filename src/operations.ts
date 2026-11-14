@@ -199,6 +199,14 @@ export const OPENCV_OPERATIONS = [
   { method: "projectPoints", wasmExport: "matProjectPointsInto" },
   { method: "initUndistortRectifyMap", wasmExport: "matInitUndistortRectifyMap" },
   { method: "undistort", wasmExport: "matUndistortInto" },
+  {
+    method: "fisheye_projectPoints",
+    wasmExport: "matFisheyeProjectPointsInto",
+  },
+  {
+    method: "fisheye_initUndistortRectifyMap",
+    wasmExport: "matFisheyeInitUndistortRectifyMap",
+  },
   { method: "gemm", wasmExport: "matGemmInto" },
   { method: "eigen", wasmExport: "matEigenInto" },
   { method: "solvePoly", wasmExport: "matSolvePolyInto" },

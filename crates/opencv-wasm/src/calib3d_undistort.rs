@@ -229,10 +229,19 @@ pub(crate) fn init_undistort_rectify_map_into(
             let mut b1 = Vec::with_capacity(n * 4);
             let mut b2 = Vec::with_capacity(n * 2);
             for index in 0..n {
-                let ix = ux[index].floor() as i64;
-                let iy = vy[index].floor() as i64;
-                let xw = ((f64::from(ux[index]) - ix as f64) * 32.0 + 0.5) as u64;
-                let yw = ((f64::from(vy[index]) - iy as f64) * 32.0 + 0.5) as u64;
+                let mut ix = ux[index].floor() as i64;
+                let mut iy = vy[index].floor() as i64;
+                let mut xw = ((f64::from(ux[index]) - ix as f64) * 32.0 + 0.5) as u64;
+                let mut yw = ((f64::from(vy[index]) - iy as f64) * 32.0 + 0.5) as u64;
+                // A fraction rounding to 32 carries into the integer part.
+                if xw == 32 {
+                    ix += 1;
+                    xw = 0;
+                }
+                if yw == 32 {
+                    iy += 1;
+                    yw = 0;
+                }
                 b1.extend_from_slice(&(ix as i16).to_ne_bytes());
                 b1.extend_from_slice(&(iy as i16).to_ne_bytes());
                 b2.extend_from_slice(&((xw + yw * 32) as u16).to_ne_bytes());

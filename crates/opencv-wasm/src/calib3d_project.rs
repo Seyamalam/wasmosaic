@@ -76,28 +76,7 @@ fn read_vector3(source: &Mat) -> Result<[f64; 3], ProjectError> {
 }
 
 fn rotation_from_vector(rvec: [f64; 3]) -> [f64; 9] {
-    let [x, y, z] = rvec;
-    let theta = (x * x + y * y + z * z).sqrt();
-    let (a, b) = if theta > 1e-14 {
-        (theta.sin() / theta, (1.0 - theta.cos()) / (theta * theta))
-    } else {
-        (1.0, 0.5)
-    };
-    let skew = [0.0, -z, y, z, 0.0, -x, -y, x, 0.0];
-    let mut rotation = [0.0f64; 9];
-    for row in 0..3 {
-        for column in 0..3 {
-            let mut s2 = 0.0;
-            for k in 0..3 {
-                s2 += skew[row * 3 + k] * skew[k * 3 + column];
-            }
-            rotation[row * 3 + column] = a * skew[row * 3 + column] + b * s2;
-        }
-    }
-    rotation[0] += 1.0;
-    rotation[4] += 1.0;
-    rotation[8] += 1.0;
-    rotation
+    crate::calib3d_rodrigues::rotation_from_vector(rvec)
 }
 
 /// Solves a 3x3 linear system `matrix * x = rhs` by Cramer's rule.

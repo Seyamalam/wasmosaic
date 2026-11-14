@@ -2253,6 +2253,107 @@ export function runCoreOpsCases(cv, reference) {
     return { destination: api.summary(destination) };
   });
 
+  // ---- fisheye_projectPoints + fisheye_initUndistortRectifyMap
+  const feK = [500, 0, 320, 0, 500, 240, 0, 0, 1];
+  const feD = [0.01, 0.03, -0.02, 0.005];
+  const fePoints = [0.1, 0.2, 1.0, -0.3, 0.05, 1.5, 0.0, 0.0, 2.0];
+  run("fisheye/project/basic", (handles) => {
+    const source = track(handles, api.mat(1, 3, 3, 6, fePoints));
+    const image = track(handles, api.empty());
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 4, 1, 6, feD));
+    cv.fisheye_projectPoints(source, image, rvec, tvec, camera, dist);
+    return { imagePoints: api.summary(image) };
+  });
+  run("fisheye/project/rt", (handles) => {
+    const source = track(handles, api.mat(1, 3, 3, 6, fePoints));
+    const image = track(handles, api.empty());
+    const rvec = track(handles, ppVec([0.1, -0.2, 0.15]));
+    const tvec = track(handles, ppVec([10, -5, 30]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 4, 1, 6, feD));
+    cv.fisheye_projectPoints(source, image, rvec, tvec, camera, dist);
+    return { imagePoints: api.summary(image) };
+  });
+  run("fisheye/project/alpha", (handles) => {
+    const source = track(handles, api.mat(1, 3, 3, 6, fePoints));
+    const image = track(handles, api.empty());
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 4, 1, 6, feD));
+    cv.fisheye_projectPoints(source, image, rvec, tvec, camera, dist, 0.5);
+    return { imagePoints: api.summary(image) };
+  });
+  run("fisheye/project/f32", (handles) => {
+    const source = track(handles, api.mat(1, 3, 3, 5, fePoints));
+    const image = track(handles, api.empty());
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 4, 1, 6, feD));
+    cv.fisheye_projectPoints(source, image, rvec, tvec, camera, dist);
+    return { imagePoints: api.summary(image) };
+  });
+  run("fisheye/project/column", (handles) => {
+    const source = track(handles, api.mat(3, 1, 3, 6, fePoints));
+    const image = track(handles, api.empty());
+    const rvec = track(handles, ppVec([0, 0, 0]));
+    const tvec = track(handles, ppVec([0, 0, 0]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 4, 1, 6, feD));
+    cv.fisheye_projectPoints(source, image, rvec, tvec, camera, dist);
+    return { imagePoints: api.summary(image) };
+  });
+  run("fisheye/project/jacobian", (handles) => {
+    const source = track(handles, api.mat(1, 2, 3, 6, [0.1, 0.2, 1.0, -0.3, 0.05, 1.5]));
+    const image = track(handles, api.empty());
+    const jacobian = track(handles, api.empty());
+    const rvec = track(handles, ppVec([0.1, -0.2, 0.15]));
+    const tvec = track(handles, ppVec([10, -5, 30]));
+    const camera = track(handles, ppK(6));
+    const dist = track(handles, api.mat(1, 4, 1, 6, feD));
+    cv.fisheye_projectPoints(source, image, rvec, tvec, camera, dist, 0, jacobian);
+    return { imagePoints: api.summary(image), jacobian: api.summary(jacobian) };
+  });
+  const feMap = (name, { R, P, m1type }) =>
+    run(`fisheye/map/${name}`, (handles) => {
+      const camera = track(handles, api.mat(3, 3, 1, 6, feK));
+      const dist = track(handles, api.mat(1, 4, 1, 6, feD));
+      const rotation = track(handles, R ? api.mat(3, 3, 1, 6, R) : api.empty());
+      const newCamera = track(handles, P ? api.mat(3, 3, 1, 6, P) : api.empty());
+      const map1 = track(handles, api.empty());
+      const map2 = track(handles, api.empty());
+      cv.fisheye_initUndistortRectifyMap(
+        camera,
+        dist,
+        rotation,
+        newCamera,
+        udSize(6, 4),
+        m1type,
+        map1,
+        map2,
+      );
+      return { map1: api.summary(map1), map2: api.summary(map2) };
+    });
+  feMap("fc1", { R: [1, 0, 0, 0, 1, 0, 0, 0, 1], P: feK, m1type: 5 });
+  feMap("empty-rp", { m1type: 5 });
+  feMap("rectify", {
+    R: [
+      0.955336489125606, 0, 0.2955202066613396, 0, 1, 0, -0.2955202066613396, 0, 0.955336489125606,
+    ],
+    P: feK,
+    m1type: 5,
+  });
+  feMap("16sc2", { R: [1, 0, 0, 0, 1, 0, 0, 0, 1], P: feK, m1type: 11 });
+  feMap("new-camera", {
+    R: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+    P: [400, 0, 300, 0, 400, 200, 0, 0, 1],
+    m1type: 5,
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference
