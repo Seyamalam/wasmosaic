@@ -37,6 +37,28 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "initUndistortRectifyMap",
+      "module": "calib3d",
+      "notes": "Inverse-rectified undistortion maps in CV_32FC1 separate, CV_32FC2 combined, and CV_16SC2 plus CV_16UC1 fixed-point layouts for F32/F64 cameras, empty-R identity, empty-distortion pass-through, 4/5/8/12/14-coefficient models, and empty-newCameraMatrix principal-point recentering at (w-1)/2, (h-1)/2.",
+      "sources": ["https://docs.opencv.org/4.13.0/d9/d0c/group__calib3d.html"],
+      "status": "implemented",
+      "upstream": "initUndistortRectifyMap",
+      "upstreamId": "calib3d.function.init-undistort-rectify-map",
+      "wasmExport": "matInitUndistortRectifyMap"
+    },
+    {
+      "implementationOrigin": "original",
+      "method": "undistort",
+      "module": "calib3d",
+      "notes": "Whole-image undistortion through generated inverse maps with fixed-point bilinear resampling for U8/U16/S16 and floating-point interpolation for F32/F64, multi-channel sources, zero border behavior, and camera-matrix default when newCameraMatrix is empty.",
+      "sources": ["https://docs.opencv.org/4.13.0/d9/d0c/group__calib3d.html"],
+      "status": "implemented",
+      "upstream": "undistort",
+      "upstreamId": "calib3d.function.undistort",
+      "wasmExport": "matUndistortInto"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "createAKAZE",
       "module": "features2d",
       "notes": "Creates a Rust-owned AKAZE configuration handle with the OpenCV 4.13 defaults and optional descriptor, threshold, octave, diffusivity, and maximum-point settings; the official 4.13.0 artifact omits the config-listed static AKAZE.create binding, so direct factory comparison is unavailable, and feature detection, descriptor extraction, and broader lifetime audits remain.",

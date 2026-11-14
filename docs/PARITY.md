@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-Two hundred twelve families meet the full-family definition. Current full parity is 212 of 488, or 43.44%.
+Two hundred fourteen families meet the full-family definition. Current full parity is 214 of 488, or 43.85%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -93,10 +93,12 @@ Two hundred twelve families meet the full-family definition. Current full parity
 | `Rodrigues`                                                                                                          | Matching `cv.Rodrigues`                         | Vector/matrix conversion both directions plus analytic Jacobians                     |
 | `getDefaultNewCameraMatrix`                                                                                          | Matching `cv.getDefaultNewCameraMatrix`         | F64 copy with optional principal-point recentering                                   |
 | `projectPoints`                                                                                                      | Matching `cv.projectPoints`                     | Pinhole projection, full distortion model, analytic Jacobian                         |
+| `initUndistortRectifyMap`                                                                                            | Matching `cv.initUndistortRectifyMap`           | Inverse-rectified maps, F32/F32C2/fixed-point layouts                                |
+| `undistort`                                                                                                          | Matching `cv.undistort`                         | Fixed-point and float undistortion resampling                                        |
 
 ## Working partial families
 
-Fifty-two families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 264 families in total.
+Fifty-two families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 266 families in total.
 
 | Package methods                                                                                  | OpenCV.js families                                        | Current limit                                                              |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------- |

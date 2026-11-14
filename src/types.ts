@@ -524,6 +524,24 @@ export interface OpenCvBackend {
     withJacobian: number,
     aspectRatio: number,
   ): void;
+  matInitUndistortRectifyMap(
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    rotation: WasmMatHandle,
+    newCameraMatrix: WasmMatHandle,
+    width: number,
+    height: number,
+    m1type: number,
+    map1: WasmMatHandle,
+    map2: WasmMatHandle,
+  ): void;
+  matUndistortInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    newCameraMatrix: WasmMatHandle,
+  ): void;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1594,6 +1612,25 @@ export interface OpenCv {
     imagePoints: Mat,
     jacobian?: Mat,
     aspectRatio?: number,
+  ): void;
+
+  initUndistortRectifyMap(
+    cameraMatrix: Mat,
+    distCoeffs: Mat,
+    R: Mat,
+    newCameraMatrix: Mat,
+    size: Size,
+    m1type: number,
+    map1: Mat,
+    map2: Mat,
+  ): void;
+
+  undistort(
+    source: Mat,
+    destination: Mat,
+    cameraMatrix: Mat,
+    distCoeffs: Mat,
+    newCameraMatrix?: Mat,
   ): void;
 
   floodFill(

@@ -2756,6 +2756,56 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  initUndistortRectifyMap(
+    ...arguments_: [
+      cameraMatrix: Mat,
+      distCoeffs: Mat,
+      R: Mat,
+      newCameraMatrix: Mat,
+      size: Size,
+      m1type: number,
+      map1: Mat,
+      map2: Mat,
+    ]
+  ): void {
+    requireExactArity(arguments_.length, 8, "initUndistortRectifyMap");
+    const [cameraMatrix, distCoeffs, rotation, newCameraMatrix, size, m1type, map1, map2] =
+      arguments_;
+    this.#backend.matInitUndistortRectifyMap(
+      matHandleForBinding(cameraMatrix),
+      matHandleForBinding(distCoeffs),
+      matHandleForBinding(rotation),
+      matHandleForBinding(newCameraMatrix),
+      toWasmI32(size.width),
+      toWasmI32(size.height),
+      toWasmI32(m1type),
+      matHandleForBinding(map1),
+      matHandleForBinding(map2),
+    );
+  }
+
+  undistort(
+    ...arguments_: [
+      source: Mat,
+      destination: Mat,
+      cameraMatrix: Mat,
+      distCoeffs: Mat,
+      newCameraMatrix?: Mat,
+    ]
+  ): void {
+    requireArityRange(arguments_.length, 4, 5, "undistort");
+    const [source, destination, cameraMatrix, distCoeffs, newCameraMatrix] = arguments_;
+    this.#backend.matUndistortInto(
+      matHandleForBinding(source),
+      matHandleForBinding(destination),
+      matHandleForBinding(cameraMatrix),
+      matHandleForBinding(distCoeffs),
+      newCameraMatrix === undefined
+        ? matHandleForBinding(this.emptyMat())
+        : matHandleForBinding(newCameraMatrix),
+    );
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;

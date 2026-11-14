@@ -285,6 +285,24 @@ declare module "#wasm" {
     withJacobian: number,
     aspectRatio: number,
   ): void;
+  export function matInitUndistortRectifyMap(
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    rotation: WasmMatHandle,
+    newCameraMatrix: WasmMatHandle,
+    width: number,
+    height: number,
+    m1type: number,
+    map1: WasmMatHandle,
+    map2: WasmMatHandle,
+  ): void;
+  export function matUndistortInto(
+    source: WasmMatHandle,
+    destination: WasmMatHandle,
+    cameraMatrix: WasmMatHandle,
+    distCoeffs: WasmMatHandle,
+    newCameraMatrix: WasmMatHandle,
+  ): void;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

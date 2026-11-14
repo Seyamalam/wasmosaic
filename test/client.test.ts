@@ -2195,6 +2195,28 @@ class CopyingBackend implements OpenCvBackend {
   ): void {
     throw new OpenCvInputError("mock projectPoints is not implemented");
   }
+  matInitUndistortRectifyMap(
+    _cameraMatrix: WasmMatHandle,
+    _distCoeffs: WasmMatHandle,
+    _rotation: WasmMatHandle,
+    _newCameraMatrix: WasmMatHandle,
+    _width: number,
+    _height: number,
+    _m1type: number,
+    _map1: WasmMatHandle,
+    _map2: WasmMatHandle,
+  ): void {
+    throw new OpenCvInputError("mock initUndistortRectifyMap is not implemented");
+  }
+  matUndistortInto(
+    _source: WasmMatHandle,
+    _destination: WasmMatHandle,
+    _cameraMatrix: WasmMatHandle,
+    _distCoeffs: WasmMatHandle,
+    _newCameraMatrix: WasmMatHandle,
+  ): void {
+    throw new OpenCvInputError("mock undistort is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6361,6 +6383,74 @@ describe("projectPoints binding", () => {
     dist.dispose();
     imagePoints.dispose();
     jacobian.dispose();
+  });
+});
+
+describe("initUndistortRectifyMap binding", () => {
+  test("forwards all handles with size and map type", () => {
+    const backend = new CopyingBackend();
+    const calls: number[][] = [];
+    backend.matInitUndistortRectifyMap = (_k, _d, _r, _nk, w, h, m1type, _m1, _m2) => {
+      calls.push([w, h, m1type]);
+    };
+    const cv = createOpenCv(backend);
+    const camera = cv.matFromF64(3, 3, 1, new Float64Array([500, 0, 320, 0, 500, 240, 0, 0, 1]));
+    const dist = cv.matFromF64(1, 5, 1, new Float64Array([0, 0, 0, 0, 0]));
+    const empty = cv.emptyMat();
+    const map1 = cv.emptyMat();
+    const map2 = cv.emptyMat();
+    cv.initUndistortRectifyMap(camera, dist, empty, empty, { width: 8, height: 6 }, 5, map1, map2);
+    expect(calls).toEqual([[8, 6, 5]]);
+    expect(cv.initUndistortRectifyMap.length).toBe(0);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.initUndistortRectifyMap(camera, dist, empty, empty, { width: 1, height: 1 }, 5),
+    ).toThrow(BindingError);
+    camera.dispose();
+    expect(() =>
+      cv.initUndistortRectifyMap(
+        camera,
+        dist,
+        empty,
+        empty,
+        { width: 1, height: 1 },
+        5,
+        map1,
+        map2,
+      ),
+    ).toThrow();
+    dist.dispose();
+    empty.dispose();
+    map1.dispose();
+    map2.dispose();
+  });
+});
+
+describe("undistort binding", () => {
+  test("forwards source and optional new camera matrix", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[] = [];
+    backend.matUndistortInto = (_s, _d, _k, _dist, newCamera) => {
+      calls.push(newCamera);
+    };
+    const cv = createOpenCv(backend);
+    const source = cv.matFromU8(2, 2, 1, new Uint8Array([1, 2, 3, 4]));
+    const destination = cv.emptyMat();
+    const camera = cv.matFromF64(3, 3, 1, new Float64Array([500, 0, 1, 0, 500, 1, 0, 0, 1]));
+    const dist = cv.matFromF64(1, 5, 1, new Float64Array([0, 0, 0, 0, 0]));
+    const newCamera = cv.matFromF64(3, 3, 1, new Float64Array([500, 0, 0, 0, 500, 0, 0, 0, 1]));
+    cv.undistort(source, destination, camera, dist);
+    cv.undistort(source, destination, camera, dist, newCamera);
+    expect(calls).toHaveLength(2);
+    expect(cv.undistort.length).toBe(0);
+    // @ts-expect-error exercise pinned binding arity rejection
+    expect(() => cv.undistort(source, destination, camera)).toThrow(BindingError);
+    source.dispose();
+    expect(() => cv.undistort(source, destination, camera, dist)).toThrow();
+    destination.dispose();
+    camera.dispose();
+    dist.dispose();
+    newCamera.dispose();
   });
 });
 

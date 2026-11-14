@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `initUndistortRectifyMap` and `undistort`: inverse-rectified undistortion map generation in CV_32FC1 separate, CV_32FC2 combined, and CV_16SC2 plus CV_16UC1 fixed-point layouts, plus whole-image undistortion for U8/U16/S16 fixed-point and F32/F64 floating-point resampling across one and three channels. Empty rotations rectify as identity, empty distortion passes coordinates through, empty new camera matrices recenter the principal point at (width-1)/2, (height-1)/2 for map generation and fall back to the camera matrix for undistortion, and 4/5/8/12/14-coefficient distortion models are supported. All pinned browser cases match exactly. **Full parity is now 214 of 488 families.**
+
+### Added
+
 - `projectPoints`: pinhole projection of 3D object points for Nx1 3-channel and Nx3/3xN 1-channel F32/F64 inputs, with radial, tangential, rational, thin-prism, and tilted-sensor distortion terms, depth-matched Nx1 2-channel output, and the analytic 2N x 15 F64 Jacobian over rotation, translation, intrinsics, and distortion coefficients; the pinned browser binding rejects a nonzero aspectRatio and so does this package. **Full parity is now 212 of 488 families.**
 
 ### Added

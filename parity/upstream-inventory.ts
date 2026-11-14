@@ -102,6 +102,8 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "calib3d.function.rodrigues": { overloadCount: 1, runtimeArity: 0 },
   "calib3d.function.get-default-new-camera-matrix": { overloadCount: 3, runtimeArity: 0 },
   "calib3d.function.project-points": { overloadCount: 3, runtimeArity: 0 },
+  "calib3d.function.init-undistort-rectify-map": { overloadCount: 2, runtimeArity: 8 },
+  "calib3d.function.undistort": { overloadCount: 2, runtimeArity: 4 },
   "objdetect.function.group-rectangles": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.line": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.rectangle": { overloadCount: 1, runtimeArity: 0 },

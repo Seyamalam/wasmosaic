@@ -6,10 +6,13 @@ use wasm_bindgen::prelude::*;
 
 mod calib3d_camera;
 mod calib3d_camera_wasm;
+mod calib3d_distort;
 mod calib3d_project;
 mod calib3d_project_wasm;
 mod calib3d_rodrigues;
 mod calib3d_rodrigues_wasm;
+mod calib3d_undistort;
+mod calib3d_undistort_wasm;
 mod core_algebra;
 mod core_algebra_wasm;
 mod core_channels;

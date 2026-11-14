@@ -79,6 +79,30 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "initUndistortRectifyMap",
+      module: "calib3d",
+      notes:
+        "Inverse-rectified undistortion maps in CV_32FC1 separate, CV_32FC2 combined, and CV_16SC2 plus CV_16UC1 fixed-point layouts for F32/F64 cameras, empty-R identity, empty-distortion pass-through, 4/5/8/12/14-coefficient models, and empty-newCameraMatrix principal-point recentering at (w-1)/2, (h-1)/2.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "initUndistortRectifyMap",
+      upstreamId: "calib3d.function.init-undistort-rectify-map",
+      wasmExport: "matInitUndistortRectifyMap",
+    },
+    {
+      implementationOrigin: "original",
+      method: "undistort",
+      module: "calib3d",
+      notes:
+        "Whole-image undistortion through generated inverse maps with fixed-point bilinear resampling for U8/U16/S16 and floating-point interpolation for F32/F64, multi-channel sources, zero border behavior, and camera-matrix default when newCameraMatrix is empty.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "undistort",
+      upstreamId: "calib3d.function.undistort",
+      wasmExport: "matUndistortInto",
+    },
+    {
+      implementationOrigin: "original",
       method: "createAKAZE",
       module: "features2d",
       notes:

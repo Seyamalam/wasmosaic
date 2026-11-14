@@ -102,20 +102,7 @@ fn rotation_from_vector(rvec: [f64; 3]) -> [f64; 9] {
 
 /// Solves a 3x3 linear system `matrix * x = rhs` by Cramer's rule.
 fn solve3(matrix: &[f64; 9], rhs: &[f64; 3]) -> [f64; 3] {
-    let det = matrix[0] * (matrix[4] * matrix[8] - matrix[5] * matrix[7])
-        - matrix[1] * (matrix[3] * matrix[8] - matrix[5] * matrix[6])
-        + matrix[2] * (matrix[3] * matrix[7] - matrix[4] * matrix[6]);
-    let mut out = [0.0f64; 3];
-    for i in 0..3 {
-        let mut m = *matrix;
-        for row in 0..3 {
-            m[row * 3 + i] = rhs[row];
-        }
-        let d = m[0] * (m[4] * m[8] - m[5] * m[7]) - m[1] * (m[3] * m[8] - m[5] * m[6])
-            + m[2] * (m[3] * m[7] - m[4] * m[6]);
-        out[i] = d / det;
-    }
-    out
+    crate::calib3d_distort::solve3(matrix, rhs)
 }
 
 /// Projects 3D object points onto the image plane using the pinhole model
@@ -220,29 +207,7 @@ pub(crate) fn project_points(
 
     // Tilted-sensor transform: project through R(tau_y, tau_x)^-1.
     let tilt_inverse: Option<[f64; 9]> = if has_tilt {
-        let alpha = tau_y.atan2(tau_x);
-        let (ca, sa) = (alpha.cos(), alpha.sin());
-        let (cx_, sx_) = (tau_x.cos(), tau_x.sin());
-        let (cy_, sy_) = (tau_y.cos(), tau_y.sin());
-        // R = Rz(alpha) Rx(tau_x) Ry(tau_y) Rz(-alpha)
-        let rx = [1.0, 0.0, 0.0, 0.0, cx_, -sx_, 0.0, sx_, cx_];
-        let ry = [cy_, 0.0, sy_, 0.0, 1.0, 0.0, -sy_, 0.0, cy_];
-        let rz_p = [ca, -sa, 0.0, sa, ca, 0.0, 0.0, 0.0, 1.0];
-        let rz_n = [ca, sa, 0.0, -sa, ca, 0.0, 0.0, 0.0, 1.0];
-        let mul = |a: &[f64; 9], b: &[f64; 9]| -> [f64; 9] {
-            let mut out = [0.0f64; 9];
-            for row in 0..3 {
-                for column in 0..3 {
-                    let mut sum = 0.0;
-                    for k in 0..3 {
-                        sum += a[row * 3 + k] * b[k * 3 + column];
-                    }
-                    out[row * 3 + column] = sum;
-                }
-            }
-            out
-        };
-        Some(mul(&rz_p, &mul(&rx, &mul(&ry, &rz_n))))
+        Some(crate::calib3d_distort::tilt_rotation(tau_x, tau_y))
     } else {
         None
     };

@@ -2157,6 +2157,102 @@ export function runCoreOpsCases(cv, reference) {
     return { imagePoints: api.summary(image) };
   });
 
+  // ---- initUndistortRectifyMap + undistort
+  const udK = [500, 0, 320, 0, 500, 240, 0, 0, 1];
+  const udD = [0.1, 0.01, 0.001, 0.002, 0];
+  const udSize = (w, h) => (reference ? new cv.Size(w, h) : { width: w, height: h });
+  const udRun = (name, { K, dist, R, nK, w, h, m1type }) =>
+    run(`initUndistortRectifyMap/${name}`, (handles) => {
+      const camera = track(handles, api.mat(3, 3, 1, 6, K));
+      const coefficients = track(handles, dist ? api.mat(1, dist.length, 1, 6, dist) : api.empty());
+      const rotation = track(handles, R ? api.mat(3, 3, 1, 6, R) : api.empty());
+      const newCamera = track(handles, nK ? api.mat(3, 3, 1, 6, nK) : api.empty());
+      const map1 = track(handles, api.empty());
+      const map2 = track(handles, api.empty());
+      cv.initUndistortRectifyMap(
+        camera,
+        coefficients,
+        rotation,
+        newCamera,
+        udSize(w, h),
+        m1type,
+        map1,
+        map2,
+      );
+      return { map1: api.summary(map1), map2: api.summary(map2) };
+    });
+  udRun("distorted/fc1", { K: udK, dist: udD, w: 8, h: 6, m1type: 5 });
+  udRun("identity/fc1", { K: udK, dist: udD.map(() => 0), w: 4, h: 3, m1type: 5 });
+  udRun("distorted/fc2", { K: udK, dist: udD, w: 5, h: 4, m1type: 13 });
+  udRun("distorted/16sc2", { K: udK, dist: udD, w: 5, h: 4, m1type: 11 });
+  udRun("rectify-r90", {
+    K: udK,
+    dist: udD.map(() => 0),
+    R: [0, -1, 0, 1, 0, 0, 0, 0, 1],
+    nK: udK,
+    w: 3,
+    h: 2,
+    m1type: 5,
+  });
+  udRun("dist-12", {
+    K: udK,
+    dist: [0.1, 0.01, 0.001, 0.002, 0.05, 0, 0, 0, 0.01, 0.02, 0.03, 0.04],
+    nK: udK,
+    w: 4,
+    h: 3,
+    m1type: 5,
+  });
+  udRun("new-camera", {
+    K: udK,
+    dist: udD,
+    nK: [450, 0, 320, 0, 450, 240, 0, 0, 1],
+    w: 8,
+    h: 6,
+    m1type: 5,
+  });
+  const udImage = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160];
+  run("undistort/u8", (handles) => {
+    const source = track(handles, api.mat(4, 4, 1, 0, udImage));
+    const camera = track(handles, api.mat(3, 3, 1, 6, [4, 0, 1.5, 0, 4, 1.5, 0, 0, 1]));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0.05, -0.02, 0.001, 0, 0]));
+    const destination = track(handles, api.empty());
+    cv.undistort(source, destination, camera, dist);
+    return { destination: api.summary(destination) };
+  });
+  run("undistort/new-camera", (handles) => {
+    const source = track(handles, api.mat(4, 4, 1, 0, udImage));
+    const camera = track(handles, api.mat(3, 3, 1, 6, [4, 0, 1.5, 0, 4, 1.5, 0, 0, 1]));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0.05, -0.02, 0.001, 0, 0]));
+    const newCamera = track(handles, api.mat(3, 3, 1, 6, [4, 0, 2, 0, 4, 1, 0, 0, 1]));
+    const destination = track(handles, api.empty());
+    cv.undistort(source, destination, camera, dist, newCamera);
+    return { destination: api.summary(destination) };
+  });
+  run("undistort/rgb", (handles) => {
+    const source = track(handles, api.mat(4, 4, 3, 0, arrays[0](48)));
+    const camera = track(handles, api.mat(3, 3, 1, 6, [4, 0, 1.5, 0, 4, 1.5, 0, 0, 1]));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0.05, -0.02, 0.001, 0, 0]));
+    const destination = track(handles, api.empty());
+    cv.undistort(source, destination, camera, dist);
+    return { destination: api.summary(destination) };
+  });
+  run("undistort/f32", (handles) => {
+    const source = track(handles, api.mat(4, 4, 1, 5, arrays[5](16)));
+    const camera = track(handles, api.mat(3, 3, 1, 6, [4, 0, 1.5, 0, 4, 1.5, 0, 0, 1]));
+    const dist = track(handles, api.mat(1, 5, 1, 6, [0.05, -0.02, 0.001, 0, 0]));
+    const destination = track(handles, api.empty());
+    cv.undistort(source, destination, camera, dist);
+    return { destination: api.summary(destination) };
+  });
+  run("undistort/no-dist", (handles) => {
+    const source = track(handles, api.mat(4, 4, 1, 0, udImage));
+    const camera = track(handles, api.mat(3, 3, 1, 6, [4, 0, 1.5, 0, 4, 1.5, 0, 0, 1]));
+    const dist = track(handles, api.empty());
+    const destination = track(handles, api.empty());
+    cv.undistort(source, destination, camera, dist);
+    return { destination: api.summary(destination) };
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference
