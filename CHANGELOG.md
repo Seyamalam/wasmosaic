@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `meanShift`: weighted-centroid window tracking on single-channel probability images of any depth, intersecting the initial window with the image, computing centers at x+width/2, rounding shifts with half-even rounding, clamping the position to the valid range, exiting early on zero moments, defaulting to 100 iterations when COUNT is unset, stopping on no movement when EPS is unset, and running to the iteration cap when the EPS bit is set after an unconverged first shift. All pinned browser cases match exactly. **Full parity is now 218 of 488 families.**
+
+### Added
+
 - `drawFrameAxes`: pinhole-projected coordinate-frame axes for 1/3/4-channel images with F32/F64 inputs, accepting a 3-vector or 3x3 rotation matrix, drawing BGR axes (0,0,255)/(0,255,0)/(255,0,0) in x/y/z order with default thickness 3, half-even endpoint rounding, and positive length/thickness validation. The shared line rasterizer now matches the pinned integer clip-to-rect behavior (endpoints are moved to the image boundary with truncated-division recomputation) and normalizes segments so x increases, which fixes oblique-axis tie-breaking; thick lines stamp a Euclidean disk of radius ceil(thickness/2) along the centerline. All pinned browser cases match exactly. **Full parity is now 217 of 488 families.**
 
 ### Added

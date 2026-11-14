@@ -36,6 +36,7 @@ const IMGPROC_HISTOGRAM_SOURCE = "https://docs.opencv.org/4.13.0/d6/dc7/group__i
 const IMGPROC_DRAWING_SOURCE = "https://docs.opencv.org/4.13.0/d6/d6e/group__imgproc__draw.html";
 const IMGPROC_SOURCE = "https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html";
 const PHOTO_SOURCE = "https://docs.opencv.org/4.13.0/d1/d0d/group__photo.html";
+const VIDEO_SOURCE = "https://docs.opencv.org/4.13.0/d7/de9/group__video.html";
 
 export const PARITY_MANIFEST = {
   baseline: "OpenCV.js 4.13.0 public browser bindings",
@@ -136,6 +137,18 @@ export const PARITY_MANIFEST = {
       upstream: "drawFrameAxes",
       upstreamId: "calib3d.function.draw-frame-axes",
       wasmExport: "matDrawFrameAxesInto",
+    },
+    {
+      implementationOrigin: "original",
+      method: "meanShift",
+      module: "video",
+      notes:
+        "Weighted-centroid window tracking on single-channel probability images of any depth, with the initial window intersected to the image, centers at x+width/2, half-even shift rounding, position clamping to the valid range, zero-moment early exit, 100-iteration default when COUNT is unset, no-movement stop when EPS is unset, and the pinned initial-only epsilon test that otherwise runs to the iteration cap.",
+      sources: [VIDEO_SOURCE],
+      status: "implemented",
+      upstream: "meanShift",
+      upstreamId: "video.function.mean-shift",
+      wasmExport: "matMeanShift",
     },
     {
       implementationOrigin: "original",

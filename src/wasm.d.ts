@@ -334,6 +334,16 @@ declare module "#wasm" {
     length: number,
     thickness: number,
   ): void;
+  export function matMeanShift(
+    probImage: WasmMatHandle,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    criteriaType: number,
+    maxCount: number,
+    epsilon: number,
+  ): Float64Array;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

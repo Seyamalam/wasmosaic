@@ -92,6 +92,17 @@
     },
     {
       "implementationOrigin": "original",
+      "method": "meanShift",
+      "module": "video",
+      "notes": "Weighted-centroid window tracking on single-channel probability images of any depth, with the initial window intersected to the image, centers at x+width/2, half-even shift rounding, position clamping to the valid range, zero-moment early exit, 100-iteration default when COUNT is unset, no-movement stop when EPS is unset, and the pinned initial-only epsilon test that otherwise runs to the iteration cap.",
+      "sources": ["https://docs.opencv.org/4.13.0/d7/de9/group__video.html"],
+      "status": "implemented",
+      "upstream": "meanShift",
+      "upstreamId": "video.function.mean-shift",
+      "wasmExport": "matMeanShift"
+    },
+    {
+      "implementationOrigin": "original",
       "method": "createAKAZE",
       "module": "features2d",
       "notes": "Creates a Rust-owned AKAZE configuration handle with the OpenCV 4.13 defaults and optional descriptor, threshold, octave, diffusivity, and maximum-point settings; the official 4.13.0 artifact omits the config-listed static AKAZE.create binding, so direct factory comparison is unavailable, and feature detection, descriptor extraction, and broader lifetime audits remain.",

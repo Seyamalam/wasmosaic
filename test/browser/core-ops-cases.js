@@ -15,6 +15,11 @@ const vecPoints = (vector) => {
   }
   return points;
 };
+const msBlob = (size, fill) => {
+  const data = new Uint8Array(size * size);
+  for (const [x, y, v] of fill) data[y * size + x] = v;
+  return Array.from(data);
+};
 const arrays = {
   0: (n) => Array.from({ length: n }, (_, i) => (i * 37 + 11) % 256),
   1: (n) => Array.from({ length: n }, (_, i) => ((i * 31 + 7) % 255) - 128),
@@ -2412,6 +2417,82 @@ export function runCoreOpsCases(cv, reference) {
   faRun("f32", { depth: 5 });
   faRun("len2", { length: 2, thickness: 1 });
   faRun("long-clip", { length: 10, thickness: 1 });
+
+  // ---- meanShift: window tracking over single-channel probability images
+  const msRun = (name, { fill, rect, type = 1, maxCount = 10, epsilon = 0, depth = 0 }) => {
+    run(`meanshift/${name}`, (handles) => {
+      const image = track(handles, api.mat(20, 20, 1, depth, msBlob(20, fill)));
+      const criteria = reference
+        ? new cv.TermCriteria(type, maxCount, epsilon)
+        : { type, maxCount, epsilon };
+      const [iterations, window] = cv.meanShift(image, rect, criteria);
+      return { iterations, window };
+    });
+  };
+  msRun("basic", {
+    fill: [[10, 12, 255]],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+  });
+  msRun("neg", {
+    fill: [
+      [9, 5, 153],
+      [10, 5, 102],
+    ],
+    rect: { x: 5, y: 0, width: 10, height: 10 },
+  });
+  msRun("eps-run", {
+    fill: [[10, 12, 255]],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+    type: 3,
+    maxCount: 5,
+    epsilon: 0.001,
+  });
+  msRun("eps-conv", {
+    fill: [
+      [6, 6, 200],
+      [7, 6, 200],
+      [6, 7, 200],
+      [7, 7, 255],
+    ],
+    rect: { x: 3, y: 3, width: 8, height: 8 },
+    type: 3,
+    maxCount: 5,
+    epsilon: 10,
+  });
+  msRun("no-count", {
+    fill: [[10, 12, 255]],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+    type: 2,
+    maxCount: 5,
+    epsilon: 0.001,
+  });
+  msRun("clamp", {
+    fill: [[19, 5, 255]],
+    rect: { x: 12, y: 0, width: 10, height: 10 },
+  });
+  msRun("neg-start", {
+    fill: [[19, 5, 255]],
+    rect: { x: -2, y: -3, width: 5, height: 5 },
+  });
+  msRun("empty", {
+    fill: [[3, 3, 255]],
+    rect: { x: 10, y: 10, width: 5, height: 5 },
+  });
+  msRun("multi", {
+    fill: [[14, 14, 255]],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+    type: 3,
+    maxCount: 10,
+    epsilon: 0.001,
+  });
+  msRun("f32", {
+    fill: [
+      [10, 5, 60],
+      [11, 5, 40],
+    ],
+    rect: { x: 5, y: 0, width: 10, height: 10 },
+    depth: 5,
+  });
 
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>

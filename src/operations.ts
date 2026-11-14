@@ -208,6 +208,7 @@ export const OPENCV_OPERATIONS = [
     wasmExport: "matFisheyeInitUndistortRectifyMap",
   },
   { method: "drawFrameAxes", wasmExport: "matDrawFrameAxesInto" },
+  { method: "meanShift", wasmExport: "matMeanShift" },
   { method: "gemm", wasmExport: "matGemmInto" },
   { method: "eigen", wasmExport: "matEigenInto" },
   { method: "solvePoly", wasmExport: "matSolvePolyInto" },

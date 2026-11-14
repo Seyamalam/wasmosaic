@@ -2254,6 +2254,18 @@ class CopyingBackend implements OpenCvBackend {
   ): void {
     throw new OpenCvInputError("mock drawFrameAxes is not implemented");
   }
+  matMeanShift(
+    _probImage: WasmMatHandle,
+    _x: number,
+    _y: number,
+    _width: number,
+    _height: number,
+    _criteriaType: number,
+    _maxCount: number,
+    _epsilon: number,
+  ): Float64Array {
+    throw new OpenCvInputError("mock meanShift is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6722,5 +6734,38 @@ describe("drawFrameAxes binding", () => {
     dist.dispose();
     rvec.dispose();
     tvec.dispose();
+  });
+});
+
+describe("meanShift binding", () => {
+  test("forwards window and criteria, returns iterations and rect", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[][] = [];
+    backend.matMeanShift = (_p, x, y, width, height, criteriaType, maxCount, epsilon) => {
+      calls.push([x, y, width, height, criteriaType, maxCount, epsilon]);
+      return new Float64Array([1, 5, 7, 10, 10]);
+    };
+    const cv = createOpenCv(backend);
+    const probImage = cv.matFromU8(20, 20, 1, new Uint8Array(400));
+    const result = cv.meanShift(
+      probImage,
+      { x: 5, y: 5, width: 10, height: 10 },
+      { type: 3, maxCount: 10, epsilon: 0.001 },
+    );
+    expect(calls).toEqual([[5, 5, 10, 10, 3, 10, 0.001]]);
+    expect(result).toEqual([1, { x: 5, y: 7, width: 10, height: 10 }]);
+    expect(cv.meanShift.length).toBe(0);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.meanShift(probImage, { x: 5, y: 5, width: 10, height: 10 }),
+    ).toThrow(BindingError);
+    probImage.dispose();
+    expect(() =>
+      cv.meanShift(
+        probImage,
+        { x: 5, y: 5, width: 10, height: 10 },
+        { type: 1, maxCount: 5, epsilon: 0 },
+      ),
+    ).toThrow();
   });
 });

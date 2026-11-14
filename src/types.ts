@@ -573,6 +573,16 @@ export interface OpenCvBackend {
     length: number,
     thickness: number,
   ): void;
+  matMeanShift(
+    probImage: WasmMatHandle,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    criteriaType: number,
+    maxCount: number,
+    epsilon: number,
+  ): Float64Array;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1695,6 +1705,8 @@ export interface OpenCv {
     length: number,
     thickness?: number,
   ): void;
+
+  meanShift(probImage: Mat, rect: Rect, criteria: TermCriteria): [number, Rect];
 
   floodFill(
     image: Mat,

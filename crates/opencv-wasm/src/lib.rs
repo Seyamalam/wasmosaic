@@ -115,6 +115,8 @@ mod mat_vector;
 mod mutable_storage;
 mod photo_tonemap;
 mod photo_tonemap_wasm;
+mod video_mean;
+mod video_mean_wasm;
 
 pub use mat::{Mat, MatDepth, mat_empty, mat_from_u8, mat_from_u16, mat_zeros_u8};
 

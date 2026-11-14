@@ -2886,6 +2886,30 @@ class WasmOpenCv implements OpenCv {
     );
   }
 
+  meanShift(...arguments_: [probImage: Mat, rect: Rect, criteria: TermCriteria]): [number, Rect] {
+    requireArityRange(arguments_.length, 3, 3, "meanShift");
+    const [probImage, rect, criteria] = arguments_;
+    const result = this.#backend.matMeanShift(
+      matHandleForBinding(probImage),
+      toWasmI32(rect.x),
+      toWasmI32(rect.y),
+      toWasmI32(rect.width),
+      toWasmI32(rect.height),
+      toWasmI32(criteria.type),
+      toWasmI32(criteria.maxCount),
+      criteria.epsilon,
+    );
+    return [
+      requiredFloat(result, 0),
+      {
+        x: requiredFloat(result, 1),
+        y: requiredFloat(result, 2),
+        width: requiredFloat(result, 3),
+        height: requiredFloat(result, 4),
+      },
+    ];
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;
