@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `findHomography`: robust 3x3 homography estimation between matching point sets on any scalar depth in both Nx1 two-channel and Nx2 single-channel layouts, quantizing coordinates through the pinned single-precision point storage before computation. Method 0 refits over all points, method 4 scans all four-point subsets in index order for the minimum median reprojection error and refits over the median-scale bound, method 8 samples hypotheses from a private per-call multiply-with-carry generator with degenerate-subset redraws and an adaptive confidence budget, and method 16 follows the same sampling path. The reported mask is the winning hypothesis's consensus set under the strict reprojection threshold, the returned model is a geometric reprojection refit over the winning set, and unsupported methods, too-few correspondences, and mismatched set sizes mirror the pinned error and empty-matrix behavior. All pinned browser cases match exactly. **Full parity is now 221 of 488 families.**
+
+### Added
+
 - `estimateAffine2D`: robust 2x3 affine estimation between matching point sets on any scalar depth in both Nx1 two-channel and Nx2 single-channel layouts, with method 4 running the deterministic exhaustive median-minimizing scan over all three-point subsets in index order and method 8 sampling hypotheses from a private per-call multiply-with-carry generator under an adaptive confidence budget. The inlier mask reports the winning hypothesis's consensus set under the strict reprojection threshold, the returned matrix is a least-squares refit over that set, and degenerate source triples, unsupported method values, and too-few correspondences mirror the pinned empty-matrix behavior. All pinned browser cases match exactly. **Full parity is now 220 of 488 families.**
 
 ### Added

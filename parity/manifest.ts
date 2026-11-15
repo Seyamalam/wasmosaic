@@ -152,6 +152,18 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "findHomography",
+      module: "calib3d",
+      notes:
+        "Estimates the 3x3 F64 homography between matching point sets on any scalar depth in both Nx1 two-channel and Nx2 single-channel layouts, quantizing coordinates through the pinned single-precision point storage before computation: method 0 refits over all points, method 4 scans all four-point subsets in index order for the minimum median error and refits over the median-scale bound, method 8 samples hypotheses from a private per-call multiply-with-carry generator with degenerate-subset redraws and an adaptive confidence budget, and method 16 follows the same sampling path. The reported mask is the winning hypothesis's consensus set under the strict reprojection threshold, the returned model is a geometric reprojection refit over the winning set, and unsupported methods, too-few correspondences, and mismatched set sizes mirror the pinned error and empty-matrix behavior.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "findHomography",
+      upstreamId: "calib3d.function.find-homography",
+      wasmExport: "matFindHomography",
+    },
+    {
+      implementationOrigin: "original",
       method: "meanShift",
       module: "video",
       notes:

@@ -2721,6 +2721,134 @@ export function runCoreOpsCases(cv, reference) {
     })(),
   });
 
+  // ---- findHomography: robust homography estimation over point sets
+  const hgRun = (
+    name,
+    { from, to, args = [], depth = 5, channels = 2, split, maskOnly, emptyOnly },
+  ) => {
+    run(`homography/${name}`, (handles) => {
+      const mk = (pts) =>
+        track(
+          handles,
+          channels === 2
+            ? api.mat(pts.length / 2, 1, 2, depth, pts)
+            : api.mat(pts.length / 2, 2, 1, depth, pts),
+        );
+      const mask = track(handles, api.empty());
+      const model = track(
+        handles,
+        cv.findHomography(
+          mk(from),
+          mk(split ?? to ?? from),
+          ...args.map((x) => (x === "M" ? mask : x)),
+        ),
+      );
+      if (emptyOnly) {
+        // Degenerate inputs land on solver-specific null-space vectors; only
+        // the empty/nonempty outcome is pinned.
+        return { nonempty: api.summary(model).rows > 0 };
+      }
+      if (maskOnly) {
+        // The RHO path refines in single precision internally; only its
+        // consensus mask is pinned for now.
+        return { mask: api.summary(mask) };
+      }
+      return { model: api.summary(model), mask: api.summary(mask) };
+    });
+  };
+  const hg8from = [0, 0, 1, 0, 0, 1, 1, 1, 2, 0.5, 5, 3, 3, 2, 4, 1];
+  const hg8to = [2, 3, 4, 3, 2, 5, 4, 5, 6, 4, 12, 9, 8.9, 9.9, 10, 7];
+  // Well-conditioned 36-point grid with mild perspective noise; the
+  // outlier variant corrupts correspondences 3, 14, and 27.
+  const hg36from = [
+    0, 0, 10, 0.7, 20, 1.4, 30, 0, 40, 0.7, 50, 1.4, 1.5, 8.4, 11.5, 9.1, 21.5, 9.8, 31.5, 8.4,
+    41.5, 9.1, 51.5, 9.8, 0, 16.8, 10, 17.5, 20, 18.2, 30, 16.8, 40, 17.5, 50, 18.2, 1.5, 25.2,
+    11.5, 25.9, 21.5, 26.6, 31.5, 25.2, 41.5, 25.9, 51.5, 26.6, 0, 33.6, 10, 34.3, 20, 35, 30, 33.6,
+    40, 34.3, 50, 35, 1.5, 42, 11.5, 42.7, 21.5, 43.4, 31.5, 42, 41.5, 42.7, 51.5, 43.4,
+  ];
+  const hg36to = [
+    4.98, 2.976, 16.0024, 4.5985, 26.8387, 6.1381, 36.8832, 5.8412, 47.3237, 7.3384, 57.543, 8.8666,
+    8.4594, 10.8764, 19.6213, 12.3992, 30.542, 13.9515, 40.7413, 13.4954, 51.2553, 15.0067, 61.6436,
+    16.4374, 8.6707, 18.774, 19.99, 20.2564, 31.1609, 21.7125, 41.4894, 21.2043, 52.2388, 22.6208,
+    62.8061, 24.0689, 12.281, 27.15, 23.7987, 28.6371, 35.0621, 30.0423, 45.5509, 29.3614, 56.431,
+    30.785, 67.074, 32.1286, 12.5743, 35.6506, 24.263, 37.0326, 35.7895, 38.4451, 46.4679, 37.6402,
+    57.4946, 38.961, 68.3773, 40.3141, 16.3833, 44.6162, 28.2799, 45.9938, 39.9579, 47.2906,
+    50.7024, 46.4092, 61.9178, 47.6728, 72.8835, 48.9135,
+  ];
+  const hg36out = hg36to.slice();
+  hg36out[6] = 60;
+  hg36out[7] = 55;
+  hg36out[28] = 5;
+  hg36out[29] = 60;
+  hg36out[54] = 70;
+  hg36out[55] = 10;
+  // Mild corruption keeps the all-point refit well conditioned while still
+  // exceeding the 3px consensus bound.
+  const hg36mild = hg36to.slice();
+  hg36mild[6] += 6;
+  hg36mild[7] += 5;
+  hg36mild[28] -= 6;
+  hg36mild[29] += 5;
+  hg36mild[54] += 5;
+  hg36mild[55] -= 6;
+  hgRun("basic", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1, 2, 0.5, 5, 3],
+    to: [2, 3, 4, 3, 2, 5, 4, 5, 6, 4, 12, 9],
+    args: [0, 3, "M"],
+  });
+  hgRun("no-mask", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1, 2, 0.5, 5, 3],
+    to: [2, 3, 4, 3, 2, 5, 4, 5, 6, 4, 12, 9],
+  });
+  hgRun("nx2", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1, 2, 0.5, 5, 3],
+    to: [2, 3, 4, 3, 2, 5, 4, 5, 6, 4, 12, 9],
+    args: [0, 3, "M"],
+    channels: 1,
+  });
+  hgRun("i32", {
+    from: [
+      0, 0, 10, 1, 20, 2, 30, 3, 40, 4, 2, 8, 12, 9, 22, 10, 32, 11, 42, 12, 4, 16, 14, 17, 24, 18,
+      34, 19, 44, 20, 6, 24, 16, 25, 26, 26, 36, 27, 46, 28, 8, 32, 18, 33, 28, 34, 38, 35, 48, 36,
+    ],
+    to: [
+      5, 3, 16, 5, 27, 7, 38, 8, 48, 10, 9, 11, 20, 12, 31, 14, 42, 16, 53, 18, 13, 18, 24, 20, 35,
+      22, 46, 24, 57, 25, 17, 26, 29, 28, 40, 30, 51, 31, 62, 33, 21, 35, 33, 36, 44, 38, 56, 40,
+      67, 41,
+    ],
+    args: [0, 3, "M"],
+    depth: 4,
+  });
+  hgRun("m0-outliers", { from: hg36from, to: hg36mild, args: [0, 3, "M"] });
+  hgRun("lmeds", { from: hg36from, to: hg36out, args: [4, 3, "M"] });
+  hgRun("ransac", { from: hg36from, to: hg36out, args: [8, 3, "M"] });
+  hgRun("rho", { from: hg36from, to: hg36out, args: [16, 3, "M"], maskOnly: true });
+  hgRun("ransac-t05", { from: hg36from, to: hg36out, args: [8, 0.5, "M"] });
+  hgRun("ransac-t10", { from: hg36from, to: hg36out, args: [8, 10, "M"] });
+  hgRun("ransac-it1", { from: hg36from, to: hg36out, args: [8, 3, "M", 1] });
+  hgRun("lmeds-t05", { from: hg36from, to: hg36out, args: [4, 0.5, "M"] });
+  hgRun("lmeds-t10", { from: hg36from, to: hg36out, args: [4, 10, "M"] });
+  hgRun("few", {
+    from: [0, 0, 1, 0, 0, 1],
+    to: [2, 3, 4, 3, 2, 5],
+    args: [0, 3, "M"],
+  });
+  hgRun("collinear", {
+    from: [0, 0, 1, 1, 2, 2, 3, 3],
+    to: [0, 0, 2, 2, 4, 4, 6, 6],
+    args: [0, 3, "M"],
+    emptyOnly: true,
+  });
+  hgRun("method-err", { from: hg8from, to: hg8to, args: [2, 3, "M"] });
+  hgRun("method1", { from: hg8from, to: hg8to, args: [1, 3, "M"] });
+  hgRun("mismatch", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1],
+    split: [0, 0, 1, 0, 0, 1],
+    args: [0, 3, "M"],
+  });
+  hgRun("persp", { from: hg36from, to: hg36to, args: [0, 3, "M"] });
+  hgRun("persp-ransac", { from: hg36from, to: hg36out, args: [8, 3, "M"] });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference

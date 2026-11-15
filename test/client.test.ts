@@ -2290,6 +2290,17 @@ class CopyingBackend implements OpenCvBackend {
   ): WasmMatHandle {
     throw new OpenCvInputError("mock estimateAffine2D is not implemented");
   }
+  matFindHomography(
+    _from: WasmMatHandle,
+    _to: WasmMatHandle,
+    _method: number,
+    _ransacReprojThreshold: number,
+    _mask: WasmMatHandle,
+    _maxIters: number,
+    _confidence: number,
+  ): WasmMatHandle {
+    throw new OpenCvInputError("mock findHomography is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6791,6 +6802,48 @@ describe("meanShift binding", () => {
         { type: 1, maxCount: 5, epsilon: 0 },
       ),
     ).toThrow();
+  });
+});
+
+describe("findHomography binding", () => {
+  test("forwards optional arguments and returns a matrix", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[][] = [];
+    backend.matFindHomography = (_f, _t, method, threshold, mask, maxIters, confidence) => {
+      calls.push([mask !== undefined, method, threshold, maxIters, confidence]);
+      return f64Handle(3, 3, [2, 0, 2, 0, 2, 3, 0, 0, 1]);
+    };
+    const originalMatEmpty = backend.matEmpty.bind(backend);
+    let temporaryEmptyCalls = 0;
+    backend.matEmpty = () => {
+      temporaryEmptyCalls += 1;
+      return originalMatEmpty();
+    };
+    const cv = createOpenCv(backend);
+    const from = cv.matFromF32(4, 1, 2, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]));
+    const to = cv.matFromF32(4, 1, 2, new Float32Array([2, 3, 4, 3, 2, 5, 4, 5]));
+    const mask = cv.emptyMat();
+    temporaryEmptyCalls = 0;
+    const result = cv.findHomography(from, to, 0, 3, mask);
+    expect(calls).toEqual([[true, 0, 3, 2000, 0.99]]);
+    expect(temporaryEmptyCalls).toBe(0);
+    expect(result.rows).toBe(3);
+    expect(result.columns).toBe(3);
+    expect(result.depth).toBe("f64");
+    cv.findHomography(from, to);
+    expect(calls[1]).toEqual([true, 0, 3, 2000, 0.99]);
+    expect(temporaryEmptyCalls).toBe(1);
+    cv.findHomography(from, to, 8, 2.5, mask, 500, 0.95);
+    expect(calls[2]).toEqual([true, 8, 2.5, 500, 0.95]);
+    expect(temporaryEmptyCalls).toBe(1);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.findHomography(from),
+    ).toThrow(BindingError);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.findHomography(from, to, 0, 3, mask, 2000, 0.99, 7),
+    ).toThrow(BindingError);
   });
 });
 

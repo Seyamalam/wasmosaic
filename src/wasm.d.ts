@@ -364,6 +364,15 @@ declare module "#wasm" {
     confidence: number,
     refineIters: number,
   ): WasmMatHandle;
+  export function matFindHomography(
+    from: WasmMatHandle,
+    to: WasmMatHandle,
+    method: number,
+    ransacReprojThreshold: number,
+    mask: WasmMatHandle,
+    maxIters: number,
+    confidence: number,
+  ): WasmMatHandle;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

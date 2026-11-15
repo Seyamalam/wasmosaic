@@ -211,6 +211,7 @@ export const OPENCV_OPERATIONS = [
   { method: "meanShift", wasmExport: "matMeanShift" },
   { method: "CamShift", wasmExport: "matCamShift" },
   { method: "estimateAffine2D", wasmExport: "matEstimateAffine2D" },
+  { method: "findHomography", wasmExport: "matFindHomography" },
   { method: "gemm", wasmExport: "matGemmInto" },
   { method: "eigen", wasmExport: "matEigenInto" },
   { method: "solvePoly", wasmExport: "matSolvePolyInto" },

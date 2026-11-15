@@ -11,9 +11,9 @@
 //!   (Euclidean reprojection error strictly below the threshold); it is not
 //!   recomputed under the refined model. The returned 2x3 CV_64F matrix is
 //!   the least-squares refit over that set.
-//! - Hypothesis subsets are drawn deterministically from a persistent
-//!   multiply-with-carry generator seeded at `u64::MAX`, matching the pinned
-//!   call-sequence behavior.
+//! - RANSAC subsets are drawn from a private per-call multiply-with-carry
+//!   generator seeded at `u64::MAX`, while LMeDS scans subsets in index
+//!   order, matching the pinned call-sequence behavior.
 
 use std::{error::Error, fmt};
 
@@ -59,7 +59,7 @@ pub(crate) struct AffineEstimate {
 ///
 /// The pinned robust estimator seeds a private generator per call and reads
 /// the low half of the updated state.
-fn rng_next(state: &mut u64) -> u32 {
+pub(crate) fn rng_next(state: &mut u64) -> u32 {
     *state = (*state & 0xFFFF_FFFF)
         .wrapping_mul(4_164_903_690)
         .wrapping_add(*state >> 32);
@@ -67,7 +67,7 @@ fn rng_next(state: &mut u64) -> u32 {
 }
 
 /// Draws an integer uniformly in `[low, high)`.
-fn rng_uniform(state: &mut u64, low: i32, high: i32) -> i32 {
+pub(crate) fn rng_uniform(state: &mut u64, low: i32, high: i32) -> i32 {
     if low == high {
         return low;
     }
@@ -226,7 +226,7 @@ fn draw_subset(state: &mut u64, count: usize, used: &mut Vec<[usize; 3]>) -> Opt
 
 /// Adaptive RANSAC iteration budget: rounds the log-ratio needed to reach
 /// `confidence` given the current best inlier fraction.
-fn ransac_iteration_budget(confidence: f64, inlier_fraction: f64, model_points: i32) -> i32 {
+pub(crate) fn ransac_iteration_budget(confidence: f64, inlier_fraction: f64, model_points: i32) -> i32 {
     let numerator = (1.0 - confidence).max(f64::MIN_POSITIVE);
     let denominator = 1.0 - inlier_fraction.powi(model_points);
     if numerator >= 1.0 - 1e-10 || denominator <= f64::MIN_POSITIVE {

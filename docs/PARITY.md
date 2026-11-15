@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-Two hundred nineteen families meet the full-family definition. Current full parity is 219 of 488, or 44.88%.
+Two hundred twenty-one families meet the full-family definition. Current full parity is 221 of 488, or 45.29%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -99,12 +99,13 @@ Two hundred nineteen families meet the full-family definition. Current full pari
 | `fisheye_initUndistortRectifyMap`                                                                                    | Matching `cv.fisheye_initUndistortRectifyMap`   | Equidistant maps, F32/fixed-point layouts                                            |
 | `drawFrameAxes`                                                                                                      | Matching `cv.drawFrameAxes`                     | Projected BGR axes, integer-clip rasterization                                       |
 | `estimateAffine2D`                                                                                                   | Matching `cv.estimateAffine2D`                  | Exhaustive LMeDS scan, private-RNG RANSAC, inlier mask                               |
+| `findHomography`                                                                                                     | Matching `cv.findHomography`                    | Normalized DLT + geometric refit, RANSAC/LMeDS, consensus mask                       |
 | `meanShift`                                                                                                          | Matching `cv.meanShift`                         | Weighted-centroid window tracking, pinned criteria quirks                            |
 | `CamShift`                                                                                                           | Matching `cv.CamShift`                          | Grown-region moments, rotated box, anchored window update                            |
 
 ## Working partial families
 
-Fifty-two families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 271 families in total.
+Fifty-two families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 273 families in total.
 
 | Package methods                                                                                  | OpenCV.js families                                        | Current limit                                                              |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------- |

@@ -6,6 +6,8 @@ use wasm_bindgen::prelude::*;
 
 mod calib3d_affine;
 mod calib3d_affine_wasm;
+mod calib3d_homography;
+mod calib3d_homography_wasm;
 mod calib3d_camera;
 mod calib3d_camera_wasm;
 mod calib3d_distort;

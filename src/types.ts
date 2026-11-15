@@ -603,6 +603,15 @@ export interface OpenCvBackend {
     confidence: number,
     refineIters: number,
   ): WasmMatHandle;
+  matFindHomography(
+    from: WasmMatHandle,
+    to: WasmMatHandle,
+    method: number,
+    ransacReprojThreshold: number,
+    mask: WasmMatHandle,
+    maxIters: number,
+    confidence: number,
+  ): WasmMatHandle;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1737,6 +1746,16 @@ export interface OpenCv {
     maxIters?: number,
     confidence?: number,
     refineIters?: number,
+  ): Mat;
+
+  findHomography(
+    from: Mat,
+    to: Mat,
+    method?: number,
+    ransacReprojThreshold?: number,
+    mask?: Mat,
+    maxIters?: number,
+    confidence?: number,
   ): Mat;
 
   floodFill(
