@@ -2494,6 +2494,124 @@ export function runCoreOpsCases(cv, reference) {
     depth: 5,
   });
 
+  // ---- CamShift: rotated-rect tracking over probability images
+  const csRun = (
+    name,
+    { fill, rect, type = 1, maxCount = 10, epsilon = 0, depth = 0, size = 20 },
+  ) => {
+    run(`camshift/${name}`, (handles) => {
+      const image = track(handles, api.mat(size, size, 1, depth, msBlob(size, fill)));
+      const criteria = reference
+        ? new cv.TermCriteria(type, maxCount, epsilon)
+        : { type, maxCount, epsilon };
+      const [rotated, window] = cv.CamShift(image, rect, criteria);
+      return { rotated, window };
+    });
+  };
+  csRun("basic", {
+    fill: [[10, 12, 255]],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+  });
+  csRun("blank", {
+    fill: [],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+  });
+  csRun("inout", {
+    fill: [
+      [2, 2, 255],
+      [10, 10, 255],
+    ],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+  });
+  csRun("antidiag", {
+    fill: [
+      [6, 12, 255],
+      [12, 6, 255],
+    ],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+  });
+  csRun("block3", {
+    fill: [
+      [9, 9, 255],
+      [10, 9, 255],
+      [11, 9, 255],
+      [9, 10, 255],
+      [10, 10, 255],
+      [11, 10, 255],
+      [9, 11, 255],
+      [10, 11, 255],
+      [11, 11, 255],
+    ],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+  });
+  csRun("blob2d", {
+    fill: [
+      [9, 9, 255],
+      [10, 9, 255],
+      [9, 10, 200],
+      [10, 10, 200],
+      [9, 11, 100],
+    ],
+    rect: { x: 5, y: 5, width: 10, height: 10 },
+  });
+  csRun("vert-gap", {
+    fill: [
+      [20, 18, 255],
+      [20, 22, 255],
+    ],
+    rect: { x: 15, y: 15, width: 10, height: 10 },
+    size: 40,
+  });
+  csRun("vert3", {
+    fill: [
+      [20, 18, 255],
+      [20, 20, 255],
+      [20, 22, 255],
+    ],
+    rect: { x: 15, y: 15, width: 10, height: 10 },
+    size: 40,
+  });
+  csRun("lshape", {
+    fill: [
+      [18, 18, 255],
+      [20, 19, 255],
+      [20, 20, 255],
+      [20, 21, 255],
+      [20, 22, 255],
+      [20, 23, 255],
+      [20, 24, 255],
+    ],
+    rect: { x: 15, y: 15, width: 10, height: 10 },
+    size: 40,
+  });
+  csRun("iw-far", {
+    fill: [
+      [20, 20, 255],
+      [20, 24, 255],
+      [22, 20, 255],
+    ],
+    rect: { x: 30, y: 30, width: 5, height: 5 },
+    size: 40,
+  });
+  csRun("mc1", {
+    fill: [
+      [20, 18, 255],
+      [20, 22, 255],
+    ],
+    rect: { x: 15, y: 15, width: 10, height: 10 },
+    size: 40,
+    type: 1,
+    maxCount: 1,
+  });
+  csRun("f32", {
+    fill: [
+      [10, 5, 60],
+      [11, 5, 40],
+    ],
+    rect: { x: 5, y: 0, width: 10, height: 10 },
+    depth: 5,
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference

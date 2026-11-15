@@ -209,6 +209,7 @@ export const OPENCV_OPERATIONS = [
   },
   { method: "drawFrameAxes", wasmExport: "matDrawFrameAxesInto" },
   { method: "meanShift", wasmExport: "matMeanShift" },
+  { method: "CamShift", wasmExport: "matCamShift" },
   { method: "gemm", wasmExport: "matGemmInto" },
   { method: "eigen", wasmExport: "matEigenInto" },
   { method: "solvePoly", wasmExport: "matSolvePolyInto" },

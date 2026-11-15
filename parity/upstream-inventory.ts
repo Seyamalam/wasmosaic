@@ -108,6 +108,7 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "calib3d.function.fisheye-init-undistort-rectify-map": { overloadCount: 2, runtimeArity: 8 },
   "calib3d.function.draw-frame-axes": { overloadCount: 1, runtimeArity: 0 },
   "video.function.mean-shift": { overloadCount: 1, runtimeArity: 3 },
+  "video.function.cam-shift": { overloadCount: 1, runtimeArity: 3 },
   "objdetect.function.group-rectangles": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.line": { overloadCount: 1, runtimeArity: 0 },
   "imgproc.function.rectangle": { overloadCount: 1, runtimeArity: 0 },

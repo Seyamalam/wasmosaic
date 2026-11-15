@@ -344,6 +344,16 @@ declare module "#wasm" {
     maxCount: number,
     epsilon: number,
   ): Float64Array;
+  export function matCamShift(
+    probImage: WasmMatHandle,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    criteriaType: number,
+    maxCount: number,
+    epsilon: number,
+  ): Float64Array;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

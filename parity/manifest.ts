@@ -152,6 +152,18 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "CamShift",
+      module: "video",
+      notes:
+        "Continuously-adaptive tracking on single-channel probability images of any depth: the supplied window grown ten pixels per side and snapped back inside the image bounds the search moments, the rotated box reports the returned window's center with size 4*sqrt of each covariance eigenvalue and orientation 90+atan2(2*mu11, mu20-mu02)/2 in degrees, the tracked window anchors at the rounded centroid with per-axis maximum projected extents plus two pixels, zero-mass regions report a zero box at the origin with the grown clipped window, the pinned f32-epsilon eigenvalue residue on saturated collinear masses is reproduced, and termination criteria are ignored like the pinned binding.",
+      sources: [VIDEO_SOURCE],
+      status: "implemented",
+      upstream: "CamShift",
+      upstreamId: "video.function.cam-shift",
+      wasmExport: "matCamShift",
+    },
+    {
+      implementationOrigin: "original",
       method: "createAKAZE",
       module: "features2d",
       notes:

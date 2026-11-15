@@ -583,6 +583,16 @@ export interface OpenCvBackend {
     maxCount: number,
     epsilon: number,
   ): Float64Array;
+  matCamShift(
+    probImage: WasmMatHandle,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    criteriaType: number,
+    maxCount: number,
+    epsilon: number,
+  ): Float64Array;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1707,6 +1717,7 @@ export interface OpenCv {
   ): void;
 
   meanShift(probImage: Mat, rect: Rect, criteria: TermCriteria): [number, Rect];
+  CamShift(probImage: Mat, rect: Rect, criteria: TermCriteria): [RotatedRect, Rect];
 
   floodFill(
     image: Mat,

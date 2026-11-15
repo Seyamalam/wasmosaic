@@ -2266,6 +2266,18 @@ class CopyingBackend implements OpenCvBackend {
   ): Float64Array {
     throw new OpenCvInputError("mock meanShift is not implemented");
   }
+  matCamShift(
+    _probImage: WasmMatHandle,
+    _x: number,
+    _y: number,
+    _width: number,
+    _height: number,
+    _criteriaType: number,
+    _maxCount: number,
+    _epsilon: number,
+  ): Float64Array {
+    throw new OpenCvInputError("mock camShift is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6762,6 +6774,46 @@ describe("meanShift binding", () => {
     probImage.dispose();
     expect(() =>
       cv.meanShift(
+        probImage,
+        { x: 5, y: 5, width: 10, height: 10 },
+        { type: 1, maxCount: 5, epsilon: 0 },
+      ),
+    ).toThrow();
+  });
+});
+
+describe("CamShift binding", () => {
+  test("forwards window and criteria, returns rotated rect and rect", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[][] = [];
+    backend.matCamShift = (_p, x, y, width, height, criteriaType, maxCount, epsilon) => {
+      calls.push([x, y, width, height, criteriaType, maxCount, epsilon]);
+      return new Float64Array([9, 9, 0, 22.6274, 135, 0, 0, 18, 18]);
+    };
+    const cv = createOpenCv(backend);
+    const probImage = cv.matFromU8(20, 20, 1, new Uint8Array(400));
+    const result = cv.CamShift(
+      probImage,
+      { x: 5, y: 5, width: 10, height: 10 },
+      { type: 3, maxCount: 10, epsilon: 0.001 },
+    );
+    expect(calls).toEqual([[5, 5, 10, 10, 3, 10, 0.001]]);
+    expect(result).toEqual([
+      {
+        center: { x: 9, y: 9 },
+        size: { width: 0, height: 22.6274 },
+        angle: 135,
+      },
+      { x: 0, y: 0, width: 18, height: 18 },
+    ]);
+    expect(cv.CamShift.length).toBe(0);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.CamShift(probImage, { x: 5, y: 5, width: 10, height: 10 }),
+    ).toThrow(BindingError);
+    probImage.dispose();
+    expect(() =>
+      cv.CamShift(
         probImage,
         { x: 5, y: 5, width: 10, height: 10 },
         { type: 1, maxCount: 5, epsilon: 0 },

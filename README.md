@@ -308,6 +308,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | calib3d    | `fisheye_initUndistortRectifyMap`           | `cv.fisheye_initUndistortRectifyMap`           | Full    | Equidistant maps, F32/fixed-point layouts                         |
 | calib3d    | `drawFrameAxes`                             | `cv.drawFrameAxes`                             | Full    | Projected BGR axes, integer-clip rasterization                    |
 | video      | `meanShift`                                 | `cv.meanShift`                                 | Full    | Weighted-centroid window tracking, pinned criteria quirks         |
+| video      | `CamShift`                                  | `cv.CamShift`                                  | Full    | Grown-region moments, rotated box, anchored window update         |
 | imgproc    | `preCornerDetect`                           | `cv.preCornerDetect`                           | Partial | Corner metric; derivative scaling pending                         |
 | imgproc    | `cornerHarris`                              | `cv.cornerHarris`                              | Full    | Normalized-covariance Harris response                             |
 | imgproc    | `cornerMinEigenVal`                         | `cv.cornerMinEigenVal`                         | Full    | Normalized min-eigenvalue corner map                              |
@@ -340,7 +341,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | photo      | `TonemapReinhard.setIntensity`              | `cv.TonemapReinhard.setIntensity`              | Full    | Exact float coercion and call contract                            |
 | photo      | `TonemapReinhard.setLightAdaptation`        | `cv.TonemapReinhard.setLightAdaptation`        | Full    | Exact float coercion and call contract                            |
 
-Current full parity is **218 of 488 (44.67%)**. There are **52 partial families**, for **270 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
+Current full parity is **219 of 488 (44.88%)**. There are **52 partial families**, for **271 supported families** in total. The 25% milestone is complete. `bun run parity:check` verifies these numbers against the inventory, TypeScript metadata, Rust exports, README rows, and generated JSON.
 
 The fixture passes the complete pinned browser contract for `determinant`. The function requires exactly one live `Mat` and accepts only nonempty square single-channel F32 or F64 matrices, including non-contiguous regions. It preserves the input, matches the direct 1x1, 2x2, and 3x3 paths with signed-zero and non-finite propagation, and keeps F32 and F64 arithmetic distinct during elimination for larger matrices. The audit locks the absolute pivot cutoffs, exact cutoff acceptance, row-swap signs, singular positive zero, stored-F32 widening in the small formulas, and Hilbert precision. Integer, multichannel, nonsquare, empty, deleted, and non-Mat inputs reject before computation.
 

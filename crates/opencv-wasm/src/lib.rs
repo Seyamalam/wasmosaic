@@ -115,6 +115,8 @@ mod mat_vector;
 mod mutable_storage;
 mod photo_tonemap;
 mod photo_tonemap_wasm;
+mod video_cam;
+mod video_cam_wasm;
 mod video_mean;
 mod video_mean_wasm;
 

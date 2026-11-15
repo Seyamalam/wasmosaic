@@ -2910,6 +2910,36 @@ class WasmOpenCv implements OpenCv {
     ];
   }
 
+  CamShift(
+    ...arguments_: [probImage: Mat, rect: Rect, criteria: TermCriteria]
+  ): [RotatedRect, Rect] {
+    requireArityRange(arguments_.length, 3, 3, "CamShift");
+    const [probImage, rect, criteria] = arguments_;
+    const result = this.#backend.matCamShift(
+      matHandleForBinding(probImage),
+      toWasmI32(rect.x),
+      toWasmI32(rect.y),
+      toWasmI32(rect.width),
+      toWasmI32(rect.height),
+      toWasmI32(criteria.type),
+      toWasmI32(criteria.maxCount),
+      criteria.epsilon,
+    );
+    return [
+      {
+        center: { x: requiredFloat(result, 0), y: requiredFloat(result, 1) },
+        size: { width: requiredFloat(result, 2), height: requiredFloat(result, 3) },
+        angle: requiredFloat(result, 4),
+      },
+      {
+        x: requiredFloat(result, 5),
+        y: requiredFloat(result, 6),
+        width: requiredFloat(result, 7),
+        height: requiredFloat(result, 8),
+      },
+    ];
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;

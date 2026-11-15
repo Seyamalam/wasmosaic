@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `CamShift`: continuously-adaptive mean-shift tracking on single-channel probability images of any depth, scanning the supplied window grown ten pixels per side and snapped inside the image, reporting the rotated box at the returned window's center with size 4*sqrt of each covariance eigenvalue and orientation 90+atan2(2*mu11, mu20-mu02)/2 in degrees, anchoring the tracked window at the rounded centroid with per-axis maximum projected extents plus two pixels, reporting zero-mass regions as a zero box at the origin with the grown clipped window, reproducing the pinned f32-epsilon eigenvalue residue on saturated collinear masses, and ignoring termination criteria like the pinned binding. All pinned browser cases match exactly. **Full parity is now 219 of 488 families.**
+
+### Added
+
 - `meanShift`: weighted-centroid window tracking on single-channel probability images of any depth, intersecting the initial window with the image, computing centers at x+width/2, rounding shifts with half-even rounding, clamping the position to the valid range, exiting early on zero moments, defaulting to 100 iterations when COUNT is unset, stopping on no movement when EPS is unset, and running to the iteration cap when the EPS bit is set after an unconverged first shift. All pinned browser cases match exactly. **Full parity is now 218 of 488 families.**
 
 ### Added
