@@ -134,12 +134,13 @@ pub fn mat_invert_affine_transform_into(transform: &Mat, destination: &Mat) -> R
 /// Allocates the 3x3 F64 projective map between four source and destination points.
 ///
 /// Point inputs may be 4x2 single-channel matrices or 4x1 and 1x4 two-channel vectors. F32
-/// inputs must be continuous. LU (0) and QR (4), optionally combined with NORMAL (16),
-/// normalize the lower-right output coefficient to one.
+/// inputs must be continuous. LU (0), SVD (1), EIG (2), CHOLESKY (3), and QR (4), optionally
+/// combined with NORMAL (16), are accepted. EIG and CHOLESKY return the unit-norm homogeneous
+/// direction; the remaining methods normalize the lower-right output coefficient to one.
+/// Singular systems return the unit-norm homogeneous least-squares direction.
 ///
 /// # Errors
-/// Returns an error for unsupported depth, shape or solve method, degenerate point
-/// configurations, or a transform that cannot use the selected normalization.
+/// Returns an error for unsupported depth, shape, or solve method.
 #[wasm_bindgen(js_name = matGetPerspectiveTransform)]
 pub fn mat_get_perspective_transform(
     source: &Mat,

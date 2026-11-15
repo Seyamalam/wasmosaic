@@ -89,7 +89,7 @@ export function perspectiveCases() {
     });
   for (const depth of [5, 6, 4])
     for (const layout of ["column", "row", "pairs", "strided"])
-      for (const method of [0, 4, 16, 20])
+      for (const method of [0, 1, 2, 3, 4, 16, 17, 18, 19, 20])
         entries.push({
           kind: "get",
           name: `get/${depth}/${layout}/${method}`,
@@ -194,9 +194,18 @@ export function runPerspectiveCases(api) {
         if (entry.special === "default") args.pop();
         if (entry.special === "missing") args.splice(1);
         if (entry.special === "extra") args.push(99);
+        const result = api.summary(own(api.get(...args)));
+        if (["zero", "collinear"].includes(entry.special) && result.values)
+          result.values = [Math.hypot(...result.values)];
+        if ([2, 3].includes(entry.method & 15) && result.values) {
+          let pivot = 0;
+          for (let index = 1; index < result.values.length; index++)
+            if (Math.abs(result.values[index]) > Math.abs(result.values[pivot])) pivot = index;
+          if (result.values[pivot] < 0) result.values = result.values.map((value) => -value);
+        }
         return {
           name: entry.name,
-          result: api.summary(own(api.get(...args))),
+          result,
           source: api.summary(source),
           target: api.summary(target),
         };

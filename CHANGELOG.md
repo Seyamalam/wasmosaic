@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `getPerspectiveTransform`: full solve-method contract for the 3x3 projective map between four continuous F32 point pairs. LU (0), SVD (1), and QR (4) decompositions, optionally combined with NORMAL (16), normalize the lower-right coefficient to one; EIG (2) and CHOLESKY (3) return the unit-norm homogeneous direction; singular configurations fall back to the unit-norm homogeneous least-squares direction; and unsupported method values mirror the pinned rejection. All 2,258 pinned browser cases match exactly. **Full parity is now 222 of 488 families.**
+
+### Added
+
 - `findHomography`: robust 3x3 homography estimation between matching point sets on any scalar depth in both Nx1 two-channel and Nx2 single-channel layouts, quantizing coordinates through the pinned single-precision point storage before computation. Method 0 refits over all points, method 4 scans all four-point subsets in index order for the minimum median reprojection error and refits over the median-scale bound, method 8 samples hypotheses from a private per-call multiply-with-carry generator with degenerate-subset redraws and an adaptive confidence budget, and method 16 follows the same sampling path. The reported mask is the winning hypothesis's consensus set under the strict reprojection threshold, the returned model is a geometric reprojection refit over the winning set, and unsupported methods, too-few correspondences, and mismatched set sizes mirror the pinned error and empty-matrix behavior. All pinned browser cases match exactly. **Full parity is now 221 of 488 families.**
 
 ### Added

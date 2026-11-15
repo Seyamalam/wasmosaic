@@ -25,7 +25,7 @@ Desktop modules that the official OpenCV.js build disables are outside this pari
 
 ## Fully implemented families
 
-Two hundred twenty-one families meet the full-family definition. Current full parity is 221 of 488, or 45.29%.
+Two hundred twenty-two families meet the full-family definition. Current full parity is 222 of 488, or 45.49%.
 
 | Package methods                                                                                                      | OpenCV.js families                              | Verified contract                                                                    |
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -71,6 +71,7 @@ Two hundred twenty-one families meet the full-family definition. Current full pa
 | `isContourConvex`, `pointPolygonTest`                                                                                | Matching `cv` polygon-query families            | Exact strict convexity, Point2f, small contours, distance, errors, and ROI           |
 | `getRotationMatrix2D`                                                                                                | `cv.getRotationMatrix2D`                        | Exact Point2f, F64 conversion, coefficients, and independent ownership               |
 | `getAffineTransform`                                                                                                 | `cv.getAffineTransform`                         | Exact F32 point layouts, LU arithmetic, singular zeros, errors, and output           |
+| `getPerspectiveTransform`                                                                                            | `cv.getPerspectiveTransform`                    | All five solve methods, NORMAL flag, unit-norm homogeneous direction and fallback    |
 | `invertAffineTransform`                                                                                              | `cv.invertAffineTransform`                      | Exact F32/F64 mutable output, depth arithmetic, aliasing, ROI, and errors            |
 | `resize`                                                                                                             | `cv.resize`                                     | All seven modes, depth/channel contracts, geometry, ROI, aliasing and binding errors |
 | `getStructuringElement`                                                                                              | `cv.getStructuringElement`                      | Exact overloads, integer conversion, four kernel kinds, anchors, and errors          |
@@ -105,7 +106,7 @@ Two hundred twenty-one families meet the full-family definition. Current full pa
 
 ## Working partial families
 
-Fifty-two families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 273 families in total.
+Fifty-one families have useful original Rust/WASM slices but do not meet the full-family definition. The project supports 273 families in total.
 
 | Package methods                                                                                  | OpenCV.js families                                        | Current limit                                                              |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -124,7 +125,6 @@ Fifty-two families have useful original Rust/WASM slices but do not meet the ful
 | `transform`, `perspectiveTransform`                                                              | `cv.transform`, `cv.perspectiveTransform`                 | Selected channel and coefficient forms                                     |
 | `invert`, `solve`                                                                                | `cv.invert`, `cv.solve`                                   | Selected dense single-channel methods                                      |
 | `ellipse2Poly`, `clipLine`                                                                       | Matching `cv` integer geometry helpers                    | Full pinned contract                                                       |
-| `getPerspectiveTransform`                                                                        | `cv.getPerspectiveTransform`                              | Continuous F32 points; LU/QR with F64 output                               |
 | `createAKAZE`                                                                                    | `cv.AKAZE.create`                                         | Static factory is absent from the pinned artifact                          |
 | `createKAZE`                                                                                     | `cv.KAZE.create`                                          | Static factory is absent from the pinned artifact                          |
 | `createAgastFeatureDetector`                                                                     | `cv.AgastFeatureDetector.create`                          | Static factory is absent from the pinned artifact                          |
@@ -256,11 +256,11 @@ The implementations follow the public [shape API contract](https://docs.opencv.o
 
 ### Perspective rectification differential coverage
 
-`test/browser/perspective.html` compares 2,186 cases against pinned OpenCV.js 4.13.0: 1,731 matching output cases and 449 matching rejection cases, plus six frozen solver differences. The fixture covers seven depths, one/four channels, nearest/linear/area interpolation, five borders, forward/inverse maps, singular and zero-denominator maps, regions, destination replacement, in-place and overlapping outputs, binding defaults and errors, transform constructors, and two corner-to-rectangle workflows.
+`test/browser/perspective.html` compares 2,258 cases against pinned OpenCV.js 4.13.0: 1,755 matching output cases and 503 matching rejection cases, with no recorded differences. The fixture covers seven depths, one/four channels, nearest/linear/area interpolation, five borders, forward/inverse maps, singular and zero-denominator maps, regions, destination replacement, in-place and overlapping outputs, binding defaults and errors, all five `getPerspectiveTransform` solve methods with NORMAL combinations, degenerate point configurations, and two corner-to-rectangle workflows.
 
 Integer outputs compare exactly; F32 values use `2e-5 * max(1, abs(reference))` tolerance, and F64 values use `2e-9 * max(1, abs(reference))`. The observed maximum absolute difference is `1.52587890625e-5`. Serialized NaN/infinity categories are compared exactly; signed-zero equality is not audited here. The recorded report is [perspective-2026-09-13.json](../test/browser/reports/perspective-2026-09-13.json). The known-difference ledger freezes both actual and reference results, so new or changed differences fail the fixture.
 
-`getPerspectiveTransform` still rejects two degenerate cases and four cases selecting unsupported SVD/EIG/Cholesky methods (including boolean-to-SVD coercion). `warpPerspective` remains partial: cubic/Lanczos interpolation, transparent borders, non-finite matrices and exhaustive numeric/error behavior remain. No family is promoted to full parity. Current totals are **124 implemented, 56 partial and 180 supported of 488**. This checkpoint makes no speed claim.
+`warpPerspective` remains partial: cubic/Lanczos interpolation, transparent borders, non-finite matrices and exhaustive numeric/error behavior remain. `getPerspectiveTransform` is promoted to implemented. Current totals are **222 implemented, 51 partial and 273 supported of 488**. This checkpoint makes no speed claim.
 
 ### Resize differential coverage
 

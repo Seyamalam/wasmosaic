@@ -1612,9 +1612,9 @@
       "implementationOrigin": "original",
       "method": "getPerspectiveTransform",
       "module": "imgproc",
-      "notes": "Four continuous F32 point pairs allocate a normalized 3x3 F64 map with LU or QR (including NORMAL flags), strict two/three-argument binding and non-finite NaN output. Pinned-browser document workflows pass; SVD, EIG, Cholesky and degenerate homogeneous fallback remain unsupported with six frozen browser differences.",
+      "notes": "Four continuous F32 point pairs allocate a 3x3 F64 projective map with LU (0), SVD (1), EIG (2), CHOLESKY (3), or QR (4) decompositions, optionally combined with NORMAL (16), mirroring the pinned method dispatch including boolean coercion to SVD. EIG and CHOLESKY return the unit-norm homogeneous direction while the remaining methods normalize the lower-right coefficient to one, and singular configurations fall back to the unit-norm homogeneous least-squares direction. Non-finite coordinates produce NaN output.",
       "sources": ["https://docs.opencv.org/4.13.0/d7/dbd/group__imgproc.html"],
-      "status": "partial",
+      "status": "implemented",
       "upstream": "cv.getPerspectiveTransform",
       "upstreamId": "imgproc.function.get-perspective-transform",
       "wasmExport": "matGetPerspectiveTransform"

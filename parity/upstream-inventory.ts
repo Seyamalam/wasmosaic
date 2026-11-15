@@ -109,6 +109,7 @@ const AUDITED_BINDING_FORMS: Readonly<Record<string, AuditedBindingForm>> = Obje
   "calib3d.function.draw-frame-axes": { overloadCount: 1, runtimeArity: 0 },
   "calib3d.function.estimate-affine2-d": { overloadCount: 1, runtimeArity: 0 },
   "calib3d.function.find-homography": { overloadCount: 1, runtimeArity: 0 },
+  "imgproc.function.get-perspective-transform": { overloadCount: 1, runtimeArity: 0 },
   "video.function.mean-shift": { overloadCount: 1, runtimeArity: 3 },
   "video.function.cam-shift": { overloadCount: 1, runtimeArity: 3 },
   "objdetect.function.group-rectangles": { overloadCount: 1, runtimeArity: 0 },

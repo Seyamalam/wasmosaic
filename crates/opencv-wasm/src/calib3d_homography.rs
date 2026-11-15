@@ -178,7 +178,7 @@ fn mat3_mul(a: &[[f64; 3]; 3], b: &[[f64; 3]; 3]) -> [[f64; 3]; 3] {
 }
 
 /// Jacobi sweep returning the eigenvector of the smallest eigenvalue.
-fn smallest_eigenvector(matrix: &[[f64; 9]; 9]) -> Option<[f64; 9]> {
+pub(crate) fn smallest_eigenvector(matrix: &[[f64; 9]; 9]) -> Option<[f64; 9]> {
     let mut m = *matrix;
     let mut v = [[0f64; 9]; 9];
     for i in 0..9 {

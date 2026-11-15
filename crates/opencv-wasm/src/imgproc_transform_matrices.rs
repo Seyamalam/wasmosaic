@@ -15,7 +15,7 @@ impl fmt::Display for TransformMatrixError {
         match self {
             Self::UnsupportedSolveMethod(method) => write!(
                 formatter,
-                "perspective solve method {method} is not implemented; use LU (0) or QR (4)"
+                "perspective solve method {method} is not supported; use LU (0), SVD (1), EIG (2), CHOLESKY (3), or QR (4), optionally with NORMAL (16)"
             ),
             Self::DegenerateGeometry => formatter
                 .write_str("transform matrix cannot be determined from degenerate input geometry"),
@@ -156,14 +156,16 @@ pub(crate) fn invert_affine_transform_f32(transform: &[f32; 6]) -> [f32; 6] {
 
 /// Finds a 3-by-3 projective map between four point correspondences.
 ///
-/// This partial implementation fixes the lower-right coefficient to one and uses LU or QR. It rejects correspondences that need a projective matrix with a zero lower-right
-/// coefficient.
+/// LU (0), SVD (1), EIG (2), CHOLESKY (3), and QR (4) decompositions are accepted, optionally
+/// combined with NORMAL (16). EIG and CHOLESKY return the unit-norm homogeneous direction, while
+/// the remaining methods normalize the lower-right coefficient to one. When the reduced 8x8
+/// system is singular, the result is the unit-norm homogeneous least-squares direction.
 pub(crate) fn perspective_transform(
     source: &[[f64; 2]; 4],
     destination: &[[f64; 2]; 4],
     method: i32,
 ) -> Result<[f64; 9], TransformMatrixError> {
-    if !matches!(method, 0 | 4 | 16 | 20) {
+    if !matches!(method & 15, 0..=4) || !matches!(method & !15, 0 | 16) {
         return Err(TransformMatrixError::UnsupportedSolveMethod(method));
     }
     if source
@@ -176,11 +178,11 @@ pub(crate) fn perspective_transform(
     }
     let mut coefficients = [[0.0; 8]; 8];
     let mut right_hand_side = [0.0; 8];
+    let mut normal = [[0.0; 9]; 9];
     for (index, (&[source_x, source_y], &[destination_x, destination_y])) in
         source.iter().zip(destination).enumerate()
     {
-        let x_row = index * 2;
-        coefficients[x_row] = [
+        let x_row = [
             source_x,
             source_y,
             1.0,
@@ -189,11 +191,9 @@ pub(crate) fn perspective_transform(
             0.0,
             -destination_x * source_x,
             -destination_x * source_y,
+            -destination_x,
         ];
-        right_hand_side[x_row] = destination_x;
-
-        let y_row = x_row + 1;
-        coefficients[y_row] = [
+        let y_row = [
             0.0,
             0.0,
             0.0,
@@ -202,8 +202,26 @@ pub(crate) fn perspective_transform(
             1.0,
             -destination_y * source_x,
             -destination_y * source_y,
+            -destination_y,
         ];
-        right_hand_side[y_row] = destination_y;
+        for (offset, row) in [x_row, y_row].iter().enumerate() {
+            coefficients[index * 2 + offset] =
+                row[..8].try_into().expect("rows carry eight coefficients");
+            for column in 0..9 {
+                for target in 0..9 {
+                    normal[column][target] += row[column] * row[target];
+                }
+            }
+        }
+        right_hand_side[index * 2] = destination_x;
+        right_hand_side[index * 2 + 1] = destination_y;
+    }
+    let homogeneous = |normal: &[[f64; 9]; 9]| {
+        crate::calib3d_homography::smallest_eigenvector(normal)
+            .ok_or(TransformMatrixError::NumericalFailure)
+    };
+    if matches!(method & 15, 2 | 3) {
+        return homogeneous(&normal);
     }
     let coefficients = coefficients.into_iter().flatten().collect::<Vec<_>>();
     let solution = if method & 15 == 4 {
@@ -211,8 +229,10 @@ pub(crate) fn perspective_transform(
     } else {
         crate::core_algebra::solve_lu(&coefficients, 8, &right_hand_side, 1)
     }
-    .map_err(|_| TransformMatrixError::NumericalFailure)?
-    .ok_or(TransformMatrixError::DegenerateGeometry)?;
+    .map_err(|_| TransformMatrixError::NumericalFailure)?;
+    let Some(solution) = solution else {
+        return homogeneous(&normal);
+    };
     let result = [
         solution[0],
         solution[1],
@@ -394,7 +414,6 @@ mod tests {
                 assert!(((m[3] * x + m[4] * y + m[5]) / w - v).abs() < 1e-10);
             }
         }
-        assert!(perspective_transform(&source, &target, 1).is_err());
         assert!(
             perspective_transform(&[[f64::NAN, 0.]; 4], &target, 0)
                 .unwrap()
@@ -402,13 +421,46 @@ mod tests {
                 .all(f64::is_nan)
         );
     }
+
     #[test]
-    fn invalid_perspective_geometry_is_rejected() {
-        let source = [[0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0]];
-        let destination = [[0.0, 0.0], [1.0, 1.0], [2.0, 1.0], [3.0, 2.0]];
-        assert_eq!(
-            perspective_transform(&source, &destination, 0),
-            Err(TransformMatrixError::DegenerateGeometry)
-        );
+    fn perspective_svd_normalizes_and_eig_cholesky_return_unit_vectors() {
+        let source = [[0., 0.], [6., 0.], [6., 4.], [0., 4.]];
+        let target = [[1., 0.], [5., 1.], [6., 4.], [0., 3.]];
+        let normalized = perspective_transform(&source, &target, 0).unwrap();
+        for method in [1, 17] {
+            let m = perspective_transform(&source, &target, method).unwrap();
+            assert_eq!(m[8], 1.0);
+            assert_close(&m, &normalized, 1.0e-12);
+        }
+        for method in [2, 3, 18, 19] {
+            let m = perspective_transform(&source, &target, method).unwrap();
+            let norm: f64 = m.iter().map(|value| value * value).sum();
+            assert!((norm.sqrt() - 1.0).abs() < 1e-12);
+            let scale = m[8].abs();
+            for index in 0..8 {
+                assert!(
+                    (m[index].abs() - normalized[index].abs() * scale).abs() < 1e-9,
+                    "value {index} diverges from the normalized direction"
+                );
+            }
+        }
+        for method in [5, 6, 7, 8, 9, 21, 32, -1] {
+            assert_eq!(
+                perspective_transform(&source, &target, method),
+                Err(TransformMatrixError::UnsupportedSolveMethod(method))
+            );
+        }
+    }
+
+    #[test]
+    fn degenerate_perspective_geometry_returns_the_homogeneous_direction() {
+        let collinear = [[0.0, 0.0], [1.0, 0.0], [2.0, 0.0], [3.0, 0.0]];
+        let destination = [[1.0, 0.0], [5.0, 1.0], [6.0, 4.0], [0.0, 3.0]];
+        for method in [0, 1, 2, 3, 4] {
+            let m = perspective_transform(&collinear, &destination, method)
+                .expect("singular systems fall back to the homogeneous direction");
+            let norm: f64 = m.iter().map(|value| value * value).sum();
+            assert!((norm.sqrt() - 1.0).abs() < 1e-12);
+        }
     }
 }
