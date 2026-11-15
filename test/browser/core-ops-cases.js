@@ -2612,6 +2612,115 @@ export function runCoreOpsCases(cv, reference) {
     depth: 5,
   });
 
+  // ---- estimateAffine2D: robust affine estimation over point sets
+  const eaRun = (name, { from, to, args = [], depth = 5, channels = 2, split }) => {
+    run(`estaffine/${name}`, (handles) => {
+      const mk = (pts) =>
+        track(
+          handles,
+          channels === 2
+            ? api.mat(pts.length / 2, 1, 2, depth, pts)
+            : api.mat(pts.length / 2, 2, 1, depth, pts),
+        );
+      const inliers = track(handles, api.empty());
+      const model = track(
+        handles,
+        cv.estimateAffine2D(mk(from), mk(split ?? to ?? from), inliers, ...args),
+      );
+      return { model: api.summary(model), inliers: api.summary(inliers) };
+    });
+  };
+  eaRun("scale", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1],
+    to: [3, 1, 5, 1, 3, 3, 5, 3],
+  });
+  eaRun("identity", { from: [0, 0, 1, 0, 0, 1], to: [0, 0, 1, 0, 0, 1] });
+  eaRun("translate", {
+    from: [0, 0, 1, 0, 0, 1],
+    to: [5, 7, 6, 7, 5, 8],
+  });
+  eaRun("nx2", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1],
+    to: [3, 1, 5, 1, 3, 3, 5, 3],
+    channels: 1,
+  });
+  eaRun("i32", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1],
+    to: [3, 1, 5, 1, 3, 3, 5, 3],
+    depth: 4,
+  });
+  eaRun("outliers", {
+    from: (() => {
+      const p = [];
+      for (let i = 0; i < 10; i++) p.push(i, (i * i) % 7);
+      return p;
+    })(),
+    to: (() => {
+      const p = [];
+      for (let i = 0; i < 10; i++) p.push(2 * i + 3, ((i * i) % 7) * 2 + 1);
+      p[8] += 50;
+      p[10] -= 40;
+      p[15] += 30;
+      return p;
+    })(),
+  });
+  eaRun("refine", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1, 5, 5, 8, 8, 20, 20],
+    to: [3, 1, 5, 1, 3, 3, 5, 3, 13.4, 11.4, 19.2, 17.2, 43, 41],
+  });
+  eaRun("thr-exact", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1, 2, 0, 9, 9],
+    to: [3, 1, 5, 1, 3, 3, 5, 3, 7, 1, 21, 22],
+  });
+  eaRun("n2", { from: [0, 0, 1, 0], to: [3, 1, 5, 1] });
+  eaRun("n1", { from: [1, 2], to: [4, 5] });
+  eaRun("collinear", {
+    from: [0, 0, 1, 3, 2, 6, 3, 9],
+    to: [0, 0, 5, 1, 10, 2, 15, 3],
+  });
+  eaRun("method-err", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1],
+    to: [3, 1, 5, 1, 3, 3, 5, 3],
+    args: [5],
+  });
+  eaRun("method0", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1],
+    to: [3, 1, 5, 1, 3, 3, 5, 3],
+    args: [0],
+  });
+  eaRun("lmeds", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1, 5, 0, 6, 0, 5, 1, 6, 1],
+    to: [0, 0, 1, 0, 0, 1, 1, 1, 15, 0, 16, 0, 15, 1, 16, 1],
+    args: [4],
+  });
+  eaRun("ransac", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1, 5, 0, 6, 0, 5, 1, 6, 1],
+    to: [0, 0, 1, 0, 0, 1, 1, 1, 15, 0, 16, 0, 15, 1, 16, 1],
+    args: [8],
+  });
+  eaRun("mismatch", {
+    from: [0, 0, 1, 0, 0, 1, 1, 1],
+    split: [0, 0, 1, 0, 0, 1],
+  });
+  eaRun("noisy", {
+    from: (() => {
+      const p = [];
+      for (let i = 0; i < 10; i++) p.push(i * 1.3, (i * 1.9) % 9);
+      p.push(30, 40, 35, 42);
+      return p;
+    })(),
+    to: (() => {
+      const p = [];
+      for (let i = 0; i < 10; i++)
+        p.push(
+          2 * i * 1.3 + 1 + ((i * 7) % 5) * 0.01,
+          2 * ((i * 1.9) % 9) + 3 - ((i * 3) % 4) * 0.008,
+        );
+      p.push(7, 2, 50, 60);
+      return p;
+    })(),
+  });
+
   // ---- CLAHE: apply on U8/U16, getters/setters, errors
   const makeClahe = (clip, width, height) =>
     reference

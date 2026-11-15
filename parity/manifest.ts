@@ -140,6 +140,18 @@ export const PARITY_MANIFEST = {
     },
     {
       implementationOrigin: "original",
+      method: "estimateAffine2D",
+      module: "calib3d",
+      notes:
+        "Estimates the 2x3 F64 affine map between matching point sets on any scalar depth in both Nx1 two-channel and Nx2 single-channel layouts: method 4 runs the deterministic exhaustive median-minimizing scan over all three-point subsets in index order while method 8 samples hypotheses from a private per-call multiply-with-carry generator with redraw dedup and an adaptive confidence budget, the inlier mask reports the winning hypothesis's consensus set under the strict reprojection threshold, the returned model is a least-squares refit over that set, and degenerate source triples, unsupported methods, and too-few correspondences mirror the pinned empty-matrix behavior.",
+      sources: [CALIB3D_SOURCE],
+      status: "implemented",
+      upstream: "estimateAffine2D",
+      upstreamId: "calib3d.function.estimate-affine2-d",
+      wasmExport: "matEstimateAffine2D",
+    },
+    {
+      implementationOrigin: "original",
       method: "meanShift",
       module: "video",
       notes:

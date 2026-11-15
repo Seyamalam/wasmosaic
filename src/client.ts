@@ -2940,6 +2940,34 @@ class WasmOpenCv implements OpenCv {
     ];
   }
 
+  estimateAffine2D(
+    ...arguments_: [
+      from: Mat,
+      to: Mat,
+      inliers?: Mat,
+      method?: number,
+      ransacReprojThreshold?: number,
+      maxIters?: number,
+      confidence?: number,
+      refineIters?: number,
+    ]
+  ): Mat {
+    requireArityRange(arguments_.length, 2, 8, "estimateAffine2D");
+    const [from, to, inliers, method, ransacReprojThreshold, maxIters, confidence, refineIters] =
+      arguments_;
+    const result = this.#backend.matEstimateAffine2D(
+      matHandleForBinding(from),
+      matHandleForBinding(to),
+      inliers === undefined ? matHandleForBinding(this.emptyMat()) : matHandleForBinding(inliers),
+      toWasmI32(method ?? 8),
+      ransacReprojThreshold ?? 3,
+      toWasmI32(maxIters ?? 2000),
+      confidence ?? 0.99,
+      toWasmI32(refineIters ?? 10),
+    );
+    return new Mat(result);
+  }
+
   Rodrigues(...arguments_: [source: Mat, destination: Mat, jacobian?: Mat]): void {
     requireArityRange(arguments_.length, 2, 3, "Rodrigues");
     const [source, destination, jacobian] = arguments_;

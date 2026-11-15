@@ -2278,6 +2278,18 @@ class CopyingBackend implements OpenCvBackend {
   ): Float64Array {
     throw new OpenCvInputError("mock camShift is not implemented");
   }
+  matEstimateAffine2D(
+    _from: WasmMatHandle,
+    _to: WasmMatHandle,
+    _inliers: WasmMatHandle,
+    _method: number,
+    _ransacReprojThreshold: number,
+    _maxIters: number,
+    _confidence: number,
+    _refineIters: number,
+  ): WasmMatHandle {
+    throw new OpenCvInputError("mock estimateAffine2D is not implemented");
+  }
   matGemmInto(): void {
     throw new OpenCvInputError("mock gemm is not implemented");
   }
@@ -6779,6 +6791,53 @@ describe("meanShift binding", () => {
         { type: 1, maxCount: 5, epsilon: 0 },
       ),
     ).toThrow();
+  });
+});
+
+describe("estimateAffine2D binding", () => {
+  test("forwards optional arguments and returns a matrix", () => {
+    const backend = new CopyingBackend();
+    const calls: unknown[][] = [];
+    backend.matEstimateAffine2D = (
+      _f,
+      _t,
+      inliers,
+      method,
+      threshold,
+      maxIters,
+      confidence,
+      refineIters,
+    ) => {
+      calls.push([inliers !== undefined, method, threshold, maxIters, confidence, refineIters]);
+      return f64Handle(2, 3, [2, 0, 3, 0, 2, 1]);
+    };
+    const originalMatEmpty = backend.matEmpty.bind(backend);
+    let temporaryEmptyCalls = 0;
+    backend.matEmpty = () => {
+      temporaryEmptyCalls += 1;
+      return originalMatEmpty();
+    };
+    const cv = createOpenCv(backend);
+    const from = cv.matFromF32(4, 1, 2, new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]));
+    const to = cv.matFromF32(4, 1, 2, new Float32Array([3, 1, 5, 1, 3, 3, 5, 3]));
+    const inliers = cv.emptyMat();
+    temporaryEmptyCalls = 0;
+    const result = cv.estimateAffine2D(from, to, inliers);
+    expect(calls).toEqual([[true, 8, 3, 2000, 0.99, 10]]);
+    expect(temporaryEmptyCalls).toBe(0);
+    expect(result.rows).toBe(2);
+    expect(result.columns).toBe(3);
+    expect(result.depth).toBe("f64");
+    cv.estimateAffine2D(from, to);
+    expect(calls[1]).toEqual([true, 8, 3, 2000, 0.99, 10]);
+    expect(temporaryEmptyCalls).toBe(1);
+    cv.estimateAffine2D(from, to, inliers, 4, 2.5, 100, 0.9, 5);
+    expect(calls[2]).toEqual([true, 4, 2.5, 100, 0.9, 5]);
+    expect(temporaryEmptyCalls).toBe(1);
+    expect(() =>
+      // @ts-expect-error exercise pinned binding arity rejection
+      cv.estimateAffine2D(from),
+    ).toThrow(BindingError);
   });
 });
 

@@ -593,6 +593,16 @@ export interface OpenCvBackend {
     maxCount: number,
     epsilon: number,
   ): Float64Array;
+  matEstimateAffine2D(
+    from: WasmMatHandle,
+    to: WasmMatHandle,
+    inliers: WasmMatHandle,
+    method: number,
+    ransacReprojThreshold: number,
+    maxIters: number,
+    confidence: number,
+    refineIters: number,
+  ): WasmMatHandle;
   matGemmInto(
     src1: WasmMatHandle,
     src2: WasmMatHandle,
@@ -1718,6 +1728,16 @@ export interface OpenCv {
 
   meanShift(probImage: Mat, rect: Rect, criteria: TermCriteria): [number, Rect];
   CamShift(probImage: Mat, rect: Rect, criteria: TermCriteria): [RotatedRect, Rect];
+  estimateAffine2D(
+    from: Mat,
+    to: Mat,
+    inliers?: Mat,
+    method?: number,
+    ransacReprojThreshold?: number,
+    maxIters?: number,
+    confidence?: number,
+    refineIters?: number,
+  ): Mat;
 
   floodFill(
     image: Mat,

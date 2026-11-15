@@ -354,6 +354,16 @@ declare module "#wasm" {
     maxCount: number,
     epsilon: number,
   ): Float64Array;
+  export function matEstimateAffine2D(
+    from: WasmMatHandle,
+    to: WasmMatHandle,
+    inliers: WasmMatHandle,
+    method: number,
+    ransacReprojThreshold: number,
+    maxIters: number,
+    confidence: number,
+    refineIters: number,
+  ): WasmMatHandle;
   export function matMatchTemplateInto(
     image: WasmMatHandle,
     template: WasmMatHandle,

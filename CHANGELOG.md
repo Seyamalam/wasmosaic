@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `estimateAffine2D`: robust 2x3 affine estimation between matching point sets on any scalar depth in both Nx1 two-channel and Nx2 single-channel layouts, with method 4 running the deterministic exhaustive median-minimizing scan over all three-point subsets in index order and method 8 sampling hypotheses from a private per-call multiply-with-carry generator under an adaptive confidence budget. The inlier mask reports the winning hypothesis's consensus set under the strict reprojection threshold, the returned matrix is a least-squares refit over that set, and degenerate source triples, unsupported method values, and too-few correspondences mirror the pinned empty-matrix behavior. All pinned browser cases match exactly. **Full parity is now 220 of 488 families.**
+
+### Added
+
 - `CamShift`: continuously-adaptive mean-shift tracking on single-channel probability images of any depth, scanning the supplied window grown ten pixels per side and snapped inside the image, reporting the rotated box at the returned window's center with size 4*sqrt of each covariance eigenvalue and orientation 90+atan2(2*mu11, mu20-mu02)/2 in degrees, anchoring the tracked window at the rounded centroid with per-axis maximum projected extents plus two pixels, reporting zero-mass regions as a zero box at the origin with the grown clipped window, reproducing the pinned f32-epsilon eigenvalue residue on saturated collinear masses, and ignoring termination criteria like the pinned binding. All pinned browser cases match exactly. **Full parity is now 219 of 488 families.**
 
 ### Added
