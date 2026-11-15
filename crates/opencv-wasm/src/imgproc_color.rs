@@ -14,12 +14,59 @@ pub(crate) const COLOR_GRAY2_BGR: i32 = 8;
 pub(crate) const COLOR_GRAY2_BGRA: i32 = 9;
 pub(crate) const COLOR_BGRA2_GRAY: i32 = 10;
 pub(crate) const COLOR_RGBA2_GRAY: i32 = 11;
+pub(crate) const COLOR_BGR2XYZ: i32 = 32;
+pub(crate) const COLOR_RGB2XYZ: i32 = 33;
+pub(crate) const COLOR_XYZ2BGR: i32 = 34;
+pub(crate) const COLOR_XYZ2RGB: i32 = 35;
+pub(crate) const COLOR_BGR2_YCR_CB: i32 = 36;
+pub(crate) const COLOR_RGB2_YCR_CB: i32 = 37;
+pub(crate) const COLOR_YCR_CB2BGR: i32 = 38;
+pub(crate) const COLOR_YCR_CB2RGB: i32 = 39;
+pub(crate) const COLOR_BGR2YUV: i32 = 82;
+pub(crate) const COLOR_RGB2YUV: i32 = 83;
+pub(crate) const COLOR_YUV2BGR: i32 = 84;
+pub(crate) const COLOR_YUV2RGB: i32 = 85;
 
 const BLUE_TO_GRAY: u32 = 1_868;
 const GREEN_TO_GRAY: u32 = 9_617;
 const RED_TO_GRAY: u32 = 4_899;
 const GRAY_SHIFT: u32 = 14;
 const GRAY_ROUND: u32 = 1 << (GRAY_SHIFT - 1);
+
+// U8 linear color transforms use a single descale after a 32-bit dot product. Coefficients are
+// pinned-implementation lookups recovered through dense black-box probing, not textbook values.
+const LINEAR_SHIFT: i32 = 14;
+const LINEAR_ROUND: i32 = 1 << (LINEAR_SHIFT - 1);
+const CHROMA_SHIFT: i32 = 13;
+const CHROMA_ROUND: i32 = 1 << (CHROMA_SHIFT - 1);
+const CHROMA_CENTER: i32 = 128;
+
+// RGB to XYZ rows apply to (blue, green, red) input order.
+const XYZ_FROM_BGR: [[i32; 3]; 3] = [
+    [2_956, 5_860, 6_756],
+    [1_184, 11_716, 3_484],
+    [15_568, 1_952, 316],
+];
+// XYZ to BGR rows apply to (x, y, z) input order.
+const BGR_FROM_XYZ: [[i32; 3]; 3] = [
+    [912, -3_344, 17_324],
+    [-15_880, 30_736, 680],
+    [53_092, -25_184, -8_168],
+];
+// Forward chroma is a pure function of the source channel minus the rounded luma byte.
+const YCR_CB_CR: i32 = 11_682;
+const YCR_CB_CB: i32 = 9_241;
+const YUV_U: i32 = 8_061;
+const YUV_V: i32 = 14_369;
+// Inverse chroma adds a descaled delta from the 128-centered source channel to luma.
+const YCR_CB_TO_B: i32 = 14_524;
+const YCR_CB_TO_R: i32 = 11_493;
+const YCR_CB_TO_G_CR: i32 = -5_849;
+const YCR_CB_TO_G_CB: i32 = -2_818;
+const YUV_TO_B: i32 = 16_646;
+const YUV_TO_R: i32 = 9_340;
+const YUV_TO_G_U: i32 = -6_472;
+const YUV_TO_G_V: i32 = -9_519;
 
 const BLUE_TO_GRAY_16: u64 = 3_735;
 const GREEN_TO_GRAY_16: u64 = 19_235;
@@ -84,8 +131,17 @@ pub(crate) fn cvt_color_into(
     destination_channels: i32,
 ) -> Result<(), ColorError> {
     let specification = Conversion::from_code(code)?;
-    require_source_channels(source, specification.source_channels())?;
-    let width = match source.depth() {
+    if !specification.accepts_source_channels(source.channels()) {
+        return Err(ColorError::InvalidSourceChannels {
+            expected: specification.source_channels(),
+            actual: source.channels(),
+        });
+    }
+    let depth = source.depth();
+    if specification.is_linear() && depth != MatDepth::U8 {
+        return Err(ColorError::UnsupportedDepth(depth));
+    }
+    let width = match depth {
         MatDepth::U8 => 1,
         MatDepth::U16 => 2,
         MatDepth::F32 => 4,
@@ -93,7 +149,13 @@ pub(crate) fn cvt_color_into(
     };
     let output_channels = specification.output_channels(destination_channels)?;
     let source_bytes = source.compact_bytes();
-    let output = specification.convert(&source_bytes, output_channels, width, source.depth());
+    let output = specification.convert(
+        &source_bytes,
+        source.channels(),
+        output_channels,
+        width,
+        source.depth(),
+    );
     destination.write_output(
         output,
         source.rows(),
@@ -122,6 +184,20 @@ enum Conversion {
     SwapBlueRed {
         channels: u16,
     },
+    Linear {
+        swapped: bool,
+        kind: LinearKind,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LinearKind {
+    Xyz,
+    XyzInverse,
+    YCrCb,
+    YCrCbInverse,
+    Yuv,
+    YuvInverse,
 }
 
 impl Conversion {
@@ -163,8 +239,36 @@ impl Conversion {
                 blue_index: 2,
                 source_channels: 4,
             }),
+            COLOR_BGR2XYZ | COLOR_RGB2XYZ => Ok(Self::Linear {
+                swapped: code == COLOR_RGB2XYZ,
+                kind: LinearKind::Xyz,
+            }),
+            COLOR_XYZ2BGR | COLOR_XYZ2RGB => Ok(Self::Linear {
+                swapped: code == COLOR_XYZ2RGB,
+                kind: LinearKind::XyzInverse,
+            }),
+            COLOR_BGR2_YCR_CB | COLOR_RGB2_YCR_CB => Ok(Self::Linear {
+                swapped: code == COLOR_RGB2_YCR_CB,
+                kind: LinearKind::YCrCb,
+            }),
+            COLOR_YCR_CB2BGR | COLOR_YCR_CB2RGB => Ok(Self::Linear {
+                swapped: code == COLOR_YCR_CB2RGB,
+                kind: LinearKind::YCrCbInverse,
+            }),
+            COLOR_BGR2YUV | COLOR_RGB2YUV => Ok(Self::Linear {
+                swapped: code == COLOR_RGB2YUV,
+                kind: LinearKind::Yuv,
+            }),
+            COLOR_YUV2BGR | COLOR_YUV2RGB => Ok(Self::Linear {
+                swapped: code == COLOR_YUV2RGB,
+                kind: LinearKind::YuvInverse,
+            }),
             _ => Err(ColorError::UnsupportedCode(code)),
         }
+    }
+
+    const fn is_linear(self) -> bool {
+        matches!(self, Self::Linear { .. })
     }
 
     const fn source_channels(self) -> u16 {
@@ -175,7 +279,18 @@ impl Conversion {
                 source_channels, ..
             } => source_channels,
             Self::GrayToColor { .. } => 1,
+            Self::Linear { .. } => 3,
             Self::SwapBlueRed { .. } => unreachable!(),
+        }
+    }
+
+    fn accepts_source_channels(self, actual: u16) -> bool {
+        match self {
+            Self::Linear {
+                kind: LinearKind::Xyz | LinearKind::YCrCb | LinearKind::Yuv,
+                ..
+            } => actual == 3 || actual == 4,
+            _ => actual == self.source_channels(),
         }
     }
 
@@ -185,6 +300,16 @@ impl Conversion {
             Self::DropAlpha { .. } | Self::SwapBlueRed { channels: 3 } => 3,
             Self::Gray { .. } => return Ok(1),
             Self::GrayToColor { default_channels } => default_channels,
+            Self::Linear { kind, .. } => match kind {
+                // Forward transforms always emit three channels; inverse transforms grow alpha.
+                LinearKind::Xyz | LinearKind::YCrCb | LinearKind::Yuv => {
+                    return match requested {
+                        0 | 3 | 4 => Ok(3),
+                        value => Err(ColorError::InvalidDestinationChannels(value)),
+                    };
+                }
+                _ => 3,
+            },
             Self::SwapBlueRed { .. } => unreachable!(),
         };
         match requested {
@@ -198,18 +323,26 @@ impl Conversion {
     fn convert(
         self,
         source: &[u8],
+        source_channels: u16,
         output_channels: u16,
         width: usize,
         depth: MatDepth,
     ) -> Vec<u8> {
-        let source_channels = usize::from(self.source_channels());
+        let source_channels = usize::from(source_channels);
         let output_channels_usize = usize::from(output_channels);
         let pixels = source.len() / (source_channels * width);
         let mut output = Vec::with_capacity(pixels * output_channels_usize * width);
         for pixel in source.chunks_exact(source_channels * width) {
             match self {
                 Self::AddAlpha { swap_blue_red } | Self::DropAlpha { swap_blue_red } => {
-                    append_color_pixel(&mut output, pixel, output_channels, swap_blue_red, width, depth);
+                    append_color_pixel(
+                        &mut output,
+                        pixel,
+                        output_channels,
+                        swap_blue_red,
+                        width,
+                        depth,
+                    );
                 }
                 Self::SwapBlueRed { .. } => {
                     append_color_pixel(&mut output, pixel, output_channels, true, width, depth);
@@ -233,10 +366,115 @@ impl Conversion {
                         output.extend_from_slice(alpha_bytes(depth));
                     }
                 }
+                Self::Linear { swapped, kind } => {
+                    let [b, g, r] = linear_pixel(kind, swapped, pixel);
+                    output.extend_from_slice(&[b, g, r]);
+                    if output_channels == 4 {
+                        output.push(u8::MAX);
+                    }
+                }
             }
         }
         output
     }
+}
+
+fn linear_pixel(kind: LinearKind, swapped: bool, pixel: &[u8]) -> [u8; 3] {
+    let c0 = i32::from(pixel[0]);
+    let c1 = i32::from(pixel[1]);
+    let c2 = i32::from(pixel[2]);
+    let (blue, green, red) = if swapped { (c2, c1, c0) } else { (c0, c1, c2) };
+    match kind {
+        LinearKind::Xyz => XYZ_FROM_BGR.map(|row| {
+            clamp_u8(descale(
+                blue * row[0] + green * row[1] + red * row[2],
+                LINEAR_SHIFT,
+            ))
+        }),
+        LinearKind::XyzInverse => {
+            let bgr = BGR_FROM_XYZ.map(|row| {
+                clamp_u8(descale(
+                    c0 * row[0] + c1 * row[1] + c2 * row[2],
+                    LINEAR_SHIFT,
+                ))
+            });
+            if swapped {
+                [bgr[2], bgr[1], bgr[0]]
+            } else {
+                bgr
+            }
+        }
+        LinearKind::YCrCb | LinearKind::Yuv => {
+            let luma = ((blue as u32) * BLUE_TO_GRAY
+                + (green as u32) * GREEN_TO_GRAY
+                + (red as u32) * RED_TO_GRAY
+                + GRAY_ROUND) as i32
+                >> GRAY_SHIFT;
+            let (chroma_a, chroma_b) = if kind == LinearKind::YCrCb {
+                (red - luma, blue - luma)
+            } else {
+                (blue - luma, red - luma)
+            };
+            let (ca, cb) = if kind == LinearKind::YCrCb {
+                (YCR_CB_CR, YCR_CB_CB)
+            } else {
+                (YUV_U, YUV_V)
+            };
+            [
+                clamp_u8(luma),
+                clamp_u8(CHROMA_CENTER + descale(chroma_a * ca, LINEAR_SHIFT)),
+                clamp_u8(CHROMA_CENTER + descale(chroma_b * cb, LINEAR_SHIFT)),
+            ]
+        }
+        LinearKind::YCrCbInverse | LinearKind::YuvInverse => {
+            let luma = c0;
+            let (chroma_a, chroma_b) = (c1 - CHROMA_CENTER, c2 - CHROMA_CENTER);
+            // YCrCb orders its deltas (Cr, Cb); YUV orders them (U, V).
+            let (b_delta, b_coef, g_a, g_b, r_delta, r_coef, g_shift) =
+                if kind == LinearKind::YCrCbInverse {
+                    (
+                        chroma_b,
+                        YCR_CB_TO_B,
+                        YCR_CB_TO_G_CR,
+                        YCR_CB_TO_G_CB,
+                        chroma_a,
+                        YCR_CB_TO_R,
+                        CHROMA_SHIFT,
+                    )
+                } else {
+                    (
+                        chroma_a,
+                        YUV_TO_B,
+                        YUV_TO_G_U,
+                        YUV_TO_G_V,
+                        chroma_b,
+                        YUV_TO_R,
+                        LINEAR_SHIFT,
+                    )
+                };
+            let bgr = [
+                clamp_u8(luma + descale(b_delta * b_coef, CHROMA_SHIFT)),
+                clamp_u8(descale(
+                    luma * (1 << g_shift) + chroma_a * g_a + chroma_b * g_b,
+                    g_shift,
+                )),
+                clamp_u8(luma + descale(r_delta * r_coef, CHROMA_SHIFT)),
+            ];
+            if swapped {
+                [bgr[2], bgr[1], bgr[0]]
+            } else {
+                bgr
+            }
+        }
+    }
+}
+
+fn descale(value: i32, shift: i32) -> i32 {
+    (value + (1 << (shift - 1))) >> shift
+}
+
+fn clamp_u8(value: i32) -> u8 {
+    value.clamp(0, i32::from(u8::MAX)) as u8
 }
 
 fn channel(pixel: &[u8], index: usize, width: usize, depth: MatDepth) -> f64 {
@@ -293,14 +531,6 @@ fn alpha_bytes(depth: MatDepth) -> &'static [u8] {
     }
 }
 
-fn require_source_channels(source: &Mat, expected: u16) -> Result<(), ColorError> {
-    let actual = source.channels();
-    if actual != expected {
-        return Err(ColorError::InvalidSourceChannels { expected, actual });
-    }
-    Ok(())
-}
-
 fn append_color_pixel(
     output: &mut Vec<u8>,
     pixel: &[u8],
@@ -327,7 +557,7 @@ fn append_color_pixel(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mat::{mat_empty, mat_from_f32, mat_from_u16, mat_from_u8};
+    use crate::mat::{mat_empty, mat_from_f32, mat_from_u8, mat_from_u16};
 
     #[test]
     fn rgba_to_gray_matches_pinned_u8_rounding() {
@@ -364,8 +594,7 @@ mod tests {
 
     #[test]
     fn u16_gray_uses_the_wide_lookup_coefficients() {
-        let source =
-            mat_from_u16(&[2570, 5140, 7710, 1, 2, 3], 1, 2, 3).expect("source");
+        let source = mat_from_u16(&[2570, 5140, 7710, 1, 2, 3], 1, 2, 3).expect("source");
         let destination = mat_empty();
         cvt_color_into(&source, &destination, COLOR_BGR2_GRAY, 0).expect("conversion");
         assert_eq!(destination.depth(), MatDepth::U16);
@@ -419,5 +648,78 @@ mod tests {
                 .flat_map(u16::to_ne_bytes)
                 .collect::<Vec<u8>>()
         );
+    }
+
+    fn linear_expect(code: i32, pixel: [u8; 3], expected: [u8; 3]) {
+        let source = mat_from_u8(&pixel, 1, 1, 3).expect("source");
+        let destination = mat_empty();
+        cvt_color_into(&source, &destination, code, 0).expect("conversion");
+        assert_eq!(destination.compact_bytes(), expected, "code {code}");
+    }
+
+    #[test]
+    fn xyz_round_trips_match_pinned_u8() {
+        // Pinned OpenCV.js 4.13.0 outputs for a (10, 20, 30) source pixel.
+        linear_expect(COLOR_BGR2XYZ, [10, 20, 30], [21, 21, 12]);
+        linear_expect(COLOR_RGB2XYZ, [10, 20, 30], [17, 19, 31]);
+        linear_expect(COLOR_XYZ2BGR, [10, 20, 30], [28, 29, 0]);
+        linear_expect(COLOR_XYZ2RGB, [10, 20, 30], [0, 29, 28]);
+        linear_expect(COLOR_XYZ2BGR, [100, 110, 120], [110, 114, 95]);
+        linear_expect(COLOR_XYZ2RGB, [100, 110, 120], [95, 114, 110]);
+    }
+
+    #[test]
+    fn ycr_cb_matches_pinned_u8() {
+        linear_expect(COLOR_BGR2_YCR_CB, [10, 20, 30], [22, 134, 121]);
+        linear_expect(COLOR_RGB2_YCR_CB, [10, 20, 30], [18, 122, 135]);
+        linear_expect(COLOR_YCR_CB2BGR, [10, 20, 30], [0, 121, 0]);
+        linear_expect(COLOR_YCR_CB2RGB, [10, 20, 30], [0, 121, 0]);
+        linear_expect(COLOR_YCR_CB2BGR, [100, 110, 120], [86, 116, 75]);
+        linear_expect(COLOR_YCR_CB2RGB, [100, 110, 120], [75, 116, 86]);
+    }
+
+    #[test]
+    fn yuv_matches_pinned_u8() {
+        linear_expect(COLOR_BGR2YUV, [10, 20, 30], [22, 122, 135]);
+        linear_expect(COLOR_RGB2YUV, [10, 20, 30], [18, 134, 121]);
+        linear_expect(COLOR_YUV2BGR, [10, 20, 30], [0, 110, 0]);
+        linear_expect(COLOR_YUV2RGB, [10, 20, 30], [0, 110, 0]);
+        linear_expect(COLOR_YUV2BGR, [100, 110, 120], [63, 112, 91]);
+        linear_expect(COLOR_YUV2RGB, [100, 110, 120], [91, 112, 63]);
+    }
+
+    #[test]
+    fn forward_linear_accepts_alpha_and_always_emits_three_channels() {
+        let source = mat_from_u8(&[10, 20, 30, 40], 1, 1, 4).expect("source");
+        let destination = mat_empty();
+        cvt_color_into(&source, &destination, COLOR_BGR2_YCR_CB, 4).expect("conversion");
+        assert_eq!(destination.channels(), 3);
+        assert_eq!(destination.compact_bytes(), [22, 134, 121]);
+    }
+
+    #[test]
+    fn inverse_linear_grows_opaque_alpha_on_request() {
+        let source = mat_from_u8(&[10, 20, 30], 1, 1, 3).expect("source");
+        let destination = mat_empty();
+        cvt_color_into(&source, &destination, COLOR_XYZ2BGR, 4).expect("conversion");
+        assert_eq!(destination.compact_bytes(), [28, 29, 0, 255]);
+    }
+
+    #[test]
+    fn linear_rejects_non_u8_depth_and_alpha_source() {
+        let wide = mat_from_u16(&[10, 20, 30], 1, 1, 3).expect("source");
+        let destination = mat_empty();
+        assert!(matches!(
+            cvt_color_into(&wide, &destination, COLOR_BGR2XYZ, 0),
+            Err(ColorError::UnsupportedDepth(MatDepth::U16))
+        ));
+        let alpha = mat_from_u8(&[10, 20, 30, 40], 1, 1, 4).expect("source");
+        assert!(matches!(
+            cvt_color_into(&alpha, &destination, COLOR_XYZ2BGR, 0),
+            Err(ColorError::InvalidSourceChannels {
+                expected: 3,
+                actual: 4
+            })
+        ));
     }
 }

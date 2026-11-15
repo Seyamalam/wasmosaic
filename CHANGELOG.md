@@ -6,6 +6,10 @@ This file records user-visible changes. The format follows Keep a Changelog, and
 
 ### Added
 
+- `cvtColor` codes 32-39 and 82-85 on U8 matrices: BGR/RGB round trips through the XYZ (32-35), YCrCb (36-39), and YUV (82-85) spaces with fixed-point arithmetic matched to the pinned OpenCV.js 4.13.0 browser build through dense black-box probing. Forward transforms accept 3- or 4-channel sources and always emit three channels; inverse transforms require 3-channel sources and grow an opaque alpha channel when `dstCn` is 4. The pinned `COLOR_BGR2XYZ` through `COLOR_YUV2RGB` constants are exported.
+
+### Added
+
 - `getPerspectiveTransform`: full solve-method contract for the 3x3 projective map between four continuous F32 point pairs. LU (0), SVD (1), and QR (4) decompositions, optionally combined with NORMAL (16), normalize the lower-right coefficient to one; EIG (2) and CHOLESKY (3) return the unit-norm homogeneous direction; singular configurations fall back to the unit-norm homogeneous least-squares direction; and unsupported method values mirror the pinned rejection. All 2,258 pinned browser cases match exactly. **Full parity is now 222 of 488 families.**
 
 ### Added

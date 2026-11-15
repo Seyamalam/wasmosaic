@@ -55,7 +55,7 @@ Regions share Rust storage without copying pixels. The core arithmetic, bitwise,
 ## Current API
 
 - `cv.grayscale(image)` converts RGB channels to fixed-point BT.601 luma and keeps alpha.
-- `cv.cvtColor(source, destination, code, dstCn?)` supports U8 color codes 0 through 11 for grayscale, RGB/BGR channel order, and alpha insertion or removal.
+- `cv.cvtColor(source, destination, code, dstCn?)` supports color codes 0 through 11 on U8, U16, and F32 for grayscale, RGB/BGR channel order, and alpha insertion or removal, plus U8 codes 32-39 (XYZ and YCrCb) and 82-85 (YUV).
 - `cv.resize(source, destination, size, fx?, fy?, interpolation?)` provides all seven interpolation modes with pinned depth and channel contracts.
 - `cv.invert(image)` inverts RGB channels and keeps alpha.
 - `cv.threshold(image, value)` emits black or white pixels using an inclusive threshold from 0 through 255.
@@ -214,7 +214,7 @@ The independent browser inventory contains 488 callable families, so the 25% mil
 | imgproc    | `getPerspectiveTransform`                   | `cv.getPerspectiveTransform`                   | Full    | All five solve methods, NORMAL flag, homogeneous fallback         |
 | imgproc    | `getRotationMatrix2D`                       | `cv.getRotationMatrix2D`                       | Full    | Exact Point2f and F64 matrix contract                             |
 | imgproc    | `getStructuringElement`                     | `cv.getStructuringElement`                     | Full    | Exact rectangle, cross, ellipse, diamond                          |
-| imgproc    | `cvtColor`                                  | `cv.cvtColor`                                  | Partial | U8 RGB/BGR/alpha/gray codes 0 through 11                          |
+| imgproc    | `cvtColor`                                  | `cv.cvtColor`                                  | Partial | Codes 0-11 on U8/U16/F32; U8 XYZ/YCrCb/YUV codes 32-39, 82-85     |
 | imgproc    | `invertAffineTransform`                     | `cv.invertAffineTransform`                     | Full    | Exact F32/F64 mutable inverse contract                            |
 | imgproc    | `isContourConvex`                           | `cv.isContourConvex`                           | Full    | Exact strict-convexity contract                                   |
 | imgproc    | `pointPolygonTest`                          | `cv.pointPolygonTest`                          | Full    | Exact classification and signed distance                          |

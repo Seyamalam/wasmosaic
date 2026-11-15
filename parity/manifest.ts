@@ -1794,7 +1794,7 @@ export const PARITY_MANIFEST = {
       method: "cvtColor",
       module: "imgproc",
       notes:
-        "U8 mutable Mat conversion for pinned codes 0 through 11, covering RGB/BGR/RGBA/BGRA channel order, alpha insertion or removal, grayscale conversion, dstCn 3/4 selection, compact and strided sources, destination replacement, and exact in-place use; U16, F32, HSV/HLS, YUV, packed, Bayer, and other codes remain.",
+        "Mutable Mat conversion for pinned codes 0 through 11 on U8, U16, and F32, covering RGB/BGR/RGBA/BGRA channel order, alpha insertion or removal, grayscale conversion, dstCn 3/4 selection, compact and strided sources, destination replacement, and exact in-place use; U8-only XYZ codes 32-35, YCrCb codes 36-39, and YUV codes 82-85 cover forward transforms on 3- or 4-channel sources and inverse transforms with optional alpha growth; U16, F32, HSV/HLS, packed, Bayer, and other codes remain.",
       sources: [IMGPROC_COLOR_SOURCE],
       status: "partial",
       upstream: "cv.cvtColor",

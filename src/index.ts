@@ -78,6 +78,18 @@ export {
   COLOR_RGBA2BGRA,
   COLOR_RGBA2GRAY,
   COLOR_RGBA2RGB,
+  COLOR_BGR2XYZ,
+  COLOR_RGB2XYZ,
+  COLOR_XYZ2BGR,
+  COLOR_XYZ2RGB,
+  COLOR_BGR2YCrCb,
+  COLOR_RGB2YCrCb,
+  COLOR_YCrCb2BGR,
+  COLOR_YCrCb2RGB,
+  COLOR_BGR2YUV,
+  COLOR_RGB2YUV,
+  COLOR_YUV2BGR,
+  COLOR_YUV2RGB,
 } from "./color.js";
 export type { ColorConversionCode } from "./color.js";
 export {
