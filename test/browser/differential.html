@@ -7581,6 +7581,26 @@
           ["RGB2RGBA-dcn3", packageCv.COLOR_RGB2RGBA, 3, [1, 2, 3], 3],
           ["GRAY2BGR-dcn4", packageCv.COLOR_GRAY2BGR, 1, [9], 4],
         ];
+        const depthCases = [
+          ["u16-BGR2GRAY", packageCv.COLOR_BGR2GRAY, 3, [2570, 5140, 7710, 1, 2, 3], 0],
+          ["u16-RGB2GRAY", packageCv.COLOR_RGB2GRAY, 3, [65535, 1, 100, 40000, 30000, 20000], 0],
+          [
+            "u16-BGRA2GRAY",
+            packageCv.COLOR_BGRA2GRAY,
+            4,
+            [100, 200, 300, 400, 65535, 65535, 65535, 128],
+            0,
+          ],
+          ["u16-BGR2BGRA", packageCv.COLOR_BGR2BGRA, 3, [1, 2, 3], 0],
+          ["u16-BGRA2RGBA", packageCv.COLOR_BGRA2RGBA, 4, [1, 2, 3, 4], 0],
+          ["u16-GRAY2BGRA", packageCv.COLOR_GRAY2BGRA, 1, [42, 65535], 0],
+          ["f32-BGR2GRAY", packageCv.COLOR_BGR2GRAY, 3, [0.1, 0.5, 0.9, 1, 1, 1], 0],
+          ["f32-RGB2GRAY", packageCv.COLOR_RGB2GRAY, 3, [0.25, 0.5, 0.75], 0],
+          ["f32-BGRA2GRAY", packageCv.COLOR_BGRA2GRAY, 4, [0.1, 0.2, 0.3, 0.4], 0],
+          ["f32-BGR2RGBA", packageCv.COLOR_BGR2RGBA, 3, [0.1, 0.2, 0.3], 0],
+          ["f32-GRAY2BGR", packageCv.COLOR_GRAY2BGR, 1, [0.5], 0],
+          ["f32-BGR2BGRA-dcn3", packageCv.COLOR_BGR2BGRA, 3, [0.4, 0.5, 0.6], 3],
+        ];
         const inPlace = packageCv.matFromU8(1, 2, 4, new Uint8Array([255, 0, 0, 7, 1, 2, 3, 4]));
         packageCv.cvtColor(inPlace, inPlace, packageCv.COLOR_RGBA2GRAY);
         const inPlaceOutput = summarizePackageTypedMat(inPlace);
@@ -7622,6 +7642,23 @@
               channels,
               new Uint8Array(values),
             );
+            const destination = packageCv.emptyMat();
+            packageCv.cvtColor(source, destination, code, destinationChannels);
+            const output = summarizePackageTypedMat(destination);
+            source.dispose();
+            destination.dispose();
+            return { name, output };
+          }),
+          depthCases: depthCases.map(([name, code, channels, values, destinationChannels]) => {
+            const isU16 = name.startsWith("u16-");
+            const source = isU16
+              ? packageCv.matFromU16(1, values.length / channels, channels, new Uint16Array(values))
+              : packageCv.matFromF32(
+                  1,
+                  values.length / channels,
+                  channels,
+                  new Float32Array(values),
+                );
             const destination = packageCv.emptyMat();
             packageCv.cvtColor(source, destination, code, destinationChannels);
             const output = summarizePackageTypedMat(destination);

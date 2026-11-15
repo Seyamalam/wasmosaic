@@ -7124,6 +7124,26 @@ function auditCvtColor(reference) {
     ["RGB2RGBA-dcn3", reference.COLOR_RGB2RGBA, 3, [1, 2, 3], 3],
     ["GRAY2BGR-dcn4", reference.COLOR_GRAY2BGR, 1, [9], 4],
   ];
+  const depthCases = [
+    ["u16-BGR2GRAY", reference.COLOR_BGR2GRAY, 3, [2570, 5140, 7710, 1, 2, 3], 0],
+    ["u16-RGB2GRAY", reference.COLOR_RGB2GRAY, 3, [65535, 1, 100, 40000, 30000, 20000], 0],
+    [
+      "u16-BGRA2GRAY",
+      reference.COLOR_BGRA2GRAY,
+      4,
+      [100, 200, 300, 400, 65535, 65535, 65535, 128],
+      0,
+    ],
+    ["u16-BGR2BGRA", reference.COLOR_BGR2BGRA, 3, [1, 2, 3], 0],
+    ["u16-BGRA2RGBA", reference.COLOR_BGRA2RGBA, 4, [1, 2, 3, 4], 0],
+    ["u16-GRAY2BGRA", reference.COLOR_GRAY2BGRA, 1, [42, 65535], 0],
+    ["f32-BGR2GRAY", reference.COLOR_BGR2GRAY, 3, [0.1, 0.5, 0.9, 1, 1, 1], 0],
+    ["f32-RGB2GRAY", reference.COLOR_RGB2GRAY, 3, [0.25, 0.5, 0.75], 0],
+    ["f32-BGRA2GRAY", reference.COLOR_BGRA2GRAY, 4, [0.1, 0.2, 0.3, 0.4], 0],
+    ["f32-BGR2RGBA", reference.COLOR_BGR2RGBA, 3, [0.1, 0.2, 0.3], 0],
+    ["f32-GRAY2BGR", reference.COLOR_GRAY2BGR, 1, [0.5], 0],
+    ["f32-BGR2BGRA-dcn3", reference.COLOR_BGR2BGRA, 3, [0.4, 0.5, 0.6], 3],
+  ];
   const inPlace = reference.matFromArray(1, 2, reference.CV_8UC4, [255, 0, 0, 7, 1, 2, 3, 4]);
   reference.cvtColor(inPlace, inPlace, reference.COLOR_RGBA2GRAY);
   const inPlaceOutput = summarizeTypedMat(inPlace);
@@ -7163,6 +7183,23 @@ function auditCvtColor(reference) {
         1,
         values.length / channels,
         typeByChannels[channels - 1],
+        values,
+      );
+      const destination = new reference.Mat();
+      reference.cvtColor(source, destination, code, destinationChannels);
+      const output = summarizeTypedMat(destination);
+      source.delete();
+      destination.delete();
+      return { name, output };
+    }),
+    depthCases: depthCases.map(([name, code, channels, values, destinationChannels]) => {
+      const depthType = name.startsWith("u16-")
+        ? [reference.CV_16UC1, reference.CV_16UC2, reference.CV_16UC3, reference.CV_16UC4]
+        : [reference.CV_32FC1, reference.CV_32FC2, reference.CV_32FC3, reference.CV_32FC4];
+      const source = reference.matFromArray(
+        1,
+        values.length / channels,
+        depthType[channels - 1],
         values,
       );
       const destination = new reference.Mat();
